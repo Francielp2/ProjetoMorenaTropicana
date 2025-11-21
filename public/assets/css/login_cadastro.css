@@ -1,0 +1,261 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background-image: url(../image/img-inicio2.png);
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.container {
+    width: 90%;
+    max-width: 450px;
+    background: rgba(255, 255, 255, 0.77);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+    padding: 40px 35px;
+    position: relative;
+    z-index: 2;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Cabeçalho com logo */
+.header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+}
+
+.icone_logo {
+    width: 115px;
+    height: 85px;
+}
+
+.nome_logo {
+    font-size: 1.8 rem;
+    font-weight: 700;
+    color: #2D3748;
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Formulário */
+.formulario_login_cadastro {
+    width: 100%;
+}
+
+.titulo_formulario {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #2D3748;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.subtitulo_formulario {
+    font-size: 0.95rem;
+    color: #718096;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.inputs {
+    margin-bottom: 20px;
+}
+
+.input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.icone_input {
+    position: absolute;
+    left: 20px;
+    font-size: 1.2rem;
+    color: #FF6B35;
+    z-index: 3;
+}
+
+.input-container input {
+    width: 100%;
+    height: 55px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(255, 107, 53, 0.2);
+    border-radius: 10px;
+    padding: 0 20px 0 50px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+/* Animação após o clik */
+.input-container input:focus {
+    border-color: #FF6B35;
+    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+    transform: translateY(-2px);
+}
+
+.input-container input::placeholder {
+    color: #A0AEC0;
+}
+
+/* Opções do formulário */
+.opcoes_formulario {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.lembre-me {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #4A5568;
+    cursor: pointer;
+}
+
+.lembre-me input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #FF6B35;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.lembre-me input[type="checkbox"]:checked+.checkmark {
+    background: #FF6B35;
+}
+
+.lembre-me input[type="checkbox"]:checked+.checkmark::after {
+    content: "✓";
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.esqueceu_senha {
+    font-size: 0.9rem;
+    color: #FF6B35;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.esqueceu_senha:hover {
+    color: #E53E3E;
+}
+
+/* Botão de login */
+.botao_submit {
+    width: 100%;
+    height: 55px;
+    background: linear-gradient(135deg, #FF6B35, #F7931E);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 25px;
+    box-shadow: 0 8px 25px rgba(255, 107, 53, 0.3);
+}
+
+.botao_login:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 35px rgba(255, 107, 53, 0.4);
+}
+
+.botao_login:active {
+    transform: translateY(-1px);
+}
+
+
+/* Link de cadastro */
+.link_cadastro_login {
+    text-align: center;
+    font-size: 0.95rem;
+    color: #4A5568;
+}
+
+.botao_cadastro_login {
+    color: #FF6B35;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.botao_cadastro_login:hover {
+    color: #E53E3E;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .container {
+        width: 95%;
+        padding: 30px 25px;
+    }
+
+    .nome_logo {
+        font-size: 1.5rem;
+    }
+
+    .titulo_formulario {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 25px 20px;
+    }
+
+    .logo {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .nome_logo {
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-height: 1080px) {
+
+    body {
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+}
