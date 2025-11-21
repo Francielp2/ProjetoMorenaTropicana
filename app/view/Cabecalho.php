@@ -117,13 +117,13 @@
                 </li>
 
                 <li class="item_navbar">
-                    <a href="#" class="link_navbar">QUIZ</a>
+                    <a href="<?= BASE_URL ?>/app/view/cliente/quiz.php" class="link_navbar">QUIZ</a>
                 </li>
             </ul>
 
             <div class="contato_navbar">
                 <img src="<?= BASE_URL ?>/public/assets/image/email.svg" alt="Icone email" class="icone_navbar">
-                <a href="https://mail.google.com/mail/?view=cm&fs=1&to=morenatropicana792@gmail.com" target="_blank" class="contato_link">morenatropicana792@gmail.com</a>
+                <a href="https://mail.google.com/mail/?view=cm&fs=1&to=morenatropicana.official@gmail.com&su=Contato%20via%20site&body=Olá,%20tenho%20interesse%20em%20saber%20mais." target="_blank" class="contato_link">morenatropicana.official@gmail.com</a>
             </div>
         </nav>
     </header>

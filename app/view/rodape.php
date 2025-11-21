@@ -35,7 +35,7 @@
 
                 <li class="item_footer">
                     <img src="<?= BASE_URL ?>/public/assets/image/envelope.svg" alt="" class="icone_footer">
-                    <a href="https://mail.google.com/mail/?view=cm&fs=1&to=morenatropicana792@gmail.com" target="_blank" class="link_footer">morenatropicana792@gmail.com</a>
+                    <a href="https://mail.google.com/mail/?view=cm&fs=1&to=morenatropicana.official@gmail.com&su=Contato%20via%20site&body=Olá,%20tenho%20interesse%20em%20saber%20mais." target="_blank" class="link_footer">morenatropicana.official@gmail.com</a>
                 </li>
 
                 <li class="item_footer">
@@ -112,7 +112,7 @@
     </div>
 
     <div class="grupo_footer">
-        <span class="copy_footer">COPYRIGHT © 2025 Morena Tropicana</span>  
+        <span class="copy_footer">COPYRIGHT © 2025 Morena Tropicana</span>
     </div>
 </footer>
 
