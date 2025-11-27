@@ -130,6 +130,11 @@
             <!-- Botão de Excluir Conta -->
             <div class="card_informacoes">
                 <div class="card_acoes">
+                    <button type="submit" class="botao_acao btn">
+                        <i class="ri-logout-box-line"></i>
+                        Sair da sua conta
+                    </button>
+
                     <button type="button" class="botao_acao botao_excluir" onclick="confirmarExclusao()">
                         <i class="ri-delete-bin-line"></i>
                         Excluir Cadastro

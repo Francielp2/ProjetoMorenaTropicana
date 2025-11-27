@@ -1,8 +1,3 @@
--- Trabalho Interdisciplinar: Banco de Dados 
--- Discentes: Lunna Souza Marques, Franciel, Francimara, Loanne e Maria Luiza
--- Turma: 2BII
--- Título do projeto: Morena Tropicana
-
 CREATE DATABASE IF NOT EXISTS Morena_Tropicana;
 USE Morena_Tropicana;
 
@@ -17,7 +12,7 @@ CREATE TABLE Usuarios (
 
 CREATE TABLE Administrador (
     id_usuario INT PRIMARY KEY,
-    data_contratacao DATE NOT NULL,
+    data_contratacao DATE NOT NULL, 
     FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario)
 		ON DELETE CASCADE
 		ON UPDATE CASCADE
