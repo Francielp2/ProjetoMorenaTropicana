@@ -1,5 +1,22 @@
-<?php require_once __DIR__ . "../../config/config.php";?>
+<?php 
+require_once __DIR__ . "/../config/config.php";
+require_once __DIR__ . "/../control/AuthController.php";
 
+// Inicia sessão
+session_start();
+
+// Processa login se formulário foi enviado
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $authController = new AuthController();
+    $authController->login();
+}
+
+// Pega mensagens de erro/sucesso
+$erro = $_SESSION['erro'] ?? '';
+$sucesso = $_SESSION['sucesso'] ?? '';
+unset($_SESSION['erro']);
+unset($_SESSION['sucesso']);
+?>
 
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -25,6 +42,20 @@
                 <h1 class="nome_logo">MORENA TROPICANA</h1>
             </div>
         </div>
+        
+        <!-- Mensagens de erro/sucesso -->
+        <?php if ($erro): ?>
+            <div style="background-color: #fee; color: #c33; padding: 15px; margin: 20px auto; max-width: 400px; border-radius: 5px; text-align: center;">
+                <?= htmlspecialchars($erro) ?>
+            </div>
+        <?php endif; ?>
+        
+        <?php if ($sucesso): ?>
+            <div style="background-color: #efe; color: #3c3; padding: 15px; margin: 20px auto; max-width: 400px; border-radius: 5px; text-align: center;">
+                <?= htmlspecialchars($sucesso) ?>
+            </div>
+        <?php endif; ?>
+        
         <!-- Formuário de login -->
         <form class="formulario_login_cadastro" method="POST" action="">
             <h2 class="titulo_formulario">Bem-vindo(a) de volta!</h2>

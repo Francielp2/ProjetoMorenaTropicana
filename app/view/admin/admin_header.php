@@ -1,6 +1,18 @@
 <?php 
 require_once __DIR__ . "/../../config/config.php";
+require_once __DIR__ . "/../../control/AuthController.php";
+
+// Protege a rota - só admin pode acessar
+AuthController::protegerAdmin();
+
 $pagina_atual = basename($_SERVER['PHP_SELF']);
+
+// Pega dados do usuário logado
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+$nomeUsuario = $_SESSION['usuario_nome'] ?? 'Administrador';
 ?>
 
 <!DOCTYPE html>
@@ -59,7 +71,7 @@ $pagina_atual = basename($_SERVER['PHP_SELF']);
             </div>
             
             <div class="admin-menu-logout">
-                <a href="<?= BASE_URL ?>/app/view/login.php" class="admin-menu-link admin-menu-logout-link">
+                <a href="<?= BASE_URL ?>/app/view/logout.php" class="admin-menu-link admin-menu-logout-link">
                     <i class="ri-logout-box-line"></i>
                     <span>Sair</span>
                 </a>
@@ -70,7 +82,7 @@ $pagina_atual = basename($_SERVER['PHP_SELF']);
             <div class="admin-header">
                 <h1 class="admin-title"><?= $titulo_pagina ?? 'Painel Administrativo' ?></h1>
                 <div class="admin-user-info">
-                    <span class="admin-user-name">Administrador</span>
+                    <span class="admin-user-name"><?= htmlspecialchars($nomeUsuario) ?></span>
                     <div class="admin-user-icon">
                         <i class="ri-user-fill"></i>
                     </div>

@@ -1,4 +1,18 @@
-<?php require_once __DIR__ . "../../config/config.php"; ?>
+<?php
+require_once __DIR__ . "/../config/config.php";
+require_once __DIR__ . "/../control/AuthController.php";
+
+// Protege a rota - só cliente pode acessar
+AuthController::protegerCliente();
+
+// Inicia sessão e pega dados do usuário
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+$nomeUsuario = $_SESSION['usuario_nome'] ?? '';
+$emailUsuario = $_SESSION['usuario_email'] ?? '';
+?>
 
 <!DOCTYPE html>
 <html lang="pt-br">

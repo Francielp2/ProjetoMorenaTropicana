@@ -1,4 +1,141 @@
-<?php include_once "../Cabecalho.php"; ?>
+<?php
+require_once __DIR__ . "/../../config/config.php";
+require_once __DIR__ . "/../../control/AuthController.php";
+require_once __DIR__ . "/../../model/UsuarioModel.php";
+
+// Protege a rota - só cliente pode acessar
+//AuthController::protegerCliente();
+
+// Inicia sessão
+session_start();
+
+// Processa exclusão de conta se solicitado
+if (isset($_GET['excluir']) && $_GET['excluir'] === 'confirmar') {
+    $authController = new AuthController();
+    $authController->excluirConta();
+    exit; // O método excluirConta já faz o redirecionamento
+}
+
+// Processa atualização de dados pessoais
+$mensagem = '';
+$tipoMensagem = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['atualizar_dados_pessoais'])) {
+    $nome = trim($_POST['nome_completo'] ?? '');
+    $telefone = preg_replace('/[^0-9]/', '', $_POST['telefone'] ?? '');
+
+    if (!empty($nome)) {
+        $usuarioModel = new UsuarioModel();
+        if ($usuarioModel->atualizarDadosPessoais($_SESSION['usuario_id'], $nome, $telefone)) {
+            $_SESSION['usuario_nome'] = $nome; // Atualiza sessão
+            $mensagem = "Dados pessoais atualizados com sucesso!";
+            $tipoMensagem = 'sucesso';
+        } else {
+            $mensagem = "Erro ao atualizar dados pessoais. Tente novamente.";
+            $tipoMensagem = 'erro';
+        }
+    } else {
+        $mensagem = "Nome é obrigatório.";
+        $tipoMensagem = 'erro';
+    }
+}
+
+// Processa atualização de endereço
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['atualizar_endereco'])) {
+    $rua = trim($_POST['rua'] ?? '');
+    $numero = trim($_POST['numero'] ?? '');
+    $bairro = trim($_POST['bairro'] ?? '');
+    $cep = trim($_POST['cep'] ?? '');
+    $estado = trim($_POST['estado'] ?? '');
+    $complemento = trim($_POST['complemento'] ?? '');
+
+    // Remove formatação do CEP para validação
+    $cepLimpo = preg_replace('/[^0-9]/', '', $cep);
+
+    if (empty($rua)) {
+        $mensagem = "O campo Rua é obrigatório.";
+        $tipoMensagem = 'erro';
+    } elseif (empty($cepLimpo) || strlen($cepLimpo) !== 8) {
+        $mensagem = "CEP inválido. Deve conter 8 dígitos.";
+        $tipoMensagem = 'erro';
+    } elseif (!empty($estado) && strlen($estado) > 2) {
+        $mensagem = "Estado deve conter no máximo 2 caracteres (UF).";
+        $tipoMensagem = 'erro';
+    } else {
+        $usuarioModel = new UsuarioModel();
+        if ($usuarioModel->salvarEndereco($_SESSION['usuario_id'], $rua, $numero, $bairro, $cep, $estado, $complemento)) {
+            $mensagem = "Endereço atualizado com sucesso!";
+            $tipoMensagem = 'sucesso';
+            // Recarrega os dados do endereço após salvar
+            $endereco = $usuarioModel->buscarEndereco($_SESSION['usuario_id']);
+            if ($endereco) {
+                $rua = $endereco['rua'] ?? '';
+                $numero = $endereco['numero'] ?? '';
+                $bairro = $endereco['bairro'] ?? '';
+                $cep = $endereco['cep'] ?? '';
+                $estado = $endereco['estado'] ?? '';
+                $complemento = $endereco['complemento'] ?? '';
+            }
+        } else {
+            // Mostra mensagem de erro mais detalhada para debug
+            $erroDetalhado = $_SESSION['erro_sql'] ?? '';
+            unset($_SESSION['erro_sql']);
+
+            if (!empty($erroDetalhado)) {
+                $mensagem = "Erro ao atualizar endereço: " . htmlspecialchars($erroDetalhado);
+            } else {
+                $mensagem = "Erro ao atualizar endereço. Verifique os dados e tente novamente.";
+            }
+            $tipoMensagem = 'erro';
+        }
+    }
+}
+
+// Busca dados completos do cliente
+$usuarioModel = new UsuarioModel();
+$dadosCliente = $usuarioModel->buscarDadosCliente($_SESSION['usuario_id']);
+
+// Se não encontrou os dados, usa os dados da sessão
+$nome = $dadosCliente['nome'] ?? $_SESSION['usuario_nome'] ?? '';
+$email = $dadosCliente['email'] ?? $_SESSION['usuario_email'] ?? '';
+$cpf = $dadosCliente['cpf'] ?? '';
+$telefone = $dadosCliente['telefone'] ?? '';
+
+// Busca endereço do cliente (só se não foi atualizado acima)
+if (!isset($endereco)) {
+    $endereco = $usuarioModel->buscarEndereco($_SESSION['usuario_id']);
+    $rua = $endereco['rua'] ?? '';
+    $numero = $endereco['numero'] ?? '';
+    $bairro = $endereco['bairro'] ?? '';
+    $cep = $endereco['cep'] ?? '';
+    $estado = $endereco['estado'] ?? '';
+    $complemento = $endereco['complemento'] ?? '';
+}
+
+// Formata CEP para exibição (XXXXX-XXX)
+$cepFormatado = $cep;
+if (!empty($cep) && strlen($cep) == 8) {
+    $cepFormatado = substr($cep, 0, 5) . '-' . substr($cep, 5, 3);
+}
+
+// Formata CPF para exibição (XXX.XXX.XXX-XX)
+$cpfFormatado = '';
+if (!empty($cpf) && strlen($cpf) == 11) {
+    $cpfFormatado = substr($cpf, 0, 3) . '.' . substr($cpf, 3, 3) . '.' . substr($cpf, 6, 3) . '-' . substr($cpf, 9, 2);
+}
+
+// Formata telefone para exibição
+$telefoneFormatado = '';
+if (!empty($telefone)) {
+    if (strlen($telefone) == 11) {
+        $telefoneFormatado = '+55 (' . substr($telefone, 0, 2) . ') ' . substr($telefone, 2, 5) . '-' . substr($telefone, 7, 4);
+    } else {
+        $telefoneFormatado = $telefone;
+    }
+}
+
+include_once "../Cabecalho.php";
+?>
 
 <main class="principal">
     <section class="banner">
@@ -21,9 +158,18 @@
                     <div class="icone_usuario">
                         <i class="ri-user-line"></i>
                     </div>
-                    <span class="email_usuario">emailusuario@email.com</span>
+                    <span class="email_usuario"><?= htmlspecialchars($email) ?></span>
                 </div>
             </div>
+
+            <!-- Mensagens de sucesso/erro -->
+            <?php if ($mensagem): ?>
+                <div style="background-color: <?= $tipoMensagem === 'sucesso' ? '#d4edda' : '#f8d7da' ?>; 
+                            color: <?= $tipoMensagem === 'sucesso' ? '#155724' : '#721c24' ?>; 
+                            padding: 15px; margin: 20px 0; border-radius: 5px; text-align: center;">
+                    <?= htmlspecialchars($mensagem) ?>
+                </div>
+            <?php endif; ?>
 
             <section class="section container">
                 <div class="aba_btns">
@@ -34,35 +180,38 @@
                 <div class="aba_content">
                     <!-- Aba Informações Pessoais -->
                     <div class="item_aba aba_ativa" id="infopessoais">
-                        <form class="card_informacoes" id="form_info_pessoais" method="POST">
+                        <form class="card_informacoes" id="form_info_pessoais" method="POST" action="">
+                            <input type="hidden" name="atualizar_dados_pessoais" value="1">
                             <h2 class="titulo_secao">Informações Pessoais</h2>
 
                             <div class="grupo_informacoes">
                                 <div class="campo_info">
                                     <label class="label_info" for="nome_completo">Nome Completo</label>
-                                    <input type="text" id="nome_completo" name="nome_completo" class="valor_info" value="Nome Do Usuario" readonly>
+                                    <input type="text" id="nome_completo" name="nome_completo" class="valor_info" value="<?= htmlspecialchars($nome) ?>" required>
                                 </div>
 
                                 <div class="campo_info">
                                     <label class="label_info" for="email">E-mail</label>
-                                    <input type="email" id="email" name="email" class="valor_info" value="emailusuario@email.com" readonly>
+                                    <input type="email" id="email" name="email" class="valor_info" value="<?= htmlspecialchars($email) ?>" readonly>
+                                    <small style="color: #666; font-size: 0.9em;">O email não pode ser alterado</small>
                                 </div>
 
                                 <div class="campo_info">
                                     <label class="label_info" for="cpf">CPF</label>
-                                    <input type="text" id="cpf" name="cpf" class="valor_info" value="123.456.789-00" readonly>
+                                    <input type="text" id="cpf" name="cpf" class="valor_info" value="<?= htmlspecialchars($cpfFormatado) ?>" readonly>
+                                    <small style="color: #666; font-size: 0.9em;">O CPF não pode ser alterado</small>
                                 </div>
 
                                 <div class="campo_info">
                                     <label class="label_info" for="telefone">Telefone</label>
-                                    <input type="tel" id="telefone" name="telefone" class="valor_info" value="+55 (77) 98128-4165" readonly>
+                                    <input type="tel" id="telefone" name="telefone" class="valor_info" value="<?= htmlspecialchars($telefone ?: '') ?>" placeholder="Ex: 77981234165" maxlength="11">
                                 </div>
                             </div>
 
                             <div class="card_acoes">
                                 <button type="submit" class="botao_acao btn">
-                                    <i class="ri-edit-line"></i>
-                                    Solicitar Modificação das Informações
+                                    <i class="ri-save-line"></i>
+                                    Editar dados
                                 </button>
                             </div>
                         </form>
@@ -70,56 +219,52 @@
 
                     <!-- Aba Endereço -->
                     <div class="item_aba" id="endereco">
-                        <form class="card_informacoes" id="form_endereco" method="POST">
+                        <form class="card_informacoes" id="form_endereco" method="POST" action="">
+                            <input type="hidden" name="atualizar_endereco" value="1">
                             <h2 class="titulo_secao">Endereço de Entrega</h2>
 
                             <div class="grupo_informacoes">
                                 <div class="campo_info_grupo">
                                     <div class="campo_info campo_medio">
-                                        <label class="label_info" for="bairro">Rua</label>
-                                        <input type="text" id="bairro" name="bairro" class="valor_info" value="rua do cliente" readonly>
+                                        <label class="label_info" for="rua">Rua</label>
+                                        <input type="text" id="rua" name="rua" class="valor_info" value="<?= htmlspecialchars($rua) ?>" required>
                                     </div>
 
                                     <div class="campo_info campo_pequeno">
-                                        <label class="label_info" for="cep">N°</label>
-                                        <input type="text" id="cep" name="cep" class="valor_info" value="15" readonly>
+                                        <label class="label_info" for="numero">N°</label>
+                                        <input type="text" id="numero" name="numero" class="valor_info" value="<?= htmlspecialchars($numero) ?>">
                                     </div>
                                 </div>
 
                                 <div class="campo_info_grupo">
                                     <div class="campo_info campo_medio">
                                         <label class="label_info" for="bairro">Bairro</label>
-                                        <input type="text" id="bairro" name="bairro" class="valor_info" value="Centro" readonly>
+                                        <input type="text" id="bairro" name="bairro" class="valor_info" value="<?= htmlspecialchars($bairro) ?>">
                                     </div>
 
                                     <div class="campo_info campo_pequeno">
                                         <label class="label_info" for="cep">CEP</label>
-                                        <input type="text" id="cep" name="cep" class="valor_info" value="46430-000" readonly>
+                                        <input type="text" id="cep" name="cep" class="valor_info" value="<?= htmlspecialchars($cepFormatado) ?>" placeholder="00000-000" maxlength="9" required>
                                     </div>
                                 </div>
 
                                 <div class="campo_info_grupo">
                                     <div class="campo_info campo_medio">
-                                        <label class="label_info" for="cidade">Cidade</label>
-                                        <input type="text" id="cidade" name="cidade" class="valor_info" value="Guanambi" readonly>
+                                        <label class="label_info" for="estado">Estado (UF)</label>
+                                        <input type="text" id="estado" name="estado" class="valor_info" value="<?= htmlspecialchars($estado) ?>" placeholder="BA" maxlength="2" style="text-transform: uppercase;">
                                     </div>
 
-                                    <div class="campo_info campo_pequeno">
-                                        <label class="label_info" for="estado">Estado</label>
-                                        <input type="text" id="estado" name="estado" class="valor_info" value="Bahia" readonly>
+                                    <div class="campo_info campo_medio">
+                                        <label class="label_info" for="complemento">Complemento</label>
+                                        <input type="text" id="complemento" name="complemento" class="valor_info" value="<?= htmlspecialchars($complemento) ?>" placeholder="Apartamento, Bloco, etc.">
                                     </div>
-                                </div>
-
-                                <div class="campo_info">
-                                    <label class="label_info" for="complemento">Complemento</label>
-                                    <input type="text" id="complemento" name="complemento" class="valor_info" value="Apartamento 302, Bloco B" readonly>
                                 </div>
                             </div>
 
                             <div class="card_acoes">
                                 <button type="submit" class="botao_acao btn">
-                                    <i class="ri-edit-line"></i>
-                                    Alterar dados de endereço
+                                    <i class="ri-save-line"></i>
+                                    Salvar Endereço
                                 </button>
                             </div>
                         </form>
@@ -130,10 +275,10 @@
             <!-- Botão de Excluir Conta -->
             <div class="card_informacoes">
                 <div class="card_acoes">
-                    <button type="submit" class="botao_acao btn">
+                    <a href="<?= BASE_URL ?>/app/view/logout.php" class="botao_acao btn" style="text-decoration: none; display: inline-block;">
                         <i class="ri-logout-box-line"></i>
                         Sair da sua conta
-                    </button>
+                    </a>
 
                     <button type="button" class="botao_acao botao_excluir" onclick="confirmarExclusao()">
                         <i class="ri-delete-bin-line"></i>
@@ -176,23 +321,39 @@
     function confirmarExclusao() {
         if (confirm('Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.')) {
             if (confirm('ATENÇÃO: Todos os seus dados serão perdidos permanentemente. Confirma a exclusão?')) {
-                // Aqui você pode adicionar o código para processar a exclusão
-                alert('Funcionalidade de exclusão será implementada.');
-                // window.location.href = 'processar_exclusao.php';
+                // Redireciona para a própria página com parâmetro de exclusão
+                window.location.href = '<?= BASE_URL ?>/app/view/cliente/conta.php?excluir=confirmar';
             }
         }
     }
 
-    // Prevenir envio dos formulários (adicione a lógica de envio depois)
-    document.getElementById('form_info_pessoais').addEventListener('submit', (e) => {
-        e.preventDefault();
-        alert('Solicitação de modificação enviada! (Implementar lógica de envio)');
-    });
+    // Máscara para CEP
+    const cepInput = document.getElementById('cep');
+    if (cepInput) {
+        cepInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length <= 8) {
+                value = value.replace(/^(\d{5})(\d)/, '$1-$2');
+                e.target.value = value;
+            }
+        });
+    }
 
-    document.getElementById('form_endereco').addEventListener('submit', (e) => {
-        e.preventDefault();
-        alert('Solicitação de modificação enviada! (Implementar lógica de envio)');
-    });
+    // Máscara para telefone
+    const telefoneInput = document.getElementById('telefone');
+    if (telefoneInput) {
+        telefoneInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\D/g, '');
+        });
+    }
+
+    // Converter estado para maiúsculas
+    const estadoInput = document.getElementById('estado');
+    if (estadoInput) {
+        estadoInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.toUpperCase();
+        });
+    }
 </script>
 
 <?php include_once "../rodape.php"; ?>

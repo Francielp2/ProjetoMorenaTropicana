@@ -41,7 +41,6 @@ CREATE TABLE Endereco (
 		ON UPDATE CASCADE
 );
 
-
 CREATE TABLE Produto (
     id_produto INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
@@ -50,7 +49,7 @@ CREATE TABLE Produto (
     preco DECIMAL(10,2) NOT NULL,
     tamanhos_disponiveis VARCHAR(50),
     cores_disponiveis VARCHAR(50),
-    imagens varchar(255)
+    imagens VARCHAR(255)
 );
 
 CREATE TABLE Administrador_Produto(
@@ -65,7 +64,6 @@ CREATE TABLE Administrador_Produto(
 		ON UPDATE CASCADE
 );
 
-
 CREATE TABLE Estoque (
     id_estoque INT AUTO_INCREMENT PRIMARY KEY,
     id_produto INT NOT NULL,
@@ -77,7 +75,6 @@ CREATE TABLE Estoque (
         ON UPDATE CASCADE
 );
 
-
 CREATE TABLE Pedido (
     id_pedido INT AUTO_INCREMENT PRIMARY KEY,
     id_cliente INT,
@@ -88,7 +85,6 @@ CREATE TABLE Pedido (
         ON DELETE SET NULL
         ON UPDATE CASCADE
 );
-
 
 CREATE TABLE Produto_Pedido (
     id_pedido INT NOT NULL,
@@ -103,7 +99,6 @@ CREATE TABLE Produto_Pedido (
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
-
 
 CREATE TABLE Pagamento (
     id_pagamento INT AUTO_INCREMENT PRIMARY KEY,
@@ -125,39 +120,5 @@ CREATE TABLE Administrador_Pedido (
         ON UPDATE CASCADE,
     FOREIGN KEY (id_pedido) REFERENCES Pedido (id_pedido)
         ON DELETE CASCADE 
-        ON UPDATE CASCADE
-);
-    
-
-
-CREATE TABLE Pergunta(
-    id_pergunta INT AUTO_INCREMENT PRIMARY KEY,
-    conteudo_pergunta TEXT,
-    alternativas varchar(1)
-);
-
-CREATE TABLE Administrador_Perguntas(
-	id_adm INT,
-    id_pergunta INT,
-    PRIMARY KEY(id_adm,id_pergunta),
-	FOREIGN KEY (id_adm) REFERENCES Administrador(id_usuario)
-        ON DELETE CASCADE 
-        ON UPDATE CASCADE,
-	FOREIGN KEY (id_pergunta) REFERENCES pergunta(id_pergunta)
-        ON DELETE CASCADE 
-        ON UPDATE CASCADE
-);
-
-CREATE TABLE Resposta (
-    id_resposta INT AUTO_INCREMENT PRIMARY KEY,
-    id_cliente INT,
-    id_pergunta INT,
-    alternativa_respondida VARCHAR(1),
-    data_resposta DATE DEFAULT (CURRENT_DATE),
-    FOREIGN KEY (id_cliente) REFERENCES Cliente(id_usuario)
-        ON DELETE SET NULL
-        ON UPDATE CASCADE,
-    FOREIGN KEY (id_pergunta) REFERENCES Pergunta(id_pergunta)
-        ON DELETE CASCADE
         ON UPDATE CASCADE
 );
