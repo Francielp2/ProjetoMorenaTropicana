@@ -1,15 +1,14 @@
 <?php
-require_once __DIR__ . "/../config/config.php";
-require_once __DIR__ . "/../control/AuthController.php";
+// Esta view recebe apenas variáveis prontas do controller
+// $nomeUsuario - nome do usuário logado
+// $emailUsuario - email do usuário logado
 
-// Protege a rota - só cliente pode acessar
-AuthController::protegerCliente();
-
-// Inicia sessão e pega dados do usuário
+// Inicia sessão se necessário
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Pega dados do usuário (já validado pelo controller)
 $nomeUsuario = $_SESSION['usuario_nome'] ?? '';
 $emailUsuario = $_SESSION['usuario_email'] ?? '';
 ?>
@@ -40,11 +39,11 @@ $emailUsuario = $_SESSION['usuario_email'] ?? '';
 
                 <ul class="lista_topbar">
                     <li class="item_topbar">
-                        <a href="<?= BASE_URL ?>/app/view/cliente/PoliticasDaLoja.php" class="link_topbar">Políticas da Loja</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=politicas" class="link_topbar">Políticas da Loja</a>
                     </li>
 
                     <li class="item_topbar">
-                        <a href="<?= BASE_URL ?>/app/view/cliente/tela_inicial.php#newsletter" class="link_topbar">Boletim informativo</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=tela_inicial#newsletter" class="link_topbar">Boletim informativo</a>
                     </li>
 
                     <li class="item_topbar">
@@ -79,7 +78,7 @@ $emailUsuario = $_SESSION['usuario_email'] ?? '';
         <div class="bottom_bar container">
             <div class="logo">
 
-                <a href="#">
+                <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=tela_inicial">
                     <img src="<?= BASE_URL ?>/public/assets/image/logo.png" alt="Logo Morena Tropicana" class="logo_navbar">
                 </a>
                 <span class="nome_logo">Morena Tropicana</span>
@@ -106,9 +105,9 @@ $emailUsuario = $_SESSION['usuario_email'] ?? '';
 
             <div class="btns_navbar">
 
-                <a href="<?= BASE_URL ?>/app/view/cliente/conta.php" class="icone_btn"><i class="ri-user-line"></i></a>
-                <a href="<?= BASE_URL ?>/app/view/cliente/Favoritos.php" class="icone_btn"><i class="ri-heart-line"></i></a>
-                <a href="<?= BASE_URL ?>/app/view/cliente/carrinho.php" class="icone_btn"><i class="ri-shopping-cart-line"></i></a>
+                <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=conta" class="icone_btn"><i class="ri-user-line"></i></a>
+                <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=favoritos" class="icone_btn"><i class="ri-heart-line"></i></a>
+                <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=carrinho" class="icone_btn"><i class="ri-shopping-cart-line"></i></a>
 
             </div>
         </div>
@@ -119,19 +118,19 @@ $emailUsuario = $_SESSION['usuario_email'] ?? '';
 
             <ul class="lista_navbar">
                 <li class="item_navbar">
-                    <a href="<?= BASE_URL ?>/app/view/cliente/tela_inicial.php" class="link_navbar">INÍCIO</a>
+                    <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=tela_inicial" class="link_navbar">INÍCIO</a>
                 </li>
 
                 <li class="item_navbar">
-                    <a href="<?= BASE_URL ?>/app/view/cliente/PaginaProdutos.php" class="link_navbar">PRODUTOS</a>
+                    <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=produtos" class="link_navbar">PRODUTOS</a>
                 </li>
 
                 <li class="item_navbar">
-                    <a href="<?= BASE_URL ?>/app/view/cliente/conta.php" class="link_navbar">MINHA CONTA</a>
+                    <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=conta" class="link_navbar">MINHA CONTA</a>
                 </li>
 
                 <li class="item_navbar">
-                    <a href="<?= BASE_URL ?>/app/view/cliente/quiz.php" class="link_navbar">QUIZ</a>
+                    <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=quiz" class="link_navbar">QUIZ</a>
                 </li>
             </ul>
 

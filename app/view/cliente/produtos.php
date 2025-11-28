@@ -86,7 +86,7 @@
                             </div>
                         </div>
 
-                        <a href="<?= BASE_URL ?>/app/view/cliente/detalhes_produtos.php" class="btn btn_produto">Adicionar ao Carrinho</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos" class="btn btn_produto">Adicionar ao Carrinho</a>
                     </div> <!--fechamento do conteudo produto -->
                 </div>
 
@@ -185,7 +185,7 @@
                             </div>
                         </div>
 
-                        <a href="<?= BASE_URL ?>/app/view/cliente/detalhes_produtos.php" class="btn btn_produto">Adicionar ao Carrinho</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos" class="btn btn_produto">Adicionar ao Carrinho</a>
                     </div> <!--fechamento do conteudo produto -->
                 </div>
 
@@ -284,7 +284,7 @@
                             </div>
                         </div>
 
-                        <a href="<?= BASE_URL ?>/app/view/cliente/detalhes_produtos.php" class="btn btn_produto">Adicionar ao Carrinho</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos" class="btn btn_produto">Adicionar ao Carrinho</a>
                     </div> <!--fechamento do conteudo produto -->
                 </div>
 
@@ -383,7 +383,7 @@
                             </div>
                         </div>
 
-                        <a href="<?= BASE_URL ?>/app/view/cliente/detalhes_produtos.php" class="btn btn_produto">Adicionar ao Carrinho</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos" class="btn btn_produto">Adicionar ao Carrinho</a>
                     </div> <!--fechamento do conteudo produto -->
                 </div>
 

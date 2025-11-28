@@ -95,16 +95,16 @@
 
             <ul class="links_footer">
                 <li>
-                    <a href="<?= BASE_URL ?>/app/view/cliente/PoliticasDaLoja.php" class="link_footer">Política de Privacidade</a>
+                    <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=politicas" class="link_footer">Política de Privacidade</a>
                 </li>
                 <li>
-                    <a href="<?= BASE_URL ?>/app/view/cliente/PoliticasDaLoja.php" class="link_footer">Termos & Condições</a>
+                    <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=politicas" class="link_footer">Termos & Condições</a>
                 </li>
                 <li>
-                    <a href="<?= BASE_URL ?>/app/view/cliente/PoliticasDaLoja.php" class="link_footer">Termos de Uso</a>
+                    <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=politicas" class="link_footer">Termos de Uso</a>
                 </li>
                 <li>
-                    <a href="<?= BASE_URL ?>/app/view/cliente/PoliticasDaLoja.php" class="link_footer">Outros Termos</a>
+                    <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=politicas" class="link_footer">Outros Termos</a>
                 </li>
             </ul>
 

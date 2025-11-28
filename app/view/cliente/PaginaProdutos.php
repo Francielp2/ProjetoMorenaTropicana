@@ -1,4 +1,4 @@
-<?php include_once "../Cabecalho.php"; ?>
+<?php include_once __DIR__ . "/../Cabecalho.php"; ?>
 
 <main class="principal">
     <section class="banner">
@@ -8,7 +8,7 @@
 
             <ul class="navegacao">
                 <li class="item_navegacao">
-                    <a href="<?= BASE_URL ?>/app/view/cliente/tela_inicial.php">Início</a>
+                    <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=tela_inicial">Início</a>
 
                 <li class="item_navegacao">Produtos</li>
                 </li>
@@ -97,7 +97,7 @@
                             </div>
                         </div>
 
-                        <a href="<?= BASE_URL ?>/app/view/cliente/detalhes_produtos.php" class="btn btn_produto">Adicionar ao Carrinho</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos" class="btn btn_produto">Adicionar ao Carrinho</a>
                     </div> <!--fechamento do conteudo produto -->
                 </div>
 
@@ -192,7 +192,7 @@
                             </div>
                         </div>
 
-                        <a href="<?= BASE_URL ?>/app/view/cliente/detalhes_produtos.php" class="btn btn_produto">Adicionar ao Carrinho</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos" class="btn btn_produto">Adicionar ao Carrinho</a>
                     </div> <!--fechamento do conteudo produto -->
                 </div>
 
@@ -287,7 +287,7 @@
                             </div>
                         </div>
 
-                        <a href="<?= BASE_URL ?>/app/view/cliente/detalhes_produtos.php" class="btn btn_produto">Adicionar ao Carrinho</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos" class="btn btn_produto">Adicionar ao Carrinho</a>
                     </div> <!--fechamento do conteudo produto -->
                 </div>
 
@@ -382,7 +382,7 @@
                             </div>
                         </div>
 
-                        <a href="<?= BASE_URL ?>/app/view/cliente/detalhes_produtos.php" class="btn btn_produto">Adicionar ao Carrinho</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos" class="btn btn_produto">Adicionar ao Carrinho</a>
                     </div> <!--fechamento do conteudo produto -->
                 </div>
 
@@ -477,7 +477,7 @@
                             </div>
                         </div>
 
-                        <a href="<?= BASE_URL ?>/app/view/cliente/detalhes_produtos.php" class="btn btn_produto">Adicionar ao Carrinho</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos" class="btn btn_produto">Adicionar ao Carrinho</a>
                     </div> <!--fechamento do conteudo produto -->
                 </div>
 
@@ -572,7 +572,7 @@
                             </div>
                         </div>
 
-                        <a href="<?= BASE_URL ?>/app/view/cliente/detalhes_produtos.php" class="btn btn_produto">Adicionar ao Carrinho</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos" class="btn btn_produto">Adicionar ao Carrinho</a>
                     </div> <!--fechamento do conteudo produto -->
                 </div>
 
@@ -667,7 +667,7 @@
                             </div>
                         </div>
 
-                        <a href="<?= BASE_URL ?>/app/view/cliente/detalhes_produtos.php" class="btn btn_produto">Adicionar ao Carrinho</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos" class="btn btn_produto">Adicionar ao Carrinho</a>
                     </div> <!--fechamento do conteudo produto -->
                 </div>
 
@@ -762,7 +762,7 @@
                             </div>
                         </div>
 
-                        <a href="<?= BASE_URL ?>/app/view/cliente/detalhes_produtos.php" class="btn btn_produto">Adicionar ao Carrinho</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos" class="btn btn_produto">Adicionar ao Carrinho</a>
                     </div> <!--fechamento do conteudo produto -->
                 </div>
 
@@ -857,7 +857,7 @@
                             </div>
                         </div>
 
-                        <a href="<?= BASE_URL ?>/app/view/cliente/detalhes_produtos.php" class="btn btn_produto">Adicionar ao Carrinho</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos" class="btn btn_produto">Adicionar ao Carrinho</a>
                     </div> <!--fechamento do conteudo produto -->
                 </div>
 
@@ -952,7 +952,7 @@
                             </div>
                         </div>
 
-                        <a href="<?= BASE_URL ?>/app/view/cliente/detalhes_produtos.php" class="btn btn_produto">Adicionar ao Carrinho</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos" class="btn btn_produto">Adicionar ao Carrinho</a>
                     </div> <!--fechamento do conteudo produto -->
                 </div>
 
@@ -1047,7 +1047,7 @@
                             </div>
                         </div>
 
-                        <a href="<?= BASE_URL ?>/app/view/cliente/detalhes_produtos.php" class="btn btn_produto">Adicionar ao Carrinho</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos" class="btn btn_produto">Adicionar ao Carrinho</a>
                     </div> <!--fechamento do conteudo produto -->
                 </div>
 
@@ -1142,7 +1142,7 @@
                             </div>
                         </div>
 
-                        <a href="<?= BASE_URL ?>/app/view/cliente/detalhes_produtos.php" class="btn btn_produto">Adicionar ao Carrinho</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos" class="btn btn_produto">Adicionar ao Carrinho</a>
                     </div> <!--fechamento do conteudo produto -->
                 </div>
 
@@ -1188,4 +1188,4 @@
     </section>
 </main>
 
-<?php include_once "../rodape.php"; ?>
+<?php include_once __DIR__ . "/../Rodape.php"; ?>

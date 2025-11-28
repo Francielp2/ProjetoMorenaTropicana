@@ -1,21 +1,7 @@
 <?php
-require_once __DIR__ . "/../config/config.php";
-require_once __DIR__ . "/../control/AuthController.php"; 
-
-// Inicia sessão
-session_start();
-
-// Processa cadastro se formulário foi enviado
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $authController = new AuthController();
-    $authController->cadastro();
-}
-
-// Pega mensagens de erro/sucesso
-$erro = $_SESSION['erro'] ?? '';
-$sucesso = $_SESSION['sucesso'] ?? '';
-unset($_SESSION['erro']);
-unset($_SESSION['sucesso']);
+// Esta view recebe apenas variáveis prontas do controller
+// $erro - mensagem de erro (se houver)
+// $sucesso - mensagem de sucesso (se houver)
 ?>
 
 <!DOCTYPE html>
@@ -56,7 +42,7 @@ unset($_SESSION['sucesso']);
         <?php endif; ?>
 
         <!-- Formulário de cadastro -->
-        <form class="formulario_login_cadastro" method="POST" action="">
+        <form class="formulario_login_cadastro" method="POST" action="<?= BASE_URL ?>/app/control/CadastroController.php">
             <h2 class="titulo_formulario">Crie sua conta</h2>
             <p class="subtitulo_formulario">Junte-se à comunidade Morena Tropicana</p>
 
@@ -102,7 +88,7 @@ unset($_SESSION['sucesso']);
 
             <p class="link_cadastro_login">
                 Já tem conta?
-                <a href="login.php" class="botao_cadastro_login">Faça login aqui</a>
+                <a href="<?= BASE_URL ?>/app/control/LoginController.php" class="botao_cadastro_login">Faça login aqui</a>
             </p>
         </form>
     </main>

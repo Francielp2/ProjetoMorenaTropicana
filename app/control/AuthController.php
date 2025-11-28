@@ -34,7 +34,7 @@ class AuthController
 
             if (empty($email) || empty($senha)) {
                 $_SESSION['erro'] = "Por favor, preencha todos os campos.";
-                header("Location: " . BASE_URL . "/app/view/login.php");
+                header("Location: " . BASE_URL . "/app/control/LoginController.php");
                 exit;
             }
 
@@ -49,14 +49,14 @@ class AuthController
 
                 // Redireciona conforme a permissão
                 if ($usuario['permissao'] === 'ADMIN') {
-                    header("Location: " . BASE_URL . "/app/view/admin/index.php");
+                    header("Location: " . BASE_URL . "/app/control/DashboardController.php");
                 } else {
-                    header("Location: " . BASE_URL . "/app/view/cliente/tela_inicial.php");
+                    header("Location: " . BASE_URL . "/app/control/ClienteController.php?acao=tela_inicial");
                 }
                 exit;
             } else {
                 $_SESSION['erro'] = "Email ou senha incorretos.";
-                header("Location: " . BASE_URL . "/app/view/login.php");
+                header("Location: " . BASE_URL . "/app/control/LoginController.php");
                 exit;
             }
         }
@@ -79,35 +79,35 @@ class AuthController
             // Validações básicas
             if (empty($nome) || empty($cpf) || empty($email) || empty($senha)) {
                 $_SESSION['erro'] = "Por favor, preencha todos os campos obrigatórios.";
-                header("Location: " . BASE_URL . "/app/view/cadastro.php");
+                header("Location: " . BASE_URL . "/app/control/CadastroController.php");
                 exit;
             }
 
             // Valida CPF (deve ter 11 dígitos)
             if (strlen($cpf) !== 11) {
                 $_SESSION['erro'] = "CPF deve conter 11 dígitos.";
-                header("Location: " . BASE_URL . "/app/view/cadastro.php");
+                header("Location: " . BASE_URL . "/app/control/CadastroController.php");
                 exit;
             }
 
             // Valida senha (mínimo 6 caracteres)
             if (strlen($senha) < 6) {
                 $_SESSION['erro'] = "A senha deve ter no mínimo 6 caracteres.";
-                header("Location: " . BASE_URL . "/app/view/cadastro.php");
+                header("Location: " . BASE_URL . "/app/control/CadastroController.php");
                 exit;
             }
 
             // Verifica se email já existe
             if ($this->usuarioModel->emailExiste($email)) {
                 $_SESSION['erro'] = "Este email já está cadastrado.";
-                header("Location: " . BASE_URL . "/app/view/cadastro.php");
+                header("Location: " . BASE_URL . "/app/control/CadastroController.php");
                 exit;
             }
 
             // Verifica se CPF já existe
             if ($this->usuarioModel->cpfExiste($cpf)) {
                 $_SESSION['erro'] = "Este CPF já está cadastrado.";
-                header("Location: " . BASE_URL . "/app/view/cadastro.php");
+                header("Location: " . BASE_URL . "/app/control/CadastroController.php");
                 exit;
             }
 
@@ -116,11 +116,11 @@ class AuthController
 
             if ($idUsuario) {
                 $_SESSION['sucesso'] = "Cadastro realizado com sucesso! Faça login para continuar.";
-                header("Location: " . BASE_URL . "/app/view/login.php");
+                header("Location: " . BASE_URL . "/app/control/LoginController.php");
                 exit;
             } else {
                 $_SESSION['erro'] = "Erro ao realizar cadastro. Tente novamente.";
-                header("Location: " . BASE_URL . "/app/view/cadastro.php");
+                header("Location: " . BASE_URL . "/app/control/CadastroController.php");
                 exit;
             }
         }
@@ -138,7 +138,7 @@ class AuthController
         session_destroy();
 
         // Redireciona para login
-        header("Location: " . BASE_URL . "/app/view/login.php");
+        header("Location: " . BASE_URL . "/app/control/LoginController.php");
         exit;
     }
 
@@ -184,12 +184,12 @@ class AuthController
     public static function protegerAdmin()
     {
         if (!self::verificarLogin()) {
-            header("Location: " . BASE_URL . "/app/view/login.php");
+            header("Location: " . BASE_URL . "/app/control/LoginController.php");
             exit;
         }
 
         if (!self::verificarAdmin()) {
-            header("Location: " . BASE_URL . "/app/view/cliente/tela_inicial.php");
+            header("Location: " . BASE_URL . "/app/control/ClienteController.php?acao=tela_inicial");
             exit;
         }
     }
@@ -200,12 +200,12 @@ class AuthController
     public static function protegerCliente()
     {
         if (!self::verificarLogin()) {
-            header("Location: " . BASE_URL . "/app/view/login.php");
+            header("Location: " . BASE_URL . "/app/control/LoginController.php");
             exit;
         }
 
         if (!self::verificarCliente()) {
-            header("Location: " . BASE_URL . "/app/view/admin/index.php");
+            header("Location: " . BASE_URL . "/app/control/DashboardController.php");
             exit;
         }
     }
@@ -220,7 +220,7 @@ class AuthController
         // Verifica se o usuário está logado e é cliente
         if (!self::verificarLogin() || !self::verificarCliente()) {
             $_SESSION['erro'] = "Acesso negado.";
-            header("Location: " . BASE_URL . "/app/view/login.php");
+            header("Location: " . BASE_URL . "/app/control/LoginController.php");
             exit;
         }
 
@@ -228,7 +228,7 @@ class AuthController
 
         if (!$idUsuario) {
             $_SESSION['erro'] = "Erro ao identificar usuário.";
-            header("Location: " . BASE_URL . "/app/view/cliente/conta.php");
+            header("Location: " . BASE_URL . "/app/control/ClienteController.php?acao=conta");
             exit;
         }
 
@@ -240,13 +240,12 @@ class AuthController
             session_unset();
             session_destroy();
 
-            // Redireciona para tela inicial como solicitado
-            // Como a tela inicial está protegida, o sistema redirecionará automaticamente para login
-            header("Location: " . BASE_URL . "/app/view/cliente/tela_inicial.php");
+            // Redireciona para login
+            header("Location: " . BASE_URL . "/app/control/LoginController.php");
             exit;
         } else {
             $_SESSION['erro'] = "Erro ao excluir conta. Tente novamente.";
-            header("Location: " . BASE_URL . "/app/view/cliente/conta.php");
+            header("Location: " . BASE_URL . "/app/control/ClienteController.php?acao=conta");
             exit;
         }
     }

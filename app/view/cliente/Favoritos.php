@@ -1,4 +1,4 @@
-<?php include_once "../Cabecalho.php"; ?>
+<?php include_once __DIR__ . "/../Cabecalho.php"; ?>
 
 <main class="principal">
     <section class="banner">
@@ -8,7 +8,7 @@
 
             <ul class="navegacao">
                 <li class="item_navegacao">
-                    <a href="<?= BASE_URL ?>/app/view/cliente/tela_inicial.php">Início</a>
+                    <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=tela_inicial">Início</a>
 
                 <li class="item_navegacao">Favoritos</li>
                 </li>
@@ -33,7 +33,7 @@
 
                         <div>
                             <h3 class="carrinho_titulo">
-                                <a href="<?= BASE_URL ?>/app/view/cliente/detalhes_produtos.php">Nome do Produto</a>
+                                <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos">Nome do Produto</a>
                             </h3>
 
                             <span class="preco_carrinho">R$ 200,00</span>
@@ -50,7 +50,7 @@
                     </td>
 
                     <td class="acoes_coluna">
-                        <a href="<?= BASE_URL ?>/app/view/cliente/detalhes_produtos.php" class="btn btn-dark favoritos_btn">Adicionar ao carrinho</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos" class="btn btn-dark favoritos_btn">Adicionar ao carrinho</a>
                         <button class="remover_btn">&times;</button>
                     </td>
                 </tr>
@@ -62,7 +62,7 @@
 
                         <div>
                             <h3 class="carrinho_titulo">
-                                <a href="<?= BASE_URL ?>/app/view/cliente/detalhes_produtos.php">Nome do Produto</a>
+                                <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos">Nome do Produto</a>
                             </h3>
 
                             <span class="preco_carrinho">R$ 200,00</span>
@@ -79,7 +79,7 @@
                     </td>
 
                     <td class="acoes_coluna">
-                        <a href="<?= BASE_URL ?>/app/view/cliente/detalhes_produtos.php" class="btn btn-dark favoritos_btn">Adicionar ao carrinho</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos" class="btn btn-dark favoritos_btn">Adicionar ao carrinho</a>
                         <button class="remover_btn">&times;</button>
                     </td>
                 </tr>
@@ -91,7 +91,7 @@
 
                         <div>
                             <h3 class="carrinho_titulo">
-                                <a href="<?= BASE_URL ?>/app/view/cliente/detalhes_produtos.php">Nome do Produto</a>
+                                <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos">Nome do Produto</a>
                             </h3>
 
                             <span class="preco_carrinho">R$ 200,00</span>
@@ -108,7 +108,7 @@
                     </td>
 
                     <td class="acoes_coluna">
-                        <a href="<?= BASE_URL ?>/app/view/cliente/detalhes_produtos.php" class="btn btn-dark favoritos_btn">Adicionar ao carrinho</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos" class="btn btn-dark favoritos_btn">Adicionar ao carrinho</a>
                         <button class="remover_btn">&times;</button>
                     </td>
                 </tr>
@@ -117,4 +117,4 @@
     </section>
 </main>
 
-<?php include_once "../rodape.php"; ?>
+<?php include_once __DIR__ . "/../Rodape.php"; ?>

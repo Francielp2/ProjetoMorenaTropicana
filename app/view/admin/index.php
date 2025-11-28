@@ -1,27 +1,19 @@
 <?php
-require_once __DIR__ . "/../../control/DashboardController.php";
+// Esta view recebe apenas variáveis prontas do controller
+// $titulo_pagina - título da página
+// $totalUsuarios - total de usuários
+// $totalProdutos - total de produtos
+// $pedidosPendentes - total de pedidos pendentes
+// $totalEstoque - total de itens em estoque
+// $receitaFormatada - receita formatada (ex: "R$ 1.234,56")
+// $totalVendas - total de vendas
 
-$titulo_pagina = "Dashboard";
 include_once "admin_header.php";
-
-// Instancia o controller do dashboard
-$dashboardController = new DashboardController();
-
-// Busca todas as estatísticas através do controller
-$estatisticas = $dashboardController->getEstatisticas();
-
-// Extrai as variáveis do array para facilitar o uso na view
-$totalUsuarios = $estatisticas['totalUsuarios'];
-$totalProdutos = $estatisticas['totalProdutos'];
-$pedidosPendentes = $estatisticas['pedidosPendentes'];
-$totalEstoque = $estatisticas['totalEstoque'];
-$receitaFormatada = $estatisticas['receitaFormatada'];
-$totalVendas = $estatisticas['totalVendas'];
 ?>
 
 <!-- Grade de Cards do Dashboard -->
 <div class="admin-dashboard-grid-3x2">
-    <a href="<?= BASE_URL ?>/app/view/admin/usuarios.php" class="admin-dashboard-card">
+    <a href="<?= BASE_URL ?>/app/control/AdminController.php?acao=usuarios" class="admin-dashboard-card">
         <div class="admin-dashboard-card-icon primary">
             <i class="ri-user-line"></i>
         </div>
@@ -36,7 +28,7 @@ $totalVendas = $estatisticas['totalVendas'];
         </div>
     </a>
 
-    <a href="<?= BASE_URL ?>/app/view/admin/produtos.php" class="admin-dashboard-card">
+    <a href="<?= BASE_URL ?>/app/control/AdminController.php?acao=produtos" class="admin-dashboard-card">
         <div class="admin-dashboard-card-icon success">
             <i class="ri-shopping-bag-line"></i>
         </div>
@@ -51,7 +43,7 @@ $totalVendas = $estatisticas['totalVendas'];
         </div>
     </a>
 
-    <a href="<?= BASE_URL ?>/app/view/admin/pedidos.php" class="admin-dashboard-card">
+    <a href="<?= BASE_URL ?>/app/control/AdminController.php?acao=pedidos" class="admin-dashboard-card">
         <div class="admin-dashboard-card-icon warning">
             <i class="ri-shopping-cart-line"></i>
         </div>
@@ -66,7 +58,7 @@ $totalVendas = $estatisticas['totalVendas'];
         </div>
     </a>
 
-    <a href="<?= BASE_URL ?>/app/view/admin/estoque.php" class="admin-dashboard-card">
+    <a href="<?= BASE_URL ?>/app/control/AdminController.php?acao=estoque" class="admin-dashboard-card">
         <div class="admin-dashboard-card-icon info">
             <i class="ri-stack-line"></i>
         </div>
@@ -81,7 +73,7 @@ $totalVendas = $estatisticas['totalVendas'];
         </div>
     </a>
 
-    <a href="<?= BASE_URL ?>/app/view/admin/pedidos.php" class="admin-dashboard-card">
+    <a href="<?= BASE_URL ?>/app/control/AdminController.php?acao=pedidos" class="admin-dashboard-card">
         <div class="admin-dashboard-card-icon primary">
             <i class="ri-money-dollar-circle-line"></i>
         </div>
@@ -96,7 +88,7 @@ $totalVendas = $estatisticas['totalVendas'];
         </div>
     </a>
 
-    <a href="<?= BASE_URL ?>/app/view/admin/pedidos.php" class="admin-dashboard-card">
+    <a href="<?= BASE_URL ?>/app/control/AdminController.php?acao=pedidos" class="admin-dashboard-card">
         <div class="admin-dashboard-card-icon success">
             <i class="ri-line-chart-line"></i>
         </div>
@@ -116,7 +108,7 @@ $totalVendas = $estatisticas['totalVendas'];
 <div class="admin-content-card">
     <div class="admin-card-header">
         <h2 class="admin-card-title">Pedidos Recentes</h2>
-        <a href="<?= BASE_URL ?>/app/view/admin/pedidos.php" class="admin-btn admin-btn-secondary admin-btn-sm">
+        <a href="<?= BASE_URL ?>/app/control/AdminController.php?acao=pedidos" class="admin-btn admin-btn-secondary admin-btn-sm">
             Ver Todos
             <i class="ri-arrow-right-line"></i>
         </a>
@@ -198,7 +190,7 @@ $totalVendas = $estatisticas['totalVendas'];
 <div class="admin-content-card">
     <div class="admin-card-header">
         <h2 class="admin-card-title">Produtos com Baixo Estoque</h2>
-        <a href="<?= BASE_URL ?>/app/view/admin/estoque.php" class="admin-btn admin-btn-secondary admin-btn-sm">
+        <a href="<?= BASE_URL ?>/app/control/AdminController.php?acao=estoque" class="admin-btn admin-btn-secondary admin-btn-sm">
             Ver Estoque Completo
             <i class="ri-arrow-right-line"></i>
         </a>

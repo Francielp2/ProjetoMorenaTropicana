@@ -1,139 +1,20 @@
 <?php
-require_once __DIR__ . "/../../config/config.php";
-require_once __DIR__ . "/../../control/AuthController.php";
+// Esta view recebe apenas variáveis prontas do controller
+// $mensagem - mensagem de sucesso/erro
+// $tipoMensagem - tipo da mensagem ('sucesso' ou 'erro')
+// $nome - nome do cliente
+// $email - email do cliente
+// $cpfFormatado - CPF formatado (XXX.XXX.XXX-XX)
+// $telefone - telefone sem formatação (para o input)
+// $telefoneFormatado - telefone formatado (para exibição)
+// $rua - rua do endereço
+// $numero - número do endereço
+// $bairro - bairro do endereço
+// $cepFormatado - CEP formatado (XXXXX-XXX)
+// $estado - estado (UF)
+// $complemento - complemento do endereço
 
-// Protege a rota - só cliente pode acessar
-//AuthController::protegerCliente();
-
-// Inicia sessão
-session_start();
-
-// Processa exclusão de conta se solicitado
-if (isset($_GET['excluir']) && $_GET['excluir'] === 'confirmar') {
-    $authController = new AuthController();
-    $authController->excluirConta();
-    exit; // O método excluirConta já faz o redirecionamento
-}
-
-// Processa atualização de dados pessoais
-$mensagem = '';
-$tipoMensagem = '';
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['atualizar_dados_pessoais'])) {
-    $nome = trim($_POST['nome_completo'] ?? '');
-    $telefone = preg_replace('/[^0-9]/', '', $_POST['telefone'] ?? '');
-
-    if (!empty($nome)) {
-        $usuarioModel = new UsuarioModel();
-        if ($usuarioModel->atualizarDadosPessoais($_SESSION['usuario_id'], $nome, $telefone)) {
-            $_SESSION['usuario_nome'] = $nome; // Atualiza sessão
-            $mensagem = "Dados pessoais atualizados com sucesso!";
-            $tipoMensagem = 'sucesso';
-        } else {
-            $mensagem = "Erro ao atualizar dados pessoais. Tente novamente.";
-            $tipoMensagem = 'erro';
-        }
-    } else {
-        $mensagem = "Nome é obrigatório.";
-        $tipoMensagem = 'erro';
-    }
-}
-
-// Processa atualização de endereço
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['atualizar_endereco'])) {
-    $rua = trim($_POST['rua'] ?? '');
-    $numero = trim($_POST['numero'] ?? '');
-    $bairro = trim($_POST['bairro'] ?? '');
-    $cep = trim($_POST['cep'] ?? '');
-    $estado = trim($_POST['estado'] ?? '');
-    $complemento = trim($_POST['complemento'] ?? '');
-
-    // Remove formatação do CEP para validação
-    $cepLimpo = preg_replace('/[^0-9]/', '', $cep);
-
-    if (empty($rua)) {
-        $mensagem = "O campo Rua é obrigatório.";
-        $tipoMensagem = 'erro';
-    } elseif (empty($cepLimpo) || strlen($cepLimpo) !== 8) {
-        $mensagem = "CEP inválido. Deve conter 8 dígitos.";
-        $tipoMensagem = 'erro';
-    } elseif (!empty($estado) && strlen($estado) > 2) {
-        $mensagem = "Estado deve conter no máximo 2 caracteres (UF).";
-        $tipoMensagem = 'erro';
-    } else {
-        $usuarioModel = new UsuarioModel();
-        if ($usuarioModel->salvarEndereco($_SESSION['usuario_id'], $rua, $numero, $bairro, $cep, $estado, $complemento)) {
-            $mensagem = "Endereço atualizado com sucesso!";
-            $tipoMensagem = 'sucesso';
-            // Recarrega os dados do endereço após salvar
-            $endereco = $usuarioModel->buscarEndereco($_SESSION['usuario_id']);
-            if ($endereco) {
-                $rua = $endereco['rua'] ?? '';
-                $numero = $endereco['numero'] ?? '';
-                $bairro = $endereco['bairro'] ?? '';
-                $cep = $endereco['cep'] ?? '';
-                $estado = $endereco['estado'] ?? '';
-                $complemento = $endereco['complemento'] ?? '';
-            }
-        } else {
-            // Mostra mensagem de erro mais detalhada para debug
-            $erroDetalhado = $_SESSION['erro_sql'] ?? '';
-            unset($_SESSION['erro_sql']);
-
-            if (!empty($erroDetalhado)) {
-                $mensagem = "Erro ao atualizar endereço: " . htmlspecialchars($erroDetalhado);
-            } else {
-                $mensagem = "Erro ao atualizar endereço. Verifique os dados e tente novamente.";
-            }
-            $tipoMensagem = 'erro';
-        }
-    }
-}
-
-// Busca dados completos do cliente
-$usuarioModel = new UsuarioModel();
-$dadosCliente = $usuarioModel->buscarDadosCliente($_SESSION['usuario_id']);
-
-// Se não encontrou os dados, usa os dados da sessão
-$nome = $dadosCliente['nome'] ?? $_SESSION['usuario_nome'] ?? '';
-$email = $dadosCliente['email'] ?? $_SESSION['usuario_email'] ?? '';
-$cpf = $dadosCliente['cpf'] ?? '';
-$telefone = $dadosCliente['telefone'] ?? '';
-
-// Busca endereço do cliente (só se não foi atualizado acima)
-if (!isset($endereco)) {
-    $endereco = $usuarioModel->buscarEndereco($_SESSION['usuario_id']);
-    $rua = $endereco['rua'] ?? '';
-    $numero = $endereco['numero'] ?? '';
-    $bairro = $endereco['bairro'] ?? '';
-    $cep = $endereco['cep'] ?? '';
-    $estado = $endereco['estado'] ?? '';
-    $complemento = $endereco['complemento'] ?? '';
-}
-
-// Formata CEP para exibição (XXXXX-XXX)
-$cepFormatado = $cep;
-if (!empty($cep) && strlen($cep) == 8) {
-    $cepFormatado = substr($cep, 0, 5) . '-' . substr($cep, 5, 3);
-}
-
-// Formata CPF para exibição (XXX.XXX.XXX-XX)
-$cpfFormatado = '';
-if (!empty($cpf) && strlen($cpf) == 11) {
-    $cpfFormatado = substr($cpf, 0, 3) . '.' . substr($cpf, 3, 3) . '.' . substr($cpf, 6, 3) . '-' . substr($cpf, 9, 2);
-}
-
-// Formata telefone para exibição
-$telefoneFormatado = '';
-if (!empty($telefone)) {
-    if (strlen($telefone) == 11) {
-        $telefoneFormatado = '+55 (' . substr($telefone, 0, 2) . ') ' . substr($telefone, 2, 5) . '-' . substr($telefone, 7, 4);
-    } else {
-        $telefoneFormatado = $telefone;
-    }
-}
-
-include_once "../Cabecalho.php";
+include_once __DIR__ . "/../Cabecalho.php";
 ?>
 
 <main class="principal">
@@ -143,7 +24,7 @@ include_once "../Cabecalho.php";
             <p class="descricao_banner">Veja suas informações pessoais e gerencie sua conta</p>
             <ul class="navegacao">
                 <li class="item_navegacao">
-                    <a href="<?= BASE_URL ?>/app/view/cliente/tela_inicial.php">Início</a>
+                    <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=tela_inicial">Início</a>
                 </li>
                 <li class="item_navegacao">Minha Conta</li>
             </ul>
@@ -179,7 +60,7 @@ include_once "../Cabecalho.php";
                 <div class="aba_content">
                     <!-- Aba Informações Pessoais -->
                     <div class="item_aba aba_ativa" id="infopessoais">
-                        <form class="card_informacoes" id="form_info_pessoais" method="POST" action="">
+                        <form class="card_informacoes" id="form_info_pessoais" method="POST" action="<?= BASE_URL ?>/app/control/ClienteController.php?acao=conta">
                             <input type="hidden" name="atualizar_dados_pessoais" value="1">
                             <h2 class="titulo_secao">Informações Pessoais</h2>
 
@@ -218,7 +99,7 @@ include_once "../Cabecalho.php";
 
                     <!-- Aba Endereço -->
                     <div class="item_aba" id="endereco">
-                        <form class="card_informacoes" id="form_endereco" method="POST" action="">
+                        <form class="card_informacoes" id="form_endereco" method="POST" action="<?= BASE_URL ?>/app/control/ClienteController.php?acao=conta">
                             <input type="hidden" name="atualizar_endereco" value="1">
                             <h2 class="titulo_secao">Endereço de Entrega</h2>
 
@@ -274,7 +155,7 @@ include_once "../Cabecalho.php";
             <!-- Botão de Excluir Conta -->
             <div class="card_informacoes">
                 <div class="card_acoes">
-                    <a href="<?= BASE_URL ?>/app/view/logout.php" class="botao_acao btn" style="text-decoration: none; display: inline-block;">
+                    <a href="<?= BASE_URL ?>/app/control/LogoutController.php" class="botao_acao btn" style="text-decoration: none; display: inline-block;">
                         <i class="ri-logout-box-line"></i>
                         Sair da sua conta
                     </a>
@@ -321,7 +202,7 @@ include_once "../Cabecalho.php";
         if (confirm('Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.')) {
             if (confirm('ATENÇÃO: Todos os seus dados serão perdidos permanentemente. Confirma a exclusão?')) {
                 // Redireciona para a própria página com parâmetro de exclusão
-                window.location.href = '<?= BASE_URL ?>/app/view/cliente/conta.php?excluir=confirmar';
+                window.location.href = '<?= BASE_URL ?>/app/control/ClienteController.php?acao=conta&excluir=confirmar';
             }
         }
     }
@@ -355,4 +236,4 @@ include_once "../Cabecalho.php";
     }
 </script>
 
-<?php include_once "../rodape.php"; ?>
+<?php include_once __DIR__ . "/../Rodape.php"; ?>

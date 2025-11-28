@@ -1,4 +1,4 @@
-<?php include_once "../Cabecalho.php"; ?>
+<?php include_once __DIR__ . "/../Cabecalho.php"; ?>
 
 <main class="principal">
     <section class="inicio">
@@ -20,7 +20,7 @@
                             Roupas que unem elegância, conforto e autenticidade para realçar sua verdadeira essência.
                         </p>
 
-                        <a href="<?= BASE_URL ?>/app/view/cliente/PaginaProdutos.php" class="btn">Compre Agora</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=produtos" class="btn">Compre Agora</a>
 
                     </div>
                 </div>
@@ -41,7 +41,7 @@
                             Roupas que unem elegância, conforto e autenticidade para realçar sua verdadeira essência.
                         </p>
 
-                        <a href="<?= BASE_URL ?>/app/view/cliente/PaginaProdutos.php" class="btn">Compre Agora</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=produtos" class="btn">Compre Agora</a>
 
                     </div>
                 </div>
@@ -57,8 +57,6 @@
 
 <?php include_once "funcionalidades.php" ?>
 
-<?php include_once "boletin-informativo.php"?>
+<?php include_once "boletin-informativo.php" ?>
 
-<?php include_once "../rodape.php"; ?>
-
-
+<?php include_once __DIR__ . "/../Rodape.php"; ?>
