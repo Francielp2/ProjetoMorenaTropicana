@@ -1,6 +1,22 @@
 <?php
+require_once __DIR__ . "/../../control/DashboardController.php";
+
 $titulo_pagina = "Dashboard";
 include_once "admin_header.php";
+
+// Instancia o controller do dashboard
+$dashboardController = new DashboardController();
+
+// Busca todas as estatísticas através do controller
+$estatisticas = $dashboardController->getEstatisticas();
+
+// Extrai as variáveis do array para facilitar o uso na view
+$totalUsuarios = $estatisticas['totalUsuarios'];
+$totalProdutos = $estatisticas['totalProdutos'];
+$pedidosPendentes = $estatisticas['pedidosPendentes'];
+$totalEstoque = $estatisticas['totalEstoque'];
+$receitaFormatada = $estatisticas['receitaFormatada'];
+$totalVendas = $estatisticas['totalVendas'];
 ?>
 
 <!-- Grade de Cards do Dashboard -->
@@ -11,7 +27,7 @@ include_once "admin_header.php";
         </div>
         <div class="admin-dashboard-card-content">
             <h3 class="admin-dashboard-card-title">Usuários</h3>
-            <div class="admin-dashboard-card-value">1.234</div>
+            <div class="admin-dashboard-card-value"><?= number_format($totalUsuarios, 0, ',', '.') ?></div>
             <p class="admin-dashboard-card-label">Total de usuários cadastrados</p>
             <div class="admin-dashboard-card-footer">
                 <span>Ver detalhes</span>
@@ -26,7 +42,7 @@ include_once "admin_header.php";
         </div>
         <div class="admin-dashboard-card-content">
             <h3 class="admin-dashboard-card-title">Produtos</h3>
-            <div class="admin-dashboard-card-value">856</div>
+            <div class="admin-dashboard-card-value"><?= number_format($totalProdutos, 0, ',', '.') ?></div>
             <p class="admin-dashboard-card-label">Total de produtos cadastrados</p>
             <div class="admin-dashboard-card-footer">
                 <span>Ver detalhes</span>
@@ -41,7 +57,7 @@ include_once "admin_header.php";
         </div>
         <div class="admin-dashboard-card-content">
             <h3 class="admin-dashboard-card-title">Pedidos</h3>
-            <div class="admin-dashboard-card-value">342</div>
+            <div class="admin-dashboard-card-value"><?= number_format($pedidosPendentes, 0, ',', '.') ?></div>
             <p class="admin-dashboard-card-label">Pedidos pendentes</p>
             <div class="admin-dashboard-card-footer">
                 <span>Ver detalhes</span>
@@ -56,7 +72,7 @@ include_once "admin_header.php";
         </div>
         <div class="admin-dashboard-card-content">
             <h3 class="admin-dashboard-card-title">Estoque</h3>
-            <div class="admin-dashboard-card-value">52</div>
+            <div class="admin-dashboard-card-value"><?= number_format($totalEstoque, 0, ',', '.') ?></div>
             <p class="admin-dashboard-card-label">Itens em estoque</p>
             <div class="admin-dashboard-card-footer">
                 <span>Ver detalhes</span>
@@ -71,7 +87,7 @@ include_once "admin_header.php";
         </div>
         <div class="admin-dashboard-card-content">
             <h3 class="admin-dashboard-card-title">Receita</h3>
-            <div class="admin-dashboard-card-value">R$ 45.678</div>
+            <div class="admin-dashboard-card-value"><?= $receitaFormatada ?></div>
             <p class="admin-dashboard-card-label">Receita do mês atual</p>
             <div class="admin-dashboard-card-footer">
                 <span>Ver detalhes</span>
@@ -86,7 +102,7 @@ include_once "admin_header.php";
         </div>
         <div class="admin-dashboard-card-content">
             <h3 class="admin-dashboard-card-title">Vendas</h3>
-            <div class="admin-dashboard-card-value">1.089</div>
+            <div class="admin-dashboard-card-value"><?= number_format($totalVendas, 0, ',', '.') ?></div>
             <p class="admin-dashboard-card-label">Total de vendas realizadas</p>
             <div class="admin-dashboard-card-footer">
                 <span>Ver detalhes</span>

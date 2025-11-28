@@ -1,7 +1,6 @@
 <?php
 require_once __DIR__ . "/../../config/config.php";
 require_once __DIR__ . "/../../control/AuthController.php";
-require_once __DIR__ . "/../../model/UsuarioModel.php";
 
 // Protege a rota - só cliente pode acessar
 //AuthController::protegerCliente();
@@ -204,7 +203,7 @@ include_once "../Cabecalho.php";
 
                                 <div class="campo_info">
                                     <label class="label_info" for="telefone">Telefone</label>
-                                    <input type="tel" id="telefone" name="telefone" class="valor_info" value="<?= htmlspecialchars($telefone ?: '') ?>" placeholder="Ex: 77981234165" maxlength="11">
+                                    <input type="tel" id="telefone" name="telefone" class="valor_info" value="<?= htmlspecialchars($telefone ?: '') ?>" placeholder="Ex: 99999999999" maxlength="11">
                                 </div>
                             </div>
 

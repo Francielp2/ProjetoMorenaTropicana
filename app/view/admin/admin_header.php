@@ -1,4 +1,4 @@
-<?php 
+<?php
 require_once __DIR__ . "/../../config/config.php";
 require_once __DIR__ . "/../../control/AuthController.php";
 
@@ -12,11 +12,17 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-$nomeUsuario = $_SESSION['usuario_nome'] ?? 'Administrador';
+
+$nomeUsuario = $_SESSION['usuario_nome'] ?? null;
+if ($nomeUsuario === null) {
+    $nomeUsuario = 'Administrador';
+}
+
 ?>
 
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,6 +31,7 @@ $nomeUsuario = $_SESSION['usuario_nome'] ?? 'Administrador';
     <link rel="stylesheet" href="<?= BASE_URL ?>/public/assets/css/adm.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.7.0/fonts/remixicon.css" rel="stylesheet" />
 </head>
+
 <body class="admin-body">
     <div class="admin-container">
         <aside class="admin-sidebar">
@@ -33,7 +40,7 @@ $nomeUsuario = $_SESSION['usuario_nome'] ?? 'Administrador';
                     <img src="<?= BASE_URL ?>/public/assets/image/logo.png" alt="Logo Morena Tropicana">
                     <span class="admin-logo-text">Morena Tropicana</span>
                 </div>
-                
+
                 <nav>
                     <ul class="admin-menu">
                         <li class="admin-menu-item">
@@ -69,7 +76,7 @@ $nomeUsuario = $_SESSION['usuario_nome'] ?? 'Administrador';
                     </ul>
                 </nav>
             </div>
-            
+
             <div class="admin-menu-logout">
                 <a href="<?= BASE_URL ?>/app/view/logout.php" class="admin-menu-link admin-menu-logout-link">
                     <i class="ri-logout-box-line"></i>
@@ -88,4 +95,3 @@ $nomeUsuario = $_SESSION['usuario_nome'] ?? 'Administrador';
                     </div>
                 </div>
             </div>
-
