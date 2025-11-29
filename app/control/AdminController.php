@@ -491,6 +491,19 @@ class AdminController
             }
         }
 
+        // Verifica se não está tentando mudar sua própria permissão
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        $usuarioLogadoId = $_SESSION['usuario_id'] ?? null;
+        if ($idUsuario == $usuarioLogadoId && $usuarioAtual) {
+            // Se o usuário atual é ADMIN e está tentando mudar para CLIENTE, impede
+            if ($usuarioAtual['permissao'] === 'ADMIN' && $tipo === 'CLIENTE') {
+                header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('Você não pode alterar sua própria permissão de administrador'));
+                exit;
+            }
+        }
+
         // Atualiza o usuário
         $senhaParaAtualizar = !empty($senha) ? $senha : null;
         $resultado = $this->usuarioModel->atualizarUsuario(

@@ -251,10 +251,22 @@ $usuarioVisualizacao = $usuarioVisualizacao ?? null;
                             </div>
                             <div class="admin-form-group" style="margin: 0; flex: 1;">
                                 <label class="admin-form-label">Tipo de Usuário</label>
-                                <select class="admin-form-select" name="tipo" required>
+                                <?php
+                                // Verifica se o usuário está editando a si mesmo
+                                if (session_status() === PHP_SESSION_NONE) {
+                                    session_start();
+                                }
+                                $usuarioLogadoId = $_SESSION['usuario_id'] ?? null;
+                                $editandoProprioUsuario = ($usuarioLogadoId == $usuarioEdicao['id'] && $usuarioEdicao['tipo'] === 'ADMIN');
+                                ?>
+                                <select class="admin-form-select" name="tipo" required <?= $editandoProprioUsuario ? 'disabled' : '' ?>>
                                     <option value="CLIENTE" <?= $usuarioEdicao['tipo'] === 'CLIENTE' ? 'selected' : '' ?>>Cliente</option>
                                     <option value="ADMIN" <?= $usuarioEdicao['tipo'] === 'ADMIN' ? 'selected' : '' ?>>Administrador</option>
                                 </select>
+                                <?php if ($editandoProprioUsuario): ?>
+                                    <input type="hidden" name="tipo" value="ADMIN">
+                                    <small style="color: #666; font-size: 0.85em; margin-top: 0.25rem; display: block;">Você não pode alterar sua própria permissão de administrador</small>
+                                <?php endif; ?>
                             </div>
                         </div>
 
