@@ -55,7 +55,21 @@ class AuthController
                 }
                 exit;
             } else {
-                $_SESSION['erro'] = "Email ou senha incorretos.";
+                // Verifica se o email existe e se a conta está suspensa
+                $usuarioPorEmail = $this->usuarioModel->buscarPorEmail($email);
+
+                if ($usuarioPorEmail && $usuarioPorEmail['permissao'] === 'CLIENTE') {
+                    $clienteAtivo = $this->usuarioModel->verificarClienteAtivo($usuarioPorEmail['id_usuario']);
+
+                    if (!$clienteAtivo) {
+                        $_SESSION['erro'] = "Sua conta está suspensa. Entre em contato com o suporte: morenatropicana.official@gmail.com .";
+                    } else {
+                        $_SESSION['erro'] = "Email ou senha incorretos.";
+                    }
+                } else {
+                    $_SESSION['erro'] = "Email ou senha incorretos.";
+                }
+
                 header("Location: " . BASE_URL . "/app/control/LoginController.php");
                 exit;
             }

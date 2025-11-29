@@ -21,7 +21,7 @@ CREATE TABLE Administrador (
 CREATE TABLE Cliente (
     id_usuario INT PRIMARY KEY,
     telefone VARCHAR(11),
-    status ENUM('Ativo', 'Inativo', 'Suspenso', 'Cancelado','Pendente') DEFAULT 'Ativo',
+    status ENUM('Ativo','Suspenso') DEFAULT 'Ativo',
     FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario)
         ON DELETE CASCADE
         ON UPDATE CASCADE

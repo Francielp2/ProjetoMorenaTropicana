@@ -1,5 +1,8 @@
 <?php
-$titulo_pagina = "Gerenciamento de Usuários";
+// Esta view recebe apenas variáveis prontas do controller
+// $titulo_pagina - título da página
+// $usuariosFormatados - array com todos os usuários formatados
+
 include_once "admin_header.php";
 ?>
 
@@ -14,18 +17,20 @@ include_once "admin_header.php";
 
     <!-- Barra de Busca e Filtros -->
     <div class="admin-search-bar">
-        <input type="text" class="admin-search-input" placeholder="Buscar por nome, email ou CPF...">
-        <select class="admin-filter-select">
+        <input type="text" id="inputPesquisa" class="admin-search-input" placeholder="Buscar por nome ou email..." onkeypress="if(event.key === 'Enter') pesquisarUsuarios()">
+        <button class="admin-btn admin-btn-primary" onclick="pesquisarUsuarios()" style="min-width: 120px;">
+            <i class="ri-search-line"></i>
+            Pesquisar
+        </button>
+        <select class="admin-filter-select" id="filtroStatus" onchange="aplicarFiltros()">
             <option value="">Todos os Status</option>
-            <option value="ativo">Ativo</option>
-            <option value="inativo">Inativo</option>
-            <option value="suspenso">Suspenso</option>
-            <option value="cancelado">Cancelado</option>
+            <option value="Ativo">Ativo</option>
+            <option value="Suspenso">Suspenso</option>
         </select>
-        <select class="admin-filter-select">
+        <select class="admin-filter-select" id="filtroTipo" onchange="aplicarFiltros()">
             <option value="">Todos os Tipos</option>
-            <option value="cliente">Cliente</option>
-            <option value="admin">Administrador</option>
+            <option value="CLIENTE">Cliente</option>
+            <option value="ADMIN">Administrador</option>
         </select>
     </div>
 
@@ -41,112 +46,38 @@ include_once "admin_header.php";
                 <th>Ações</th>
             </tr>
         </thead>
-        <tbody>
-            <tr>
-                <td>1</td>
-                <td>Maria Silva</td>
-                <td>maria.silva@email.com</td>
-                <td>123.456.789-00</td>
-                <td><span class="admin-badge admin-badge-info">Cliente</span></td>
-                <td><span class="admin-badge admin-badge-success">Ativo</span></td>
-                <td>
-                    <div class="admin-table-actions">
-                        <button class="admin-btn admin-btn-icon admin-btn-secondary" title="Visualizar" onclick="visualizarUsuario(1)">
-                            <i class="ri-eye-line"></i>
-                        </button>
-                        <button class="admin-btn admin-btn-icon admin-btn-primary" title="Editar" onclick="editarUsuario(1)">
-                            <i class="ri-edit-line"></i>
-                        </button>
-                        <button class="admin-btn admin-btn-icon admin-btn-danger" title="Excluir" onclick="excluirUsuario(1)">
-                            <i class="ri-delete-bin-line"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td>2</td>
-                <td>Ana Costa</td>
-                <td>ana.costa@email.com</td>
-                <td>987.654.321-00</td>
-                <td><span class="admin-badge admin-badge-info">Cliente</span></td>
-                <td><span class="admin-badge admin-badge-success">Ativo</span></td>
-                <td>
-                    <div class="admin-table-actions">
-                        <button class="admin-btn admin-btn-icon admin-btn-secondary" title="Visualizar" onclick="visualizarUsuario(2)">
-                            <i class="ri-eye-line"></i>
-                        </button>
-                        <button class="admin-btn admin-btn-icon admin-btn-primary" title="Editar" onclick="editarUsuario(2)">
-                            <i class="ri-edit-line"></i>
-                        </button>
-                        <button class="admin-btn admin-btn-icon admin-btn-danger" title="Excluir" onclick="excluirUsuario(2)">
-                            <i class="ri-delete-bin-line"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td>3</td>
-                <td>João Administrador</td>
-                <td>joao.admin@email.com</td>
-                <td>111.222.333-44</td>
-                <td><span class="admin-badge admin-badge-primary">Admin</span></td>
-                <td><span class="admin-badge admin-badge-success">Ativo</span></td>
-                <td>
-                    <div class="admin-table-actions">
-                        <button class="admin-btn admin-btn-icon admin-btn-secondary" title="Visualizar" onclick="visualizarUsuario(3)">
-                            <i class="ri-eye-line"></i>
-                        </button>
-                        <button class="admin-btn admin-btn-icon admin-btn-primary" title="Editar" onclick="editarUsuario(3)">
-                            <i class="ri-edit-line"></i>
-                        </button>
-                        <button class="admin-btn admin-btn-icon admin-btn-danger" title="Excluir" onclick="excluirUsuario(3)">
-                            <i class="ri-delete-bin-line"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td>4</td>
-                <td>Paula Oliveira</td>
-                <td>paula.oliveira@email.com</td>
-                <td>555.666.777-88</td>
-                <td><span class="admin-badge admin-badge-info">Cliente</span></td>
-                <td><span class="admin-badge admin-badge-warning">Suspenso</span></td>
-                <td>
-                    <div class="admin-table-actions">
-                        <button class="admin-btn admin-btn-icon admin-btn-secondary" title="Visualizar" onclick="visualizarUsuario(4)">
-                            <i class="ri-eye-line"></i>
-                        </button>
-                        <button class="admin-btn admin-btn-icon admin-btn-primary" title="Editar" onclick="editarUsuario(4)">
-                            <i class="ri-edit-line"></i>
-                        </button>
-                        <button class="admin-btn admin-btn-icon admin-btn-danger" title="Excluir" onclick="excluirUsuario(4)">
-                            <i class="ri-delete-bin-line"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td>5</td>
-                <td>Carlos Santos</td>
-                <td>carlos.santos@email.com</td>
-                <td>999.888.777-66</td>
-                <td><span class="admin-badge admin-badge-info">Cliente</span></td>
-                <td><span class="admin-badge admin-badge-danger">Inativo</span></td>
-                <td>
-                    <div class="admin-table-actions">
-                        <button class="admin-btn admin-btn-icon admin-btn-secondary" title="Visualizar" onclick="visualizarUsuario(5)">
-                            <i class="ri-eye-line"></i>
-                        </button>
-                        <button class="admin-btn admin-btn-icon admin-btn-primary" title="Editar" onclick="editarUsuario(5)">
-                            <i class="ri-edit-line"></i>
-                        </button>
-                        <button class="admin-btn admin-btn-icon admin-btn-danger" title="Excluir" onclick="excluirUsuario(5)">
-                            <i class="ri-delete-bin-line"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
+        <tbody id="tbodyUsuarios">
+            <?php if (empty($usuariosFormatados)): ?>
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 20px; color: #666;">
+                        Nenhum usuário encontrado
+                    </td>
+                </tr>
+            <?php else: ?>
+                <?php foreach ($usuariosFormatados as $usuario): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($usuario['id']) ?></td>
+                        <td><?= htmlspecialchars($usuario['nome']) ?></td>
+                        <td><?= htmlspecialchars($usuario['email']) ?></td>
+                        <td><?= htmlspecialchars($usuario['cpf']) ?></td>
+                        <td><span class="admin-badge <?= htmlspecialchars($usuario['tipo_classe']) ?>"><?= htmlspecialchars($usuario['tipo']) ?></span></td>
+                        <td><span class="admin-badge <?= htmlspecialchars($usuario['status_classe']) ?>"><?= htmlspecialchars($usuario['status']) ?></span></td>
+                        <td>
+                            <div class="admin-table-actions">
+                                <button class="admin-btn admin-btn-icon admin-btn-secondary" title="Visualizar" onclick="visualizarUsuario(<?= $usuario['id'] ?>)">
+                                    <i class="ri-eye-line"></i>
+                                </button>
+                                <button class="admin-btn admin-btn-icon admin-btn-primary" title="Editar" onclick="editarUsuario(<?= $usuario['id'] ?>)">
+                                    <i class="ri-edit-line"></i>
+                                </button>
+                                <button class="admin-btn admin-btn-icon admin-btn-danger" title="Excluir" onclick="excluirUsuario(<?= $usuario['id'] ?>)">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </tbody>
     </table>
 </div>
@@ -154,7 +85,7 @@ include_once "admin_header.php";
 <script>
     function abrirModalCadastro() {
         const conteudo = `
-        <form class="admin-form" onsubmit="salvarUsuario(event)">
+        <form class="admin-form" id="formCadastroUsuario" onsubmit="salvarUsuario(event)">
             <div class="admin-form-group">
                 <label class="admin-form-label">Nome Completo</label>
                 <input type="text" class="admin-form-input" name="nome" required>
@@ -165,28 +96,31 @@ include_once "admin_header.php";
             </div>
             <div class="admin-form-group">
                 <label class="admin-form-label">CPF</label>
-                <input type="text" class="admin-form-input" name="cpf" required>
+                <input type="text" class="admin-form-input" name="cpf" placeholder="Apenas números (11 dígitos)" maxlength="11" required>
             </div>
             <div class="admin-form-row">
                 <div class="admin-form-group">
                     <label class="admin-form-label">Senha</label>
-                    <input type="password" class="admin-form-input" name="senha" required>
+                    <input type="password" class="admin-form-input" name="senha" minlength="6" required>
+                    <small style="color: #666; font-size: 0.9em;">Mínimo 6 caracteres</small>
                 </div>
                 <div class="admin-form-group">
                     <label class="admin-form-label">Tipo de Usuário</label>
-                    <select class="admin-form-select" name="tipo" required>
+                    <select class="admin-form-select" name="tipo" id="tipoUsuario" required onchange="atualizarCamposCadastro()">
                         <option value="CLIENTE">Cliente</option>
                         <option value="ADMIN">Administrador</option>
                     </select>
                 </div>
             </div>
-            <div class="admin-form-group">
+            <div class="admin-form-group" id="campoTelefone" style="display: block;">
+                <label class="admin-form-label">Telefone</label>
+                <input type="text" class="admin-form-input" name="telefone" placeholder="Apenas números (opcional)" maxlength="11">
+            </div>
+            <div class="admin-form-group" id="campoStatus" style="display: block;">
                 <label class="admin-form-label">Status</label>
                 <select class="admin-form-select" name="status" required>
                     <option value="Ativo">Ativo</option>
-                    <option value="Inativo">Inativo</option>
                     <option value="Suspenso">Suspenso</option>
-                    <option value="Cancelado">Cancelado</option>
                 </select>
             </div>
             <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
@@ -203,109 +137,409 @@ include_once "admin_header.php";
         abrirModal('Cadastrar Novo Usuário', conteudo);
     }
 
+    function atualizarCamposCadastro() {
+        const tipo = document.getElementById('tipoUsuario').value;
+        const campoTelefone = document.getElementById('campoTelefone');
+        const campoStatus = document.getElementById('campoStatus');
+
+        if (tipo === 'CLIENTE') {
+            campoTelefone.style.display = 'block';
+            campoStatus.style.display = 'block';
+        } else {
+            campoTelefone.style.display = 'none';
+            campoStatus.style.display = 'none';
+        }
+    }
+
     function editarUsuario(id) {
-        const conteudo = `
-        <form class="admin-form" onsubmit="atualizarUsuario(event, ${id})">
-            <div class="admin-form-group">
-                <label class="admin-form-label">Nome Completo</label>
-                <input type="text" class="admin-form-input" name="nome" value="Nome do Usuário ${id}" required>
-            </div>
-            <div class="admin-form-group">
-                <label class="admin-form-label">Email</label>
-                <input type="email" class="admin-form-input" name="email" value="usuario${id}@email.com" required>
-            </div>
-            <div class="admin-form-group">
-                <label class="admin-form-label">CPF</label>
-                <input type="text" class="admin-form-input" name="cpf" value="123.456.789-00" required>
-            </div>
-            <div class="admin-form-row">
-                <div class="admin-form-group">
-                    <label class="admin-form-label">Nova Senha (deixe em branco para manter)</label>
-                    <input type="password" class="admin-form-input" name="senha">
-                </div>
-                <div class="admin-form-group">
-                    <label class="admin-form-label">Tipo de Usuário</label>
-                    <select class="admin-form-select" name="tipo" required>
-                        <option value="CLIENTE">Cliente</option>
-                        <option value="ADMIN">Administrador</option>
-                    </select>
-                </div>
-            </div>
-            <div class="admin-form-group">
-                <label class="admin-form-label">Status</label>
-                <select class="admin-form-select" name="status" required>
-                    <option value="Ativo">Ativo</option>
-                    <option value="Inativo">Inativo</option>
-                    <option value="Suspenso">Suspenso</option>
-                    <option value="Cancelado">Cancelado</option>
-                </select>
-            </div>
-            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                <button type="submit" class="admin-btn admin-btn-primary" style="flex: 1;">
-                    <i class="ri-save-line"></i>
-                    Atualizar
-                </button>
-                <button type="button" class="admin-btn admin-btn-secondary" onclick="fecharModal()" style="flex: 1;">
-                    Cancelar
-                </button>
-            </div>
-        </form>
-    `;
-        abrirModal('Editar Usuário', conteudo);
+        // Mostra loading no modal
+        abrirModal('Editar Usuário', '<div style="text-align: center; padding: 20px;">Carregando dados...</div>');
+
+        // Busca dados reais do usuário
+        fetch('<?= BASE_URL ?>/app/control/AdminController.php?acao=buscarUsuario&id=' + id)
+            .then(response => response.json())
+            .then(data => {
+                if (data.erro) {
+                    abrirModal('Erro', '<div style="text-align: center; padding: 20px; color: #d32f2f;">' + data.erro + '</div>');
+                    return;
+                }
+
+                // Função para escapar HTML
+                function escapeHtml(text) {
+                    if (!text) return '';
+                    const div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
+                }
+
+                // Determina tipo selecionado
+                const tipoSelecionado = data.tipo === 'Administrador' ? 'ADMIN' : 'CLIENTE';
+                const tipoClienteSelected = tipoSelecionado === 'CLIENTE' ? 'selected' : '';
+                const tipoAdminSelected = tipoSelecionado === 'ADMIN' ? 'selected' : '';
+
+                // Monta opções de status
+                const statusOptions = ['Ativo', 'Suspenso'];
+                let statusOptionsHtml = '';
+                statusOptions.forEach(status => {
+                    const selected = data.status === status ? 'selected' : '';
+                    statusOptionsHtml += `<option value="${status}" ${selected}>${status}</option>`;
+                });
+
+                // Monta o formulário com os dados reais
+                const conteudo = `
+                    <form class="admin-form" onsubmit="atualizarUsuario(event, ${id})">
+                        <input type="hidden" name="id" value="${id}">
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Nome Completo</label>
+                            <input type="text" class="admin-form-input" name="nome" value="${escapeHtml(data.nome || '')}" required>
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Email</label>
+                            <input type="email" class="admin-form-input" name="email" value="${escapeHtml(data.email || '')}" required>
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">CPF</label>
+                            <input type="text" class="admin-form-input" value="${escapeHtml(data.cpf || '')}" readonly>
+                            <small style="color: #666; font-size: 0.9em;">O CPF não pode ser alterado</small>
+                        </div>
+                        ${tipoSelecionado === 'CLIENTE' ? `
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Telefone</label>
+                            <input type="text" class="admin-form-input" name="telefone" value="${escapeHtml((data.telefone || '').replace(/\D/g, ''))}" placeholder="Apenas números (opcional)" maxlength="11">
+                        </div>
+                        ` : ''}
+                        <div class="admin-form-row">
+                            <div class="admin-form-group">
+                                <label class="admin-form-label">Nova Senha (deixe em branco para manter)</label>
+                                <input type="password" class="admin-form-input" name="senha" placeholder="Deixe em branco para manter a senha atual">
+                            </div>
+                            <div class="admin-form-group">
+                                <label class="admin-form-label">Tipo de Usuário</label>
+                                <select class="admin-form-select" name="tipo" required>
+                                    <option value="CLIENTE" ${tipoClienteSelected}>Cliente</option>
+                                    <option value="ADMIN" ${tipoAdminSelected}>Administrador</option>
+                                </select>
+                            </div>
+                        </div>
+                        ${tipoSelecionado === 'CLIENTE' ? `
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Status</label>
+                            <select class="admin-form-select" name="status" required>
+                                ${statusOptionsHtml}
+                            </select>
+                        </div>
+                        ` : ''}
+                        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                            <button type="submit" class="admin-btn admin-btn-primary" style="flex: 1;">
+                                <i class="ri-save-line"></i>
+                                Atualizar
+                            </button>
+                            <button type="button" class="admin-btn admin-btn-secondary" onclick="fecharModal()" style="flex: 1;">
+                                Cancelar
+                            </button>
+                        </div>
+                    </form>
+                `;
+                abrirModal('Editar Usuário', conteudo);
+            })
+            .catch(error => {
+                abrirModal('Erro', '<div style="text-align: center; padding: 20px; color: #d32f2f;">Erro ao carregar dados do usuário.</div>');
+            });
     }
 
     function visualizarUsuario(id) {
-        const conteudo = `
-        <div class="admin-form">
-            <div class="admin-form-group">
-                <label class="admin-form-label">Nome Completo</label>
-                <input type="text" class="admin-form-input" value="Nome do Usuário ${id}" readonly>
-            </div>
-            <div class="admin-form-group">
-                <label class="admin-form-label">Email</label>
-                <input type="email" class="admin-form-input" value="usuario${id}@email.com" readonly>
-            </div>
-            <div class="admin-form-group">
-                <label class="admin-form-label">CPF</label>
-                <input type="text" class="admin-form-input" value="123.456.789-00" readonly>
-            </div>
-            <div class="admin-form-row">
-                <div class="admin-form-group">
-                    <label class="admin-form-label">Tipo</label>
-                    <input type="text" class="admin-form-input" value="Cliente" readonly>
-                </div>
-                <div class="admin-form-group">
-                    <label class="admin-form-label">Status</label>
-                    <input type="text" class="admin-form-input" value="Ativo" readonly>
-                </div>
-            </div>
-            <div style="margin-top: 1.5rem;">
-                <button type="button" class="admin-btn admin-btn-secondary" onclick="fecharModal()" style="width: 100%;">
-                    Fechar
-                </button>
-            </div>
-        </div>
-    `;
-        abrirModal('Detalhes do Usuário', conteudo);
+        // Mostra loading no modal
+        abrirModal('Detalhes do Usuário', '<div style="text-align: center; padding: 20px;">Carregando dados...</div>');
+
+        // Busca dados reais do usuário
+        fetch('<?= BASE_URL ?>/app/control/AdminController.php?acao=buscarUsuario&id=' + id)
+            .then(response => response.json())
+            .then(data => {
+                if (data.erro) {
+                    abrirModal('Erro', '<div style="text-align: center; padding: 20px; color: #d32f2f;">' + data.erro + '</div>');
+                    return;
+                }
+
+                // Função para escapar HTML (segurança)
+                function escapeHtml(text) {
+                    if (!text) return '';
+                    const div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
+                }
+
+                // Monta o conteúdo do modal com os dados reais
+                const telefoneHtml = data.telefone ? `
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Telefone</label>
+                        <input type="text" class="admin-form-input" value="${escapeHtml(data.telefone)}" readonly>
+                    </div>
+                ` : '';
+
+                const dataContratacaoHtml = data.data_contratacao ? `
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Data de Contratação</label>
+                        <input type="text" class="admin-form-input" value="${escapeHtml(data.data_contratacao)}" readonly>
+                    </div>
+                ` : '';
+
+                const conteudo = `
+                    <div class="admin-form">
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">ID</label>
+                            <input type="text" class="admin-form-input" value="${escapeHtml(data.id)}" readonly>
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Nome Completo</label>
+                            <input type="text" class="admin-form-input" value="${escapeHtml(data.nome || '')}" readonly>
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Email</label>
+                            <input type="email" class="admin-form-input" value="${escapeHtml(data.email || '')}" readonly>
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">CPF</label>
+                            <input type="text" class="admin-form-input" value="${escapeHtml(data.cpf || '')}" readonly>
+                        </div>
+                        ${telefoneHtml}
+                        <div class="admin-form-row">
+                            <div class="admin-form-group">
+                                <label class="admin-form-label">Tipo</label>
+                                <input type="text" class="admin-form-input" value="${escapeHtml(data.tipo || '')}" readonly>
+                            </div>
+                            <div class="admin-form-group">
+                                <label class="admin-form-label">Status</label>
+                                <input type="text" class="admin-form-input" value="${escapeHtml(data.status || '')}" readonly>
+                            </div>
+                        </div>
+                        ${dataContratacaoHtml}
+                        <div style="margin-top: 1.5rem;">
+                            <button type="button" class="admin-btn admin-btn-secondary" onclick="fecharModal()" style="width: 100%;">
+                                Fechar
+                            </button>
+                        </div>
+                    </div>
+                `;
+                abrirModal('Detalhes do Usuário', conteudo);
+            })
+            .catch(error => {
+                abrirModal('Erro', '<div style="text-align: center; padding: 20px; color: #d32f2f;">Erro ao carregar dados do usuário.</div>');
+            });
     }
 
     function excluirUsuario(id) {
-        if (confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.')) {
-            alert('Usuário excluído com sucesso! (Funcionalidade será implementada)');
-            // Aqui você implementaria a lógica de exclusão
+        // Primeira confirmação
+        if (!confirm('Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.')) {
+            return;
         }
+
+        // Segunda confirmação (mais rigorosa)
+        if (!confirm('ATENÇÃO: Todos os dados deste usuário serão perdidos permanentemente.\n\nIsso inclui:\n- Dados pessoais\n- Pedidos relacionados\n- Endereços\n- Outras informações\n\nConfirma a exclusão?')) {
+            return;
+        }
+
+        // Cria FormData para enviar o ID
+        const formData = new FormData();
+        formData.append('id', id);
+
+        // Envia requisição para excluir
+        fetch('<?= BASE_URL ?>/app/control/AdminController.php?acao=excluirUsuario', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.erro) {
+                    alert('Erro: ' + data.erro);
+                } else {
+                    alert('Usuário excluído com sucesso!');
+                    // Recarrega a página para atualizar a tabela
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                alert('Erro ao excluir usuário. Tente novamente.');
+            });
     }
 
     function salvarUsuario(event) {
         event.preventDefault();
-        alert('Usuário cadastrado com sucesso! (Funcionalidade será implementada)');
-        fecharModal();
+
+        // Pega dados do formulário
+        const formData = new FormData(event.target);
+
+        // Remove caracteres não numéricos do CPF e telefone
+        const cpf = formData.get('cpf').replace(/\D/g, '');
+        formData.set('cpf', cpf);
+
+        const telefone = formData.get('telefone');
+        if (telefone) {
+            formData.set('telefone', telefone.replace(/\D/g, ''));
+        }
+
+        // Mostra loading
+        const submitButton = event.target.querySelector('button[type="submit"]');
+        const textoOriginal = submitButton.innerHTML;
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="ri-loader-4-line"></i> Salvando...';
+
+        // Envia dados para o servidor
+        fetch('<?= BASE_URL ?>/app/control/AdminController.php?acao=cadastrarUsuario', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.erro) {
+                    alert('Erro: ' + data.erro);
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = textoOriginal;
+                } else {
+                    alert('Usuário cadastrado com sucesso!');
+                    fecharModal();
+                    // Recarrega a página para atualizar a tabela
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                alert('Erro ao cadastrar usuário. Tente novamente.');
+                submitButton.disabled = false;
+                submitButton.innerHTML = textoOriginal;
+            });
     }
 
     function atualizarUsuario(event, id) {
         event.preventDefault();
-        alert('Usuário atualizado com sucesso! (Funcionalidade será implementada)');
-        fecharModal();
+
+        // Pega dados do formulário
+        const formData = new FormData(event.target);
+
+        // Mostra loading
+        const submitButton = event.target.querySelector('button[type="submit"]');
+        const textoOriginal = submitButton.innerHTML;
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="ri-loader-4-line"></i> Atualizando...';
+
+        // Envia dados para o servidor
+        fetch('<?= BASE_URL ?>/app/control/AdminController.php?acao=atualizarUsuario', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.erro) {
+                    alert('Erro: ' + data.erro);
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = textoOriginal;
+                } else {
+                    alert('Usuário atualizado com sucesso!');
+                    fecharModal();
+                    // Recarrega a página para atualizar a tabela
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                alert('Erro ao atualizar usuário. Tente novamente.');
+                submitButton.disabled = false;
+                submitButton.innerHTML = textoOriginal;
+            });
+    }
+
+    function aplicarFiltros() {
+        // Aplica filtros quando mudarem os selects
+        pesquisarUsuarios();
+    }
+
+    function pesquisarUsuarios() {
+        // Pega o termo de pesquisa
+        const termo = document.getElementById('inputPesquisa').value.trim();
+        const tbody = document.getElementById('tbodyUsuarios');
+
+        // Pega os filtros
+        const filtroTipo = document.getElementById('filtroTipo').value;
+        const filtroStatus = document.getElementById('filtroStatus').value;
+
+        // Se não houver termo nem filtros, recarrega a página para mostrar todos
+        if (termo === '' && filtroTipo === '' && filtroStatus === '') {
+            window.location.href = '<?= BASE_URL ?>/app/control/AdminController.php?acao=usuarios';
+            return;
+        }
+
+        // Mostra loading
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;"><i class="ri-loader-4-line"></i> Pesquisando...</td></tr>';
+
+        // Monta a URL com termo e filtros
+        let url = '<?= BASE_URL ?>/app/control/AdminController.php?acao=pesquisarUsuarios';
+        if (termo !== '') {
+            url += '&termo=' + encodeURIComponent(termo);
+        }
+        if (filtroTipo !== '') {
+            url += '&tipo=' + encodeURIComponent(filtroTipo);
+        }
+        if (filtroStatus !== '') {
+            url += '&status=' + encodeURIComponent(filtroStatus);
+        }
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro na requisição');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.erro) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #d32f2f;">Erro: ' + escapeHtml(data.erro) + '</td></tr>';
+                    return;
+                }
+
+                // Se não houver resultados
+                if (!data.usuarios || data.usuarios.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #666;">Nenhum usuário encontrado para "' + escapeHtml(termo) + '"</td></tr>';
+                    return;
+                }
+
+                // Monta as linhas da tabela
+                let html = '';
+                data.usuarios.forEach(usuario => {
+                    html += `
+                        <tr>
+                            <td>${escapeHtml(usuario.id)}</td>
+                            <td>${escapeHtml(usuario.nome)}</td>
+                            <td>${escapeHtml(usuario.email)}</td>
+                            <td>${escapeHtml(usuario.cpf)}</td>
+                            <td><span class="admin-badge ${escapeHtml(usuario.tipo_classe)}">${escapeHtml(usuario.tipo)}</span></td>
+                            <td><span class="admin-badge ${escapeHtml(usuario.status_classe)}">${escapeHtml(usuario.status)}</span></td>
+                            <td>
+                                <div class="admin-table-actions">
+                                    <button class="admin-btn admin-btn-icon admin-btn-secondary" title="Visualizar" onclick="visualizarUsuario(${usuario.id})">
+                                        <i class="ri-eye-line"></i>
+                                    </button>
+                                    <button class="admin-btn admin-btn-icon admin-btn-primary" title="Editar" onclick="editarUsuario(${usuario.id})">
+                                        <i class="ri-edit-line"></i>
+                                    </button>
+                                    <button class="admin-btn admin-btn-icon admin-btn-danger" title="Excluir" onclick="excluirUsuario(${usuario.id})">
+                                        <i class="ri-delete-bin-line"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+            })
+            .catch(error => {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #d32f2f;">Erro ao pesquisar. Tente novamente.</td></tr>';
+            });
+    }
+
+    // Função auxiliar para escapar HTML (já existe no código, mas garantindo que está disponível)
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 </script>
 
