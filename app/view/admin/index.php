@@ -7,6 +7,8 @@
 // $totalEstoque - total de itens em estoque
 // $receitaFormatada - receita formatada (ex: "R$ 1.234,56")
 // $totalVendas - total de vendas
+// $pedidosFormatados - array com os últimos pedidos formatados
+// $produtosFormatados - array com produtos de estoque baixo formatados
 
 include_once "admin_header.php";
 ?>
@@ -80,7 +82,7 @@ include_once "admin_header.php";
         <div class="admin-dashboard-card-content">
             <h3 class="admin-dashboard-card-title">Receita</h3>
             <div class="admin-dashboard-card-value"><?= $receitaFormatada ?></div>
-            <p class="admin-dashboard-card-label">Receita do mês atual</p>
+            <p class="admin-dashboard-card-label">Receita do ano atual</p>
             <div class="admin-dashboard-card-footer">
                 <span>Ver detalhes</span>
                 <i class="ri-arrow-right-line"></i>
@@ -122,66 +124,26 @@ include_once "admin_header.php";
                 <th>Data</th>
                 <th>Valor</th>
                 <th>Status</th>
-                <th>Ações</th>
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>#001234</td>
-                <td>Maria Silva</td>
-                <td>15/01/2025</td>
-                <td>R$ 299,90</td>
-                <td><span class="admin-badge admin-badge-warning">Pendente</span></td>
-                <td>
-                    <div class="admin-table-actions">
-                        <button class="admin-btn admin-btn-icon admin-btn-secondary" title="Visualizar">
-                            <i class="ri-eye-line"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td>#001233</td>
-                <td>Ana Costa</td>
-                <td>14/01/2025</td>
-                <td>R$ 450,00</td>
-                <td><span class="admin-badge admin-badge-success">Entregue</span></td>
-                <td>
-                    <div class="admin-table-actions">
-                        <button class="admin-btn admin-btn-icon admin-btn-secondary" title="Visualizar">
-                            <i class="ri-eye-line"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td>#001232</td>
-                <td>Joana Santos</td>
-                <td>14/01/2025</td>
-                <td>R$ 189,90</td>
-                <td><span class="admin-badge admin-badge-info">Em Trânsito</span></td>
-                <td>
-                    <div class="admin-table-actions">
-                        <button class="admin-btn admin-btn-icon admin-btn-secondary" title="Visualizar">
-                            <i class="ri-eye-line"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td>#001231</td>
-                <td>Paula Oliveira</td>
-                <td>13/01/2025</td>
-                <td>R$ 320,00</td>
-                <td><span class="admin-badge admin-badge-success">Entregue</span></td>
-                <td>
-                    <div class="admin-table-actions">
-                        <button class="admin-btn admin-btn-icon admin-btn-secondary" title="Visualizar">
-                            <i class="ri-eye-line"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
+            <?php if (empty($pedidosFormatados)): ?>
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 20px; color: #666;">
+                        Nenhum pedido encontrado
+                    </td>
+                </tr>
+            <?php else: ?>
+                <?php foreach ($pedidosFormatados as $pedido): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($pedido['id']) ?></td>
+                        <td><?= htmlspecialchars($pedido['cliente']) ?></td>
+                        <td><?= htmlspecialchars($pedido['data']) ?></td>
+                        <td><?= htmlspecialchars($pedido['valor']) ?></td>
+                        <td><span class="admin-badge <?= htmlspecialchars($pedido['status_classe']) ?>"><?= htmlspecialchars($pedido['status']) ?></span></td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </tbody>
     </table>
 </div>
@@ -203,49 +165,25 @@ include_once "admin_header.php";
                 <th>Categoria</th>
                 <th>Quantidade</th>
                 <th>Status</th>
-                <th>Ações</th>
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>Vestido Floral Verão</td>
-                <td>Vestidos</td>
-                <td>3</td>
-                <td><span class="admin-badge admin-badge-danger">Crítico</span></td>
-                <td>
-                    <div class="admin-table-actions">
-                        <button class="admin-btn admin-btn-icon admin-btn-primary" title="Repor Estoque">
-                            <i class="ri-add-line"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td>Blusa Manga Longa</td>
-                <td>Blusas</td>
-                <td>5</td>
-                <td><span class="admin-badge admin-badge-warning">Baixo</span></td>
-                <td>
-                    <div class="admin-table-actions">
-                        <button class="admin-btn admin-btn-icon admin-btn-primary" title="Repor Estoque">
-                            <i class="ri-add-line"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td>Calça Jeans Skinny</td>
-                <td>Calças</td>
-                <td>7</td>
-                <td><span class="admin-badge admin-badge-warning">Baixo</span></td>
-                <td>
-                    <div class="admin-table-actions">
-                        <button class="admin-btn admin-btn-icon admin-btn-primary" title="Repor Estoque">
-                            <i class="ri-add-line"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
+            <?php if (empty($produtosFormatados)): ?>
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 20px; color: #666;">
+                        Nenhum produto com estoque baixo encontrado
+                    </td>
+                </tr>
+            <?php else: ?>
+                <?php foreach ($produtosFormatados as $produto): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($produto['nome']) ?></td>
+                        <td><?= htmlspecialchars($produto['categoria']) ?></td>
+                        <td><?= htmlspecialchars($produto['quantidade']) ?></td>
+                        <td><span class="admin-badge <?= htmlspecialchars($produto['status_classe']) ?>"><?= htmlspecialchars($produto['status']) ?></span></td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </tbody>
     </table>
 </div>

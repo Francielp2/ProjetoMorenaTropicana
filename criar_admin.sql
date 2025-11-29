@@ -10,7 +10,7 @@ VALUES (
     'Administrador',                    -- Nome do administrador
     '00000000000',                      -- CPF (11 dígitos)
     'admin@morenatropicana.com',        -- Email
-    '$2b$12$QRGRFViKMJERzGFz9lVlYOh8OW.TsF1H.XNSkaG4yNo2IzHb3TroW',  -- Senha: "password" (altere depois!)
+    '$2b$12$QRGRFViKMJERzGFz9lVlYOh8OW.TsF1H.XNSkaG4yNo2IzHb3TroW',  -- Senha: "Administrador"
     'ADMIN'                              -- Permissão
 );
 
