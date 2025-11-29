@@ -62,12 +62,14 @@ class AdminController
         // Protege a rota - só admin pode acessar
         AuthController::protegerAdmin();
 
-        // Verifica se há termo de pesquisa
-        $termoPesquisa = $_GET['pesquisa'] ?? '';
+        // Pega parâmetros de pesquisa e filtros via GET
+        $termoPesquisa = $_GET['termo'] ?? $_GET['pesquisa'] ?? '';
+        $filtroTipo = $_GET['tipo'] ?? '';
+        $filtroStatus = $_GET['status'] ?? '';
 
         // Busca usuários (com ou sem filtro)
-        if (!empty($termoPesquisa)) {
-            $usuarios = $this->usuarioModel->buscarUsuariosPorTermo($termoPesquisa);
+        if (!empty($termoPesquisa) || !empty($filtroTipo) || !empty($filtroStatus)) {
+            $usuarios = $this->usuarioModel->buscarUsuariosPorTermo($termoPesquisa, $filtroTipo, $filtroStatus);
         } else {
             $usuarios = $this->usuarioModel->listarTodosUsuarios();
         }
@@ -131,12 +133,96 @@ class AdminController
         $titulo_pagina = "Usuários";
         $_GET['acao'] = 'usuarios';
 
+        // Passa filtros para a view manter os valores selecionados
+        // A view pode receber filtros da URL também (para manter ao abrir modais)
+        $filtros = [
+            'termo' => $_GET['termo'] ?? $termoPesquisa,
+            'tipo' => $_GET['tipo'] ?? $filtroTipo,
+            'status' => $_GET['status'] ?? $filtroStatus
+        ];
+
+        // Busca dados do usuário para edição (se houver ID na URL)
+        $usuarioEdicao = null;
+        if (isset($_GET['editar']) && !empty($_GET['editar'])) {
+            $usuarioCompleto = $this->usuarioModel->buscarUsuarioCompleto($_GET['editar']);
+            if ($usuarioCompleto) {
+                // Formata dados do usuário para edição
+                $cpfFormatado = '';
+                if (!empty($usuarioCompleto['cpf']) && strlen($usuarioCompleto['cpf']) == 11) {
+                    $cpfFormatado = substr($usuarioCompleto['cpf'], 0, 3) . '.' .
+                        substr($usuarioCompleto['cpf'], 3, 3) . '.' .
+                        substr($usuarioCompleto['cpf'], 6, 3) . '-' .
+                        substr($usuarioCompleto['cpf'], 9, 2);
+                }
+                $usuarioEdicao = [
+                    'id' => $usuarioCompleto['id_usuario'],
+                    'nome' => $usuarioCompleto['nome'],
+                    'email' => $usuarioCompleto['email'],
+                    'cpf' => $cpfFormatado,
+                    'tipo' => $usuarioCompleto['permissao'],
+                    'status' => $usuarioCompleto['status_cliente'] ?? 'Ativo',
+                    'telefone' => $usuarioCompleto['telefone'] ?? ''
+                ];
+            }
+        }
+
+        // Busca dados do usuário para visualização (se houver ID na URL)
+        $usuarioVisualizacao = null;
+        if (isset($_GET['visualizar']) && !empty($_GET['visualizar'])) {
+            $usuarioCompleto = $this->usuarioModel->buscarUsuarioCompleto($_GET['visualizar']);
+            if ($usuarioCompleto) {
+                // Formata dados do usuário para visualização
+                $cpfFormatado = '';
+                if (!empty($usuarioCompleto['cpf']) && strlen($usuarioCompleto['cpf']) == 11) {
+                    $cpfFormatado = substr($usuarioCompleto['cpf'], 0, 3) . '.' .
+                        substr($usuarioCompleto['cpf'], 3, 3) . '.' .
+                        substr($usuarioCompleto['cpf'], 6, 3) . '-' .
+                        substr($usuarioCompleto['cpf'], 9, 2);
+                }
+
+                $telefoneFormatado = '';
+                if (!empty($usuarioCompleto['telefone'])) {
+                    $telefone = $usuarioCompleto['telefone'];
+                    if (strlen($telefone) == 11) {
+                        $telefoneFormatado = '(' . substr($telefone, 0, 2) . ') ' .
+                            substr($telefone, 2, 5) . '-' .
+                            substr($telefone, 7, 4);
+                    } else {
+                        $telefoneFormatado = $telefone;
+                    }
+                }
+
+                $tipo = $usuarioCompleto['permissao'] === 'ADMIN' ? 'Administrador' : 'Cliente';
+                $status = 'Ativo';
+                if ($usuarioCompleto['permissao'] === 'CLIENTE' && !empty($usuarioCompleto['status_cliente'])) {
+                    $status = $usuarioCompleto['status_cliente'];
+                }
+
+                $dataContratacaoFormatada = '';
+                if (!empty($usuarioCompleto['data_contratacao'])) {
+                    $dataObj = new DateTime($usuarioCompleto['data_contratacao']);
+                    $dataContratacaoFormatada = $dataObj->format('d/m/Y');
+                }
+
+                $usuarioVisualizacao = [
+                    'id' => $usuarioCompleto['id_usuario'],
+                    'nome' => $usuarioCompleto['nome'],
+                    'email' => $usuarioCompleto['email'],
+                    'cpf' => $cpfFormatado,
+                    'telefone' => $telefoneFormatado,
+                    'tipo' => $tipo,
+                    'status' => $status,
+                    'data_contratacao' => $dataContratacaoFormatada
+                ];
+            }
+        }
+
         // Inclui a view passando as variáveis prontas
         require_once __DIR__ . "/../view/admin/usuarios.php";
     }
 
     /**
-     * Processa a pesquisa de usuários (endpoint AJAX)
+     * Processa a pesquisa de usuários (endpoint AJAX - mantido para compatibilidade)
      * Retorna JSON com os usuários encontrados
      */
     public function pesquisarUsuarios()
@@ -346,6 +432,7 @@ class AdminController
     /**
      * Processa a atualização de um usuário
      * Recebe dados via POST e atualiza no banco
+     * Redireciona após sucesso ou erro
      */
     public function atualizarUsuario()
     {
@@ -354,8 +441,7 @@ class AdminController
 
         // Verifica se é POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'Método não permitido']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('Método não permitido'));
             exit;
         }
 
@@ -370,34 +456,29 @@ class AdminController
 
         // Validações básicas
         if (!$idUsuario) {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'ID do usuário não informado']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('ID do usuário não informado'));
             exit;
         }
 
         if (empty($nome)) {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'Nome é obrigatório']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('Nome é obrigatório'));
             exit;
         }
 
         if (empty($email)) {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'Email é obrigatório']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('Email é obrigatório'));
             exit;
         }
 
         // Valida tipo
         if (!in_array($tipo, ['ADMIN', 'CLIENTE'])) {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'Tipo de usuário inválido']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('Tipo de usuário inválido'));
             exit;
         }
 
         // Valida status se for cliente
         if ($tipo === 'CLIENTE' && $status && !in_array($status, ['Ativo', 'Suspenso'])) {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'Status inválido']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('Status inválido'));
             exit;
         }
 
@@ -405,8 +486,7 @@ class AdminController
         $usuarioAtual = $this->usuarioModel->buscarUsuarioCompleto($idUsuario);
         if ($usuarioAtual && $usuarioAtual['email'] !== $email) {
             if ($this->usuarioModel->emailExiste($email)) {
-                header('Content-Type: application/json');
-                echo json_encode(['erro' => 'Este email já está cadastrado para outro usuário']);
+                header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('Este email já está cadastrado para outro usuário'));
                 exit;
             }
         }
@@ -424,12 +504,10 @@ class AdminController
         );
 
         if ($resultado) {
-            header('Content-Type: application/json');
-            echo json_encode(['sucesso' => true, 'mensagem' => 'Usuário atualizado com sucesso!']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&sucesso=' . urlencode('Usuário atualizado com sucesso!'));
             exit;
         } else {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'Erro ao atualizar usuário. Tente novamente.']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('Erro ao atualizar usuário. Tente novamente.'));
             exit;
         }
     }
@@ -437,6 +515,7 @@ class AdminController
     /**
      * Processa a exclusão de um usuário
      * Recebe ID via POST e exclui do banco
+     * Redireciona após sucesso ou erro
      */
     public function excluirUsuario()
     {
@@ -445,8 +524,7 @@ class AdminController
 
         // Verifica se é POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'Método não permitido']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('Método não permitido'));
             exit;
         }
 
@@ -455,8 +533,7 @@ class AdminController
 
         // Validações
         if (!$idUsuario) {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'ID do usuário não informado']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('ID do usuário não informado'));
             exit;
         }
 
@@ -467,8 +544,7 @@ class AdminController
 
         $usuarioLogadoId = $_SESSION['usuario_id'] ?? null;
         if ($idUsuario == $usuarioLogadoId) {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'Você não pode excluir sua própria conta']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('Você não pode excluir sua própria conta'));
             exit;
         }
 
@@ -476,12 +552,10 @@ class AdminController
         $resultado = $this->usuarioModel->excluirConta($idUsuario);
 
         if ($resultado) {
-            header('Content-Type: application/json');
-            echo json_encode(['sucesso' => true, 'mensagem' => 'Usuário excluído com sucesso!']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&sucesso=' . urlencode('Usuário excluído com sucesso!'));
             exit;
         } else {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'Erro ao excluir usuário. Tente novamente.']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('Erro ao excluir usuário. Tente novamente.'));
             exit;
         }
     }
@@ -489,6 +563,7 @@ class AdminController
     /**
      * Processa o cadastro de um novo usuário
      * Recebe dados via POST e cria no banco
+     * Redireciona após sucesso ou erro
      */
     public function cadastrarUsuario()
     {
@@ -497,8 +572,7 @@ class AdminController
 
         // Verifica se é POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'Método não permitido']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('Método não permitido'));
             exit;
         }
 
@@ -513,62 +587,53 @@ class AdminController
 
         // Validações básicas
         if (empty($nome)) {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'Nome é obrigatório']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('Nome é obrigatório'));
             exit;
         }
 
         if (empty($email)) {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'Email é obrigatório']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('Email é obrigatório'));
             exit;
         }
 
         if (empty($senha)) {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'Senha é obrigatória']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('Senha é obrigatória'));
             exit;
         }
 
         // Valida CPF (deve ter 11 dígitos)
         if (strlen($cpf) !== 11) {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'CPF deve conter 11 dígitos']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('CPF deve conter 11 dígitos'));
             exit;
         }
 
         // Valida senha (mínimo 6 caracteres)
         if (strlen($senha) < 6) {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'A senha deve ter no mínimo 6 caracteres']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('A senha deve ter no mínimo 6 caracteres'));
             exit;
         }
 
         // Valida tipo
         if (!in_array($tipo, ['ADMIN', 'CLIENTE'])) {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'Tipo de usuário inválido']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('Tipo de usuário inválido'));
             exit;
         }
 
         // Valida status (apenas para clientes)
         if ($tipo === 'CLIENTE' && !in_array($status, ['Ativo', 'Suspenso'])) {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'Status inválido']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('Status inválido'));
             exit;
         }
 
         // Verifica se email já existe
         if ($this->usuarioModel->emailExiste($email)) {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'Este email já está cadastrado']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('Este email já está cadastrado'));
             exit;
         }
 
         // Verifica se CPF já existe
         if ($this->usuarioModel->cpfExiste($cpf)) {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'Este CPF já está cadastrado']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('Este CPF já está cadastrado'));
             exit;
         }
 
@@ -576,12 +641,10 @@ class AdminController
         $idUsuario = $this->usuarioModel->criarUsuario($nome, $cpf, $email, $senha, $tipo, $status, $telefone);
 
         if ($idUsuario) {
-            header('Content-Type: application/json');
-            echo json_encode(['sucesso' => 'Usuário cadastrado com sucesso!']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&sucesso=' . urlencode('Usuário cadastrado com sucesso!'));
             exit;
         } else {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'Erro ao cadastrar usuário. Tente novamente.']);
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=usuarios&erro=' . urlencode('Erro ao cadastrar usuário. Tente novamente.'));
             exit;
         }
     }

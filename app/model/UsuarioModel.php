@@ -430,10 +430,17 @@ class UsuarioModel
                 $params[':tipo'] = $filtroTipo;
             }
 
-            // Adiciona filtro de status (apenas para clientes)
+            // Adiciona filtro de status
             if (!empty($filtroStatus) && in_array($filtroStatus, ['Ativo', 'Suspenso'])) {
-                $sql .= " AND c.status = :status";
-                $params[':status'] = $filtroStatus;
+                // Se o filtro for "Ativo", mostra clientes ativos E todos os administradores
+                if ($filtroStatus === 'Ativo') {
+                    $sql .= " AND (c.status = :status OR u.permissao = 'ADMIN')";
+                    $params[':status'] = $filtroStatus;
+                } else {
+                    // Se for "Suspenso", mostra apenas clientes suspensos
+                    $sql .= " AND c.status = :status";
+                    $params[':status'] = $filtroStatus;
+                }
             }
 
             $sql .= " ORDER BY u.id_usuario ASC";
