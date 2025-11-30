@@ -1,22 +1,21 @@
 <?php
+
+/* CHAMA A CONEXÃO COM O BANCO DE DADOS */
 require_once __DIR__ . "/../../Database/conexaodb.php";
 
-
-//Classe de usuario
+/* CRIAÇÃO DA CLASSE USUÁRIO */
 
 class UsuarioModel
 {
+    /* INICIA O OBJETO DE CONEXÃO E ARMAZENA SEU VALOR NA VARIÁVEL CONN */
     private $conn;
-
     public function __construct()
     {
         $database = new Database();
         $this->conn = $database->conexao();
     }
 
-    /**
-     * Busca um usuário pelo email
-     */
+    /* BUSCA USUÁRIO NO BANCO DE DADOS USANDO O EMAIL E RETORNA UM ARRAY COM OS DADOS DO USUÁRIO */
     public function buscarPorEmail($email)
     {
         try {
@@ -29,11 +28,9 @@ class UsuarioModel
         }
     }
 
-    /**
-     * Busca um usuário pelo ID
-     */
+    /* FUNÇÃO QUE BUSCA O USUÁRIO USANDO ID E RETORNA UM ARRAY COM OS DADOS DE USUÁRIO*/
     public function buscarPorId($id)
-    {
+     {
         try {
             $stmt = $this->conn->prepare("SELECT * FROM Usuarios WHERE id_usuario = :id");
             $stmt->bindParam(':id', $id);
@@ -44,9 +41,7 @@ class UsuarioModel
         }
     }
 
-    /**
-     * Verifica se o email já existe
-     */
+    /* FUNÇÃO QUE VERIFICA SE O EMAIL JÁ EXISTE NO BANCO DE DADOS E RETORNA O VALOR DO COUNT SE O EMAIL JÁ EXISTIR */
     public function emailExiste($email)
     {
         try {
@@ -59,9 +54,7 @@ class UsuarioModel
         }
     }
 
-    /**
-     * Verifica se o CPF já existe
-     */
+    /* FUNÇÃO QUE VERIFICA SE O CPF JÁ EXISTE NO BANCO DE DADOS E RETORNA O VALOR DO COUNT SE O CPF JÁ EXISTIR */
     public function cpfExiste($cpf)
     {
         try {
@@ -74,38 +67,31 @@ class UsuarioModel
         }
     }
 
-    /**
-     * Cria um novo usuário (cliente)
-     */
-    public function criarCliente($nome, $cpf, $email, $senha, $telefone = null)
+    /* FUNÇÃO USADA PARA CRIAR UM CLIENTE QUE RETORNA  A FUNÇÃO CRIAR USUÁRIO PASSANDO CLIENTE E ATIVO COMO PERMISSÃO E STATUS RESPECTIVAMENTE*/
+    public function criarCliente($nome, $cpf, $email, $senha, $telefone = null)/* DADOS DO USUÁRIO, SE NÃO TIVER TELEFONE ESTE FICA NULL */
     {
         return $this->criarUsuario($nome, $cpf, $email, $senha, 'CLIENTE', 'Ativo', $telefone);
     }
 
-    /**
-     * Cria um novo usuário (cliente ou admin)
-     * Reutiliza a lógica do criarCliente para manter consistência
-     */
+    /* FUNÇÃO USADA PARA CRIAR UM USUÁRIO QUE PODE SER CLIENTE OU ADM */
     public function criarUsuario($nome, $cpf, $email, $senha, $tipo, $status = 'Ativo', $telefone = null)
     {
         try {
-            // Valida tipo
+            /* VERIFICA SE O TIPO ADMIN OU CLIENTE EXISTE E SE NÃO TIVER RETORNA FALSO */
             if (!in_array($tipo, ['ADMIN', 'CLIENTE'])) {
                 return false;
             }
 
-            // Valida status (apenas para clientes)
+            /* SE FOR CLIENTE, VERIFICA SE TEM O STATUS DE ATIVO OU SUSPENSO E SE NÃO TIVER RETORNA FALSO */
             if ($tipo === 'CLIENTE' && !in_array($status, ['Ativo', 'Suspenso'])) {
                 return false;
             }
 
-            // Inicia transação
-            $this->conn->beginTransaction();
+            $this->conn->beginTransaction();/* ESSA FUNÇÃO INICIA UM BLOCO DE INSERÇÕES NO BANCO DE DADOS ONDE TODOS OS VALORES DÃO CERTO OU TODOS DÃO ERRADO PARA EVITAR ERROS. SÓ ENVIA PARA O BANCO DEPOIS QUE FOR COMITADO */
 
-            // Hash da senha
-            $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
+            $senhaHash = password_hash($senha, PASSWORD_DEFAULT);/* CRIA UM HASH DA SENHA, QUE É UMA FORMA DE CRIPTOGRAFIA */
 
-            // Insere na tabela Usuarios
+            /* INSERE NA TABELA DO BANCO DE DADOS OS VALORES QUE FORAM PASSADOS COMO PARÂMENTROS */
             $stmt = $this->conn->prepare("
                 INSERT INTO Usuarios (nome, cpf, email, senha, permissao) 
                 VALUES (:nome, :cpf, :email, :senha, :permissao)
@@ -117,10 +103,9 @@ class UsuarioModel
             $stmt->bindParam(':permissao', $tipo);
             $stmt->execute();
 
-            // Pega o ID do usuário criado
-            $idUsuario = $this->conn->lastInsertId();
+            $idUsuario = $this->conn->lastInsertId();/* PEGA O ID DO ULTIMO USUÁRIO CRIADO */
 
-            // Se for cliente, insere na tabela Cliente
+            /* SE ESSE USUÁRIO FOR CLIENTE ADICIONA NA TABELA DE CLIENTE */
             if ($tipo === 'CLIENTE') {
                 $stmt = $this->conn->prepare("
                     INSERT INTO Cliente (id_usuario, telefone, status) 
@@ -132,7 +117,7 @@ class UsuarioModel
                 $stmt->execute();
             }
 
-            // Se for admin, insere na tabela Administrador
+            /* SE ESSE USUÁRIO FOR ADM ADICIONA NA TABELA DE ADM */
             if ($tipo === 'ADMIN') {
                 $stmt = $this->conn->prepare("
                     INSERT INTO Administrador (id_usuario, data_contratacao) 
@@ -142,55 +127,46 @@ class UsuarioModel
                 $stmt->execute();
             }
 
-            // Confirma transação
-            $this->conn->commit();
-            return $idUsuario;
+
+            $this->conn->commit();/* PERMITE QUE OS VALORES SEJAM ENVIADOS */
+            return $idUsuario;/* SE TUDO SER CERTO A FUNÇÃO RETORNA O ID USUÁRIO CRIADO */
         } catch (PDOException $e) {
-            // Desfaz transação em caso de erro
-            $this->conn->rollBack();
+            $this->conn->rollBack();/* SE ALGO DER ERRADO DESFAZ A TRANSAÇÃO COM O BANCO DE DADOS */
             return false;
         }
     }
 
-    /**
-     * Verifica login (email e senha)
-     * Retorna o usuário se login estiver correto e status for Ativo
-     */
+    /* FUNÇÃO DE VERIFICAR O LOGIN POR MEIO DO EMAIL E DA SENHA */
     public function verificarLogin($email, $senha)
     {
         try {
-            $usuario = $this->buscarPorEmail($email);
+            $usuario = $this->buscarPorEmail($email); /* PASSA À VARIÁVEL USUÁRIO O RESULTADO DA FUNÇAO DE BUSCAR EMAIL QUE RETORNA OS DADOS DO USUÁRIO EM  UM ARRAY */
 
-            // Verifica se usuário existe e senha está correta
+            /* VERIFICA SE A VARIÁVEL DE USUÁRIO TEM VALOR !NULL E SE A SENHA BATE COM O HASH DO BANCO DE DADOS */
             if ($usuario && password_verify($senha, $usuario['senha'])) {
-                // Se for cliente, verifica o status
+                /* SE FOR CLINTE VERIFICA O STATUS, AFNAL SE ESTE NÃO FOR ATIVO O LOGIN NÃO PODE ACONTECER */
                 if ($usuario['permissao'] === 'CLIENTE') {
-                    // Busca status do cliente
+                    /*  Busca status do cliente */
                     $stmt = $this->conn->prepare("SELECT status FROM Cliente WHERE id_usuario = :id");
                     $stmt->bindParam(':id', $usuario['id_usuario']);
                     $stmt->execute();
                     $statusCliente = $stmt->fetchColumn();
 
-                    // Se status não for Ativo, retorna false
+                    /* Se status não for Ativo, retorna false */
                     if ($statusCliente !== 'Ativo') {
                         return false;
                     }
                 }
 
-                // Se chegou aqui, login está correto e status é válido
-                return $usuario;
+                return $usuario;/* SE OS DADOS INSERIDOS (EMAIL E SENHA) PASSARAM POR TODAS AS VERIFICAÇÕES E NÃO PARARAM O CÓDIGO EM NENHUMA DELAS, O LOGIN É VALIDO E A FUNÇÃO RETORNA O USUÁRIO */
             }
-
-            return false;
+            return false;/*  SE DER ALGUM ERRO OU NÃO PASSAR POR ALGUMA VERIFICAÇÃO ESSA FUNÇÃO RETORNA FALSO */
         } catch (PDOException $e) {
             return false;
         }
     }
 
-    /**
-     * Verifica se o cliente está ativo
-     * Retorna true se status for 'Ativo', false caso contrário
-     */
+    /* FUNÇÃO DE VERIFICAR SE O CLIENTE ESTÁ ATIVO */
     public function verificarClienteAtivo($idUsuario)
     {
         try {
@@ -205,9 +181,7 @@ class UsuarioModel
         }
     }
 
-    /**
-     * Busca dados completos do cliente (com informações da tabela Cliente)
-     */
+    /* BUSCA DADOS COMPLETO DO CLIENTE COM INFORMAÇÕES DA TABELA USUÁRIO E DA TABELA CLIENTE E RETORNA UM ARRAY DE DADOS*/
     public function buscarDadosCliente($idUsuario)
     {
         try {
@@ -225,11 +199,7 @@ class UsuarioModel
         }
     }
 
-    /**
-     * Exclui a conta do cliente
-     * Como há ON DELETE CASCADE no DDL, ao deletar da tabela Usuarios,
-     * automaticamente deleta de Cliente e outras tabelas relacionadas
-     */
+    /* EXCLUIR CONTA DE CLIENTE SE DER CERTO RETORNA VERDADEIRO E SE NÃO RETORNA FALSO */
     public function excluirConta($idUsuario)
     {
         try {
@@ -242,37 +212,33 @@ class UsuarioModel
         }
     }
 
-    /**
-     * Atualiza dados pessoais do cliente (nome e telefone)
-     */
+    /* ATUALISA DADOS DO CLIENTE */
     public function atualizarDadosPessoais($idUsuario, $nome, $telefone)
     {
         try {
-            $this->conn->beginTransaction();
+            $this->conn->beginTransaction();/* INICIA O BLOCO DE INSERÇÕES */
 
-            // Atualiza nome na tabela Usuarios
+            /* Atualiza nome na tabela Usuarios */
             $stmt = $this->conn->prepare("UPDATE Usuarios SET nome = :nome WHERE id_usuario = :id");
             $stmt->bindParam(':nome', $nome);
             $stmt->bindParam(':id', $idUsuario);
             $stmt->execute();
 
-            // Atualiza telefone na tabela Cliente
+            /* Atualiza telefone na tabela Cliente */
             $stmt = $this->conn->prepare("UPDATE Cliente SET telefone = :telefone WHERE id_usuario = :id");
             $stmt->bindParam(':telefone', $telefone);
             $stmt->bindParam(':id', $idUsuario);
             $stmt->execute();
 
-            $this->conn->commit();
+            $this->conn->commit();/* PERMITE O ENVIO DOS DADOS PARA O BANCO */
             return true;
         } catch (PDOException $e) {
-            $this->conn->rollBack();
+            $this->conn->rollBack();/* SE DER ERROS TODAS AS INSERÇÕES FALHAM */
             return false;
         }
     }
 
-    /**
-     * Busca endereço do cliente
-     */
+    /* BUSCA ENDEREÇO DO CLIENTE E RETORNA UM ARRAY SE ACHA RENDEREÇO SALVO E SE NÃO RETORNA FALSO */
     public function buscarEndereco($idCliente)
     {
         try {
@@ -290,32 +256,28 @@ class UsuarioModel
         }
     }
 
-    /**
-     * Salva ou atualiza endereço do cliente
-     */
-    public function salvarEndereco($idCliente, $rua, $numero, $bairro, $cep, $estado, $complemento = null, $tipoEndereco = 'ENTREGA')
+    /* SALVA OU ATUALIZA O ENDEREÇO DO CLIENTE  E RETORNA VERDADEIRO OU FALSO */
+    public function salvarEndereco($idCliente, $rua, $numero, $bairro, $cep, $estado, $complemento = null, $tipoEndereco = 'ENTREGA')/* PARÂMETROS PARA SEREM SALVOS */
     {
         try {
-            // Remove caracteres não numéricos do CEP
-            $cep = preg_replace('/[^0-9]/', '', $cep);
+            $cep = preg_replace('/[^0-9]/', '', $cep); /* Remove caracteres não numéricos do CEP */
 
-            // Valida CEP (deve ter 8 dígitos)
+            /*    Valida CEP (deve ter 8 dígitos) */
             if (strlen($cep) !== 8) {
                 return false;
             }
 
-            // Limpa e valida campos
+            /* LIMPA E VALIDA OD CAMPOS VERIFICANDO SE OS OBRIGATÓRIOS ESTÃO PREENCHIDOS E RETIRA OS ESPAÇOS DO INICIO E DO FINAL */
             $rua = trim($rua);
             $numero = !empty(trim($numero)) ? trim($numero) : null;
             $bairro = !empty(trim($bairro)) ? trim($bairro) : null;
             $estado = !empty(trim($estado)) ? strtoupper(trim($estado)) : null;
             $complemento = !empty(trim($complemento)) ? trim($complemento) : null;
 
-            // Verifica se já existe endereço para este cliente
-            $enderecoExistente = $this->buscarEndereco($idCliente);
+            $enderecoExistente = $this->buscarEndereco($idCliente);  /* Verifica se já existe endereço para este cliente */
 
+            /* SE EXISTIR ENDEREÇO ATUALIZA OS DADOS E SE NÃO EXISTIR ADICIONA OS DADOS */
             if ($enderecoExistente) {
-                // Atualiza endereço existente
                 $stmt = $this->conn->prepare("
                     UPDATE Endereco 
                     SET rua = :rua, numero = :numero, bairro = :bairro, 
@@ -333,7 +295,7 @@ class UsuarioModel
                 $stmt->bindParam(':id_endereco', $enderecoExistente['id_endereco']);
                 $stmt->execute();
             } else {
-                // Cria novo endereço
+                /* Cria novo endereço */
                 $stmt = $this->conn->prepare("
                     INSERT INTO Endereco (id_cliente, rua, numero, bairro, cep, estado, complemento, tipo_endereco)
                     VALUES (:id_cliente, :rua, :numero, :bairro, :cep, :estado, :complemento, :tipo_endereco)
@@ -359,10 +321,7 @@ class UsuarioModel
         }
     }
 
-    /**
-     * Busca todos os usuários com seus dados completos
-     * Retorna array com dados de Usuarios, Cliente e Administrador
-     */
+    /* BUSCA TODOS OS USUÁRIOS E SEUS DADOS COMPLETOS E RETORNA UM ARRAY CONTENDO OS RESULTADOS */
     public function listarTodosUsuarios()
     {
         try {
@@ -388,19 +347,16 @@ class UsuarioModel
         }
     }
 
-    /**
-     * Busca usuários por termo de pesquisa (nome ou email) com filtros opcionais
-     * Busca case-insensitive (não diferencia maiúsculas/minúsculas)
-     */
-    public function buscarUsuariosPorTermo($termo = '', $filtroTipo = '', $filtroStatus = '')
+    /* REALIZA AS BUSCAS DA TABELA DE USUÁRIO */
+    public function buscarUsuariosPorTermo($termo = '', $filtroTipo = '', $filtroStatus = '')/* SE NÃO FOR DEFINIDO OS VALORES, ESSE SERAM VAZIOS */
     {
         try {
-            // Remove espaços do início e fim
+            /* Remove espaços do início e fim */
             $termo = trim($termo);
             $filtroTipo = trim($filtroTipo);
             $filtroStatus = trim($filtroStatus);
 
-            // Monta a query SQL base
+            /* CRIA UM CÓDIGO BASE DE PESQUISA SQL E GUARDA NA VÁRIÁVEL SQL */
             $sql = "SELECT
                         u.id_usuario,
                         u.nome,
@@ -443,11 +399,11 @@ class UsuarioModel
                 }
             }
 
-            $sql .= " ORDER BY u.id_usuario ASC";
+            $sql .= " ORDER BY u.id_usuario ASC";/* PEGA O SQL FINAL E ADICIONA A FUNÇÃO DE ORDENAR POR ID EM ORDEM CRESCENTE */
 
-            $stmt = $this->conn->prepare($sql);
+            $stmt = $this->conn->prepare($sql);/* AO PASSAR PELA VERIFICAÇÃO O CÓDIGO SQL É COMPLEMENTADO E É PREPARADO PARA SER CONSULTADO NO BANCO DE DADOS */
 
-            // Bind dos parâmetros
+            /* Bind dos parâmetros */
             foreach ($params as $key => $value) {
                 $stmt->bindValue($key, $value, PDO::PARAM_STR);
             }
@@ -455,17 +411,14 @@ class UsuarioModel
             $stmt->execute();
             $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            return $resultados;
+            return $resultados;/* RETORNA UMA VARIÁVEL COM TODOS OS DADOS DA PESQUISA */
         } catch (PDOException $e) {
-            // Retorna array vazio em caso de erro
+            /* Retorna array vazio em caso de erro */
             return [];
         }
     }
 
-    /**
-     * Busca dados completos de um usuário específico
-     * Retorna array com dados de Usuarios, Cliente e Administrador
-     */
+    /* BUSCA DADOS COMPLETOS DE UM USUÁRIO ESPERCÍFICO */
     public function buscarUsuarioCompleto($idUsuario)
     {
         try {
@@ -492,23 +445,23 @@ class UsuarioModel
         }
     }
 
-    /**
-     * Atualiza dados completos de um usuário
-     * Atualiza nome, email, senha (se fornecida), tipo e status
-     */
+    /* ATUALIZA DADOS DE UM USUÁRIO */
     public function atualizarUsuario($idUsuario, $nome, $email, $senha = null, $tipo, $status = null, $telefone = null)
     {
         try {
             $this->conn->beginTransaction();
 
-            // Busca dados atuais do usuário
+            /* Busca dados atuais do usuário */
             $usuarioAtual = $this->buscarUsuarioCompleto($idUsuario);
+
+
+            /* SE NÃO ENCONTRAR DADOS DO USUÁRIO DESFAZ A TRANSAÇÃO */
             if (!$usuarioAtual) {
                 $this->conn->rollBack();
                 return false;
             }
 
-            // Atualiza nome e email na tabela Usuarios
+            /* ATUALIZA NOME EMAIL  E TIPO NA TABELA USUARIO */
             $sql = "UPDATE Usuarios SET nome = :nome, email = :email, permissao = :permissao WHERE id_usuario = :id";
             $params = [
                 ':nome' => $nome,
@@ -517,7 +470,7 @@ class UsuarioModel
                 ':id' => $idUsuario
             ];
 
-            // Se senha foi fornecida, atualiza também
+            /* SE A SENHA FOI FORNECIDA ELA É ATUALIZADA TAMBÉM */
             if (!empty($senha)) {
                 $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
                 $sql = "UPDATE Usuarios SET nome = :nome, email = :email, senha = :senha, permissao = :permissao WHERE id_usuario = :id";
@@ -530,15 +483,15 @@ class UsuarioModel
             }
             $stmt->execute();
 
-            // Se mudou de tipo, precisa ajustar tabelas Cliente e Administrador
+            /* SE MUDOU A PERMISSÃO DE USUÁRIO PRECISA MUDAR AS TABELAS DE ADM E CLIENTE */
             if ($usuarioAtual['permissao'] !== $tipo) {
                 if ($tipo === 'ADMIN') {
-                    // Remove de Cliente se existir
+                    /* Remove de Cliente se existir */
                     $stmt = $this->conn->prepare("DELETE FROM Cliente WHERE id_usuario = :id");
                     $stmt->bindParam(':id', $idUsuario);
                     $stmt->execute();
 
-                    // Adiciona em Administrador se não existir
+                    /* Adiciona em Administrador se não existir */
                     $stmt = $this->conn->prepare("SELECT COUNT(*) FROM Administrador WHERE id_usuario = :id");
                     $stmt->bindParam(':id', $idUsuario);
                     $stmt->execute();
@@ -548,12 +501,12 @@ class UsuarioModel
                         $stmt->execute();
                     }
                 } else {
-                    // Remove de Administrador se existir
+                    /* Remove de Administrador se existir */
                     $stmt = $this->conn->prepare("DELETE FROM Administrador WHERE id_usuario = :id");
                     $stmt->bindParam(':id', $idUsuario);
                     $stmt->execute();
 
-                    // Adiciona em Cliente se não existir
+                    /* Adiciona em Cliente se não existir */
                     $stmt = $this->conn->prepare("SELECT COUNT(*) FROM Cliente WHERE id_usuario = :id");
                     $stmt->bindParam(':id', $idUsuario);
                     $stmt->execute();
@@ -564,7 +517,7 @@ class UsuarioModel
                         $stmt->bindValue(':status', $status ?? 'Ativo');
                         $stmt->execute();
                     } else {
-                        // Atualiza status e telefone do cliente existente
+                        /* Atualiza status e telefone do cliente existente */
                         $stmt = $this->conn->prepare("UPDATE Cliente SET status = :status, telefone = :telefone WHERE id_usuario = :id");
                         $stmt->bindValue(':status', $status ?? 'Ativo');
                         $stmt->bindValue(':telefone', $telefone);
@@ -573,22 +526,22 @@ class UsuarioModel
                     }
                 }
             } else {
-                // Tipo não mudou
+                /* Tipo não mudou */
                 if ($tipo === 'CLIENTE') {
-                    // Atualiza status e telefone do cliente
+                    /* Atualiza status e telefone do cliente */
                     $stmt = $this->conn->prepare("UPDATE Cliente SET status = :status, telefone = :telefone WHERE id_usuario = :id");
                     $stmt->bindValue(':status', $status ?? 'Ativo');
                     $stmt->bindValue(':telefone', $telefone);
                     $stmt->bindParam(':id', $idUsuario);
                     $stmt->execute();
                 }
-                // Se for ADMIN, não precisa atualizar nada nas tabelas relacionadas
+                /* Se for ADMIN, não precisa atualizar nada nas tabelas relacionadas */
             }
 
-            $this->conn->commit();
+            $this->conn->commit();/* PERMITE AS MUDANÇAS NO BD */
             return true;
         } catch (PDOException $e) {
-            $this->conn->rollBack();
+            $this->conn->rollBack();/* SE DER ERRO CANCELA TODAS AS MUDANÇAS */
             return false;
         }
     }

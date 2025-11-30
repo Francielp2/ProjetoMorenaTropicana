@@ -1,5 +1,6 @@
 <?php
-// Esta view recebe apenas variáveis prontas do controller
+/* VARIÁVEIS DO CONTROLER QUE SERAM USADAS */
+
 // $titulo_pagina - título da página
 // $totalUsuarios - total de usuários
 // $totalProdutos - total de produtos
@@ -10,11 +11,13 @@
 // $pedidosFormatados - array com os últimos pedidos formatados
 // $produtosFormatados - array com produtos de estoque baixo formatados
 
-include_once "admin_header.php";
+include_once "admin_header.php";/* CHAMA A PARTE DE HEADER QUE CONTÉM O MEU DE NAVEGAÇÃO E ABERTURA DO HTML */
 ?>
 
 <!-- Grade de Cards do Dashboard -->
 <div class="admin-dashboard-grid-3x2">
+
+    <!-- ESSE LINK LEVA PARA O ARQUIVO DE ADMIN CONTROLER E ENVIA JUNTO UM GET['ACAO'] QUE NESSE CASO É IGUAL A USUÁRIO -->
     <a href="<?= BASE_URL ?>/app/control/AdminController.php?acao=usuarios" class="admin-dashboard-card">
         <div class="admin-dashboard-card-icon primary">
             <i class="ri-user-line"></i>
@@ -30,6 +33,7 @@ include_once "admin_header.php";
         </div>
     </a>
 
+    <!-- ESSE LINK LEVA PARA O ARQUIVO DE ADMIN CONTROLER E ENVIA JUNTO UM GET['ACAO'] QUE NESSE CASO É IGUAL A PRODUTOS -->
     <a href="<?= BASE_URL ?>/app/control/AdminController.php?acao=produtos" class="admin-dashboard-card">
         <div class="admin-dashboard-card-icon success">
             <i class="ri-shopping-bag-line"></i>
@@ -45,6 +49,7 @@ include_once "admin_header.php";
         </div>
     </a>
 
+    <!-- ESSE LINK LEVA PARA O ARQUIVO DE ADMIN CONTROLER E ENVIA JUNTO UM GET['ACAO'] QUE NESSE CASO É IGUAL A PEDIDOS -->
     <a href="<?= BASE_URL ?>/app/control/AdminController.php?acao=pedidos" class="admin-dashboard-card">
         <div class="admin-dashboard-card-icon warning">
             <i class="ri-shopping-cart-line"></i>
@@ -60,6 +65,7 @@ include_once "admin_header.php";
         </div>
     </a>
 
+    <!-- ESSE LINK LEVA PARA O ARQUIVO DE ADMIN CONTROLER E ENVIA JUNTO UM GET['ACAO'] QUE NESSE CASO É IGUAL A ESTOQUE-->
     <a href="<?= BASE_URL ?>/app/control/AdminController.php?acao=estoque" class="admin-dashboard-card">
         <div class="admin-dashboard-card-icon info">
             <i class="ri-stack-line"></i>
@@ -75,6 +81,7 @@ include_once "admin_header.php";
         </div>
     </a>
 
+    <!-- ESSE LINK LEVA PARA O ARQUIVO DE ADMIN CONTROLER E ENVIA JUNTO UM GET['ACAO'] QUE NESSE CASO É IGUAL A PEDIDOS -->
     <a href="<?= BASE_URL ?>/app/control/AdminController.php?acao=pedidos" class="admin-dashboard-card">
         <div class="admin-dashboard-card-icon primary">
             <i class="ri-money-dollar-circle-line"></i>
@@ -90,6 +97,7 @@ include_once "admin_header.php";
         </div>
     </a>
 
+    <!-- ESSE LINK LEVA PARA O ARQUIVO DE ADMIN CONTROLER E ENVIA JUNTO UM GET['ACAO'] QUE NESSE CASO É IGUAL A PEDIDOS -->
     <a href="<?= BASE_URL ?>/app/control/AdminController.php?acao=pedidos" class="admin-dashboard-card">
         <div class="admin-dashboard-card-icon success">
             <i class="ri-line-chart-line"></i>
@@ -106,10 +114,12 @@ include_once "admin_header.php";
     </a>
 </div>
 
-<!-- Pedidos Recentes -->
+<!-- Pedidos Recentes TABELA -->
 <div class="admin-content-card">
     <div class="admin-card-header">
         <h2 class="admin-card-title">Pedidos Recentes</h2>
+
+        <!-- ESSE LINK LEVA PARA O ARQUIVO DE ADMIN CONTROLER E ENVIA JUNTO UM GET['ACAO'] QUE NESSE CASO É IGUAL A PEDIDOS -->
         <a href="<?= BASE_URL ?>/app/control/AdminController.php?acao=pedidos" class="admin-btn admin-btn-secondary admin-btn-sm">
             Ver Todos
             <i class="ri-arrow-right-line"></i>
@@ -127,6 +137,8 @@ include_once "admin_header.php";
             </tr>
         </thead>
         <tbody>
+
+            <!-- SE O ARRAY DE PEDIDOS FORMATADOS ESIVER VAZIO, COLOCA MESAGEM DE USUÁRIO NÃO ENCONTRADO -->
             <?php if (empty($pedidosFormatados)): ?>
                 <tr>
                     <td colspan="6" style="text-align: center; padding: 20px; color: #666;">
@@ -134,6 +146,7 @@ include_once "admin_header.php";
                     </td>
                 </tr>
             <?php else: ?>
+                <!-- CRIA UMA LINHA PARA CADA PRODUTO FORMATADO -->
                 <?php foreach ($pedidosFormatados as $pedido): ?>
                     <tr>
                         <td><?= htmlspecialchars($pedido['id']) ?></td>
@@ -148,10 +161,11 @@ include_once "admin_header.php";
     </table>
 </div>
 
-<!-- Produtos com Baixo Estoque -->
+<!-- Produtos com Baixo Estoque TABELA-->
 <div class="admin-content-card">
     <div class="admin-card-header">
         <h2 class="admin-card-title">Produtos com Baixo Estoque</h2>
+        <!-- ESSE LINK LEVA PARA O ARQUIVO DE ADMIN CONTROLER E ENVIA JUNTO UM GET['ACAO'] QUE NESSE CASO É IGUAL A ESTOQUE -->
         <a href="<?= BASE_URL ?>/app/control/AdminController.php?acao=estoque" class="admin-btn admin-btn-secondary admin-btn-sm">
             Ver Estoque Completo
             <i class="ri-arrow-right-line"></i>
@@ -168,6 +182,7 @@ include_once "admin_header.php";
             </tr>
         </thead>
         <tbody>
+            <!-- SE O ARRAY DE PRODUTOS FORMATADOS ESIVER VAZIO, COLOCA MESAGEM DE USUÁRIO NÃO ENCONTRADO -->
             <?php if (empty($produtosFormatados)): ?>
                 <tr>
                     <td colspan="5" style="text-align: center; padding: 20px; color: #666;">
@@ -188,4 +203,6 @@ include_once "admin_header.php";
     </table>
 </div>
 
+
+<!--  CHAMA A PARTE DE HEADER QUE CONTÉM O MEU DE NAVEGAÇÃO E ABERTURA DO HTML  -->
 <?php include_once "admin_footer.php"; ?>

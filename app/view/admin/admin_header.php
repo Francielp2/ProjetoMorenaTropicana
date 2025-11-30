@@ -2,12 +2,6 @@
 // Esta view recebe apenas variáveis prontas do controller
 // $nomeUsuario - nome do usuário logado
 // $pagina_atual - página atual para destacar no menu
-
-// Inicia sessão se necessário
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
 // Pega dados do usuário logado (já validado pelo controller)
 $nomeUsuario = $_SESSION['usuario_nome'] ?? 'Administrador';
 $pagina_atual = $_GET['acao'] ?? 'dashboard';

@@ -1,33 +1,34 @@
 <?php
+/* ---INCLUI NO MODEL A CONEXÃO COM O BANCO DE DADOS--- */
 require_once __DIR__ . "/../../Database/conexaodb.php";
+
+/* ---CRAÇÃO DA CLASSE DASHBOARD DO MODEL--- */
 
 class DashboardModel
 {
     private $conn;
 
+    /* ---FUNÇÃO CONSTRUCT EXECULTA A CONEXÃO TODA VEZ QUE O OBJETO DE DASHBOARD FOR INSTÂNCIADO--- */
     public function __construct()
     {
         $database = new Database();
         $this->conn = $database->conexao();
     }
 
-    /**
-     * Busca o total de usuários cadastrados
-     */
+    /* ---FUNÇÃO DE PEGAR A QUANTIDADE DE USUÁRIOS DO BANCO--- */
     public function getTotalUsuarios()
     {
         try {
             $stmt = $this->conn->prepare("SELECT COUNT(*) FROM Usuarios");
             $stmt->execute();
-            return $stmt->fetchColumn();
+            return $stmt->fetchColumn();/* O fetchColumn() NESSE USO PEGA OS VALORES EM ARRAY DA VARIÁVEL $STMT E TRANSFORMA EM UMA ÚNICA LINHA DE DADOS
+            DO TIPO QUE O COUNT() RETORNA (INT)*/
         } catch (PDOException $e) {
             return 0;
         }
     }
 
-    /**
-     * Busca o total de produtos cadastrados
-     */
+    /*---FUNÇÃO DE PEGAR A QUANTIDADE DE PRODUTOS DO BANCO---*/
     public function getTotalProdutos()
     {
         try {
@@ -39,9 +40,7 @@ class DashboardModel
         }
     }
 
-    /**
-     * Busca o total de pedidos pendentes
-     */
+    /* ---FUNÇÃO DE PEGAR A QUANTIDADE DE PEDIDOS DO BANCO (SÓ RETORNA OS PEDIDOS COM STATUS = "PENDENTE")--- */
     public function getPedidosPendentes()
     {
         try {
@@ -53,9 +52,7 @@ class DashboardModel
         }
     }
 
-    /**
-     * Busca o total de itens em estoque
-     */
+    /* ---FUNÇÃO DE PEGAR A QUANTIDADE DE PRODUTOS EM ESTOQUE NO BANCO, RETORNA A SOMA DO ESTOQUE DE TODOS OS PRODUTOS")--- */
     public function getTotalEstoque()
     {
         try {
@@ -68,11 +65,8 @@ class DashboardModel
         }
     }
 
-    /**
-     * Busca a receita do mês atual
-     * Considera pedidos FINALIZADOS ou ENTREGUE
-     */
-    public function getReceitaMesAtual()
+    /* ---FUNÇÃO DE PEGAR O VALOR DE TODOS OS PEDIDOS QUE FORAM VENDIDOS DO BANCO NO NO ANO ATUAL. SE ESSE VALOR FOR NULO RETORNA 0")--- */
+    public function getReceitaAnoAtual()
     {
         try {
             $stmt = $this->conn->prepare("
@@ -88,10 +82,7 @@ class DashboardModel
         }
     }
 
-    /**
-     * Busca o total de vendas realizadas
-     * Considera pedidos FINALIZADOS ou ENTREGUE
-     */
+    /* ---FUNÇÃO DE PEGAR A QUANTIDADE DE TODOS OS PEDIDOS VENDIDOS DO BANCO (ENTENDE-SE POR VENDIDO PEDIDOS QUE TEM STATUS FINALIZADO OU ENTREGUE)*/
     public function getTotalVendas()
     {
         try {
@@ -107,11 +98,8 @@ class DashboardModel
         }
     }
 
-    /**
-     * Busca os 5 últimos pedidos realizados
-     * Retorna array com dados dos pedidos incluindo nome do cliente
-     */
-    public function getUltimosPedidos($limite = 5)
+    /* ---FUNÇÃO DE PEGAR OS ÚLTIMOS PEDIDOS QUE FORAM FEITOS---*/
+    public function getUltimosPedidos($limite)
     {
         try {
             $stmt = $this->conn->prepare("
@@ -126,7 +114,7 @@ class DashboardModel
                 ORDER BY p.data_pedido DESC
                 LIMIT :limite
             ");
-            $stmt->bindValue(':limite', (int)$limite, PDO::PARAM_INT);
+            $stmt->bindValue(':limite', (int)$limite, PDO::PARAM_INT);/* O $LIMITE DECIDE QUANTOS DADOS SERAM PUXADOS */
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
@@ -134,10 +122,7 @@ class DashboardModel
         }
     }
 
-    /**
-     * Busca produtos com estoque abaixo de 10
-     * Retorna array com dados do produto e estoque
-     */
+    /*---FUNÇÃO QUE PEGA OS PRODUTOS COM ESTOQUE BAIXO*/
     public function getProdutosEstoqueBaixo()
     {
         try {

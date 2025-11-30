@@ -1,4 +1,7 @@
 <?php
+
+/* ---CRIAÇÃO DA CLASSE DE CONEXÃO--- */
+
 class Database
 {
     // private $host = "localhost";
@@ -7,6 +10,7 @@ class Database
     // private $password = "databasekey@31";
     private $conn;
 
+    /* ---FUNÇÃO DE CONEXÃO COM PDO--- */
     public function conexao($host = "localhost", $dbname = "morena_tropicana", $username = "root", $password = "databasekey@31")
     {
         try {

@@ -1,9 +1,11 @@
 <?php
+/* CHAMA COMO BASE O CONTROLER DE AUTENTICAÇÃO */
 require_once __DIR__ . "/../config/config.php";
 require_once __DIR__ . "/AuthController.php";
 
 class CadastroController
 {
+    /* INSTANCIA O OBJETO DE AUTH CONTROLER AO INSTANCIAR ESSA CLASSE */
     private $authController;
 
     public function __construct()
@@ -11,33 +13,29 @@ class CadastroController
         $this->authController = new AuthController();
     }
 
-    /**
-     * Exibe a página de cadastro
-     * Se for POST, processa o cadastro
-     */
+    /* EXIBE A PÁGINA DE CADASTRO E SE FOR POST, PROCESSA OS DADOS DO POST */
     public function index()
     {
-        // Inicia sessão
+        /*  Inicia sessão */
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
 
-        // Se for POST, processa o cadastro
+        /* Se for POST, processa o cadastro */
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->authController->cadastro();
-            return; // O AuthController já faz o redirecionamento
+            return; /* O AuthController já faz o redirecionamento */
         }
 
-        // Pega mensagens de erro/sucesso da sessão
+        /*  Pega mensagens de erro/sucesso da sessão */
         $erro = $_SESSION['erro'] ?? '';
         $sucesso = $_SESSION['sucesso'] ?? '';
-        
-        // Limpa as mensagens da sessão após pegar
+
+        /* Limpa as mensagens da sessão após pegar */
         unset($_SESSION['erro']);
         unset($_SESSION['sucesso']);
 
-        // Inclui a view passando as variáveis prontas
-        require_once __DIR__ . "/../view/cadastro.php";
+        require_once __DIR__ . "/../view/cadastro.php";/*   Inclui a view passando as variáveis prontas */
     }
 }
 

@@ -1,10 +1,17 @@
 <?php
-require_once __DIR__ . "/../model/DashboardModel.php";
-require_once __DIR__ . "/../config/config.php";
-require_once __DIR__ . "/AuthController.php";
+
+/* FAZ AS REQUISIÇÕES NECESSÁRIAS PARA QUE FUNCIONE O DASHBOARD*/
+require_once __DIR__ . "/../model/DashboardModel.php";/*CHAMA O MODEL DO DASHBOARD*/
+require_once __DIR__ . "/../config/config.php";/*CHAMA O ARQUIVO QUE CONFIGURA OS CAMINHOS DE OUTROS ARQUIVOS*/
+require_once __DIR__ . "/AuthController.php";/*CHAMA O CONTROLADOR DE LOGIN E AÇÕES RELACIONADAS*/
+
+/* ---CLASSE QUE CONTROLA A DANHBOARD--- */
 
 class DashboardController
 {
+
+    /* CRIA UMA VÁRIAVEL E INICIA NESTA O OBJETO DE DASHBOARD MODEL PARA CONSEGUIR USAR AS FUNÇÕES DECLARADAS NO MODEL */
+
     private $dashboardModel;
 
     public function __construct()
@@ -12,46 +19,37 @@ class DashboardController
         $this->dashboardModel = new DashboardModel();
     }
 
-    /**
-     * Exibe a página do dashboard
-     * Busca todas as estatísticas e inclui a view
-     */
+    /* ---FUNÇÃO DE INCLUIR A VIEW E TRATAR AS VARIÁVEIS PARA SEREM USADAS */
     public function index()
     {
-        // Protege a rota - só admin pode acessar
+        /* ---CHAMA A FUNÇÃO DE PROTEGER A ROTA PARA QUE USUÁRIOS SEM AUTORIZAÇÃO NÃO ACESSEM---*/
+        /* ---ESSA FUNÇÃO É ESTATICA POR ISSO NÃO PRECISA INSTÂNCIAR O OBJETO---*/
         AuthController::protegerAdmin();
 
-        // Busca todas as estatísticas do banco
+        /* CHAMA AS FUNÇÕES DE CONSULTA DO DASHBOARD MODEL E PASSA O QUE ELAS RETORNAM PARA AS RESPECTIVAS VARIÁVEIS */
         $totalUsuarios = $this->dashboardModel->getTotalUsuarios();
         $totalProdutos = $this->dashboardModel->getTotalProdutos();
         $pedidosPendentes = $this->dashboardModel->getPedidosPendentes();
         $totalEstoque = $this->dashboardModel->getTotalEstoque();
-        $receitaMesAtual = $this->dashboardModel->getReceitaMesAtual();
+        $receitaAnoAtual = $this->dashboardModel->getReceitaAnoAtual();
         $totalVendas = $this->dashboardModel->getTotalVendas();
+        $receitaFormatada = "R$ " . number_format($receitaAnoAtual, 2, ',', '.');/* FORMATA O VALOR DA RECEITA PARA SER EXIBIDO */
 
-        // Formata a receita para exibição
-        $receitaFormatada = "R$ " . number_format($receitaMesAtual, 2, ',', '.');
+        $ultimosPedidos = $this->dashboardModel->getUltimosPedidos(5);/* BUSCA OS ULTIMOS 5 PEDIDOS REALIZADOS */
 
-        // Busca os 5 últimos pedidos
-        $ultimosPedidos = $this->dashboardModel->getUltimosPedidos(5);
-
-        // Formata os pedidos para exibição
+        /* FORMATAÇÃO DOS DADOS DOS ULTIMOS PEDIDOS PARA SEREM MOSTRADOS NA TABELA */
         $pedidosFormatados = [];
         foreach ($ultimosPedidos as $pedido) {
-            // Formata ID do pedido (com zeros à esquerda)
-            $idFormatado = '#' . str_pad($pedido['id_pedido'], 6, '0', STR_PAD_LEFT);
-
-            // Formata data (DD/MM/YYYY)
-            $dataFormatada = '';
+            $idFormatado = '#' . str_pad($pedido['id_pedido'], 6, '0', STR_PAD_LEFT);/* Formata o ID */
+            $dataFormatada = '';/* Formata data*/
             if (!empty($pedido['data_pedido'])) {
                 $dataObj = new DateTime($pedido['data_pedido']);
                 $dataFormatada = $dataObj->format('d/m/Y');
             }
 
-            // Formata valor
-            $valorFormatado = 'R$ ' . number_format($pedido['valor_total'] ?? 0, 2, ',', '.');
+            $valorFormatado = 'R$ ' . number_format($pedido['valor_total'] ?? 0, 2, ',', '.'); // Formata valor
 
-            // Formata status (traduz e define classe CSS)
+            /* FUNÇÃO DE FORMATAR O STATUS DO PEDIDO ESSA FUNÇÃO SERÁ DECLARADA POSTERIORMENTE NESSE CÓDIGO */
             $statusFormatado = $this->formatarStatusPedido($pedido['status_pedido']);
 
             $pedidosFormatados[] = [
@@ -64,17 +62,14 @@ class DashboardController
                 'status_classe' => $statusFormatado['classe']
             ];
         }
+        $produtosEstoqueBaixo = $this->dashboardModel->getProdutosEstoqueBaixo();/* Busca produtos com estoque baixo */
 
-        // Busca produtos com estoque baixo
-        $produtosEstoqueBaixo = $this->dashboardModel->getProdutosEstoqueBaixo();
-
-        // Formata os produtos para exibição
+        /* FORMATAÇÃO DOS DADOS DOS PRODUTOS COM ESTOQUE BAIXO PARA SEREM MOSTRADOS NA TABELA */
         $produtosFormatados = [];
         foreach ($produtosEstoqueBaixo as $produto) {
             $quantidade = (int)$produto['quantidade'];
 
-            // Determina status baseado na quantidade
-            $statusFormatado = $this->formatarStatusEstoque($quantidade);
+            $statusFormatado = $this->formatarStatusEstoque($quantidade); /* função de formatar e cassificar o estoque pela quantidade. Será implemntada masis a frente no código */
 
             $produtosFormatados[] = [
                 'id_produto' => $produto['id_produto'],
@@ -87,20 +82,14 @@ class DashboardController
             ];
         }
 
-        // Define o título da página
-        $titulo_pagina = "Dashboard";
+        $titulo_pagina = "Dashboard"; /* Define o título da página */
 
-        // Define a página atual para o menu
-        $_GET['acao'] = 'dashboard';
+        $_GET['acao'] = 'dashboard'; /* Define a página atual para o menu */
 
-        // Inclui a view passando todas as variáveis prontas
-        require_once __DIR__ . "/../view/admin/index.php";
+        require_once __DIR__ . "/../view/admin/index.php";/* INCLUI A VIEW */
     }
 
-    /**
-     * Formata o status do pedido para exibição
-     * Retorna array com texto formatado e classe CSS
-     */
+    /* FUNÇÃO DE FORMATAR O STATUS DO PEDIDO, REBEBE UMA STRING COM O STATUS */
     private function formatarStatusPedido($status)
     {
         $statusMap = [
@@ -110,13 +99,11 @@ class DashboardController
             'CANCELADO' => ['texto' => 'Cancelado', 'classe' => 'admin-badge-danger']
         ];
 
-        return $statusMap[$status] ?? ['texto' => ucfirst(strtolower($status)), 'classe' => 'admin-badge-info'];
+        return $statusMap[$status] ?? ['texto' => ucfirst(strtolower($status)), 'classe' => 'admin-badge-info'];/* RETORNA UM ARRAY QUE CONTÉM O STATUS E A CLASSE CSS DESSE STATUS PARA SER FORMATADO NA TABELA */
     }
 
-    /**
-     * Formata o status do estoque baseado na quantidade
-     * Retorna array com texto formatado e classe CSS
-     */
+    /* FUNÇÃO DE FORMATAR O STATUS DO ESTOQUE, REBEBE UM INTEIRO COM A QUANTIDADE DE ITENS NO ESTOQUE */
+    /* RETORNA O O STATUS E A CLASSE */
     private function formatarStatusEstoque($quantidade)
     {
         if ($quantidade == 0) {
@@ -131,7 +118,7 @@ class DashboardController
     }
 }
 
-// Se o arquivo foi chamado diretamente, executa o controller
+/* PEGA O ARQUIVO QUE ESTA SENDO EXECULTADO E SE ESSE ARQUIVO FOR O ATUAL INSTANCIA O OBJETO CHAMA A A FUNÇÃO DE MOSTRAR O INDEX */
 if (basename($_SERVER['PHP_SELF']) === 'DashboardController.php') {
     $controller = new DashboardController();
     $controller->index();
