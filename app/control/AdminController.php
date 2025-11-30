@@ -39,8 +39,8 @@ class AdminController
             case 'produtos':
                 $this->produtos();
                 break;
-            case 'buscarProduto':
-                $this->buscarProduto();
+            case 'produtos':
+                $this->produtos();
                 break;
             case 'atualizarProduto':
                 $this->atualizarProduto();
@@ -221,38 +221,38 @@ class AdminController
         require_once __DIR__ . "/../view/admin/usuarios.php";
     }
 
-   /**
-     * Exibe a página de produtos
-     */
+    /* EXIBE A PÁGINA DE PRODUTOS */
     private function produtos()
     {
-        // Protege a rota - só admin pode acessar
+        /* Protege a rota - só admin pode acessar */
         AuthController::protegerAdmin();
 
-        // Pega parâmetros de pesquisa e filtros via GET
+        /* Pega parâmetros de pesquisa e filtros via GET */
         $termoPesquisa = $_GET['termo'] ?? $_GET['pesquisa'] ?? '';
         $filtroCategoria = $_GET['categoria'] ?? '';
 
-        // Busca produtos (com ou sem filtro)
+        /* VALIDA SE FOI PASSADO FILTROS DE PESQUISA E PESQUISA OS PRODUTOS DE ACORDO COM OS FILTROS OU SEM ELES */
         if (!empty($termoPesquisa) || !empty($filtroCategoria)) {
+            /* SE EXISTIR TERMO PASSA OS TERMOS COMO PARÂMETRO DE PESQUISA */
             $produtos = $this->produtoModel->buscarProdutosPorTermo($termoPesquisa, $filtroCategoria);
         } else {
             $produtos = $this->produtoModel->listarTodosProdutos();
         }
 
-        // Busca categorias para o filtro
+        /* BUSCA AS CATEGORIAS EXISTENTES PARA SER EXIBIDA NO FILTRO*/
         $categorias = $this->produtoModel->listarCategorias();
 
-        // Formata os produtos para exibição
+        /* FORMATA OS PRODUTOS PARA SEREM EXIBIDOS */
         $produtosFormatados = [];
         foreach ($produtos as $produto) {
-            // Formata preço (R$ XXX,XX)
+            /* Formata preço (R$ XXX,XX) */
             $precoFormatado = 'R$ ' . number_format($produto['preco'], 2, ',', '.');
-            
-            // Determina status do estoque
-            $estoqueTotal = (int)$produto['estoque_total'];
-            $statusEstoque = $this->formatarStatusEstoque($estoqueTotal);
 
+            /* Determina status do estoque */
+            $estoqueTotal = (int)$produto['estoque_total'];
+            $statusEstoque = $this->formatarStatusEstoque($estoqueTotal);/* CHAMA A FUNÇÃO DE FORMATAR E PASSAR AS CLASSES PARA OS PRODUTOS */
+
+            /* ARRAY COM OS RESULTADOS FORMATADOS */
             $produtosFormatados[] = [
                 'id' => $produto['id_produto'],
                 'nome' => $produto['nome'],
@@ -269,16 +269,18 @@ class AdminController
             ];
         }
 
+
+        /* PASSA O TITULO DA PÁGINA E AÇÃO QUE DEVE SER EXECUTADA PELO ROTEADOR */
         $titulo_pagina = "Produtos";
         $_GET['acao'] = 'produtos';
 
-        // Passa filtros para a view manter os valores selecionados
+        /* PASSA OS FILTROS QUE A VIEW DEVE MANTER SELECIONADOS ATÉ QUE SEJAM LIMPOS */
         $filtros = [
             'termo' => $termoPesquisa,
             'categoria' => $filtroCategoria
         ];
 
-        // Busca dados do produto para edição (se houver ID na URL)
+        /* Busca dados do produto para edição (se houver ID na URL) */
         $produtoEdicao = null;
         if (isset($_GET['editar']) && !empty($_GET['editar'])) {
             $produtoCompleto = $this->produtoModel->buscarProdutoPorId($_GET['editar']);
@@ -296,14 +298,14 @@ class AdminController
             }
         }
 
-        // Busca dados do produto para visualização (se houver ID na URL)
+        /* Busca dados do produto para visualização (se houver ID na URL) */
         $produtoVisualizacao = null;
         if (isset($_GET['visualizar']) && !empty($_GET['visualizar'])) {
             $produtoCompleto = $this->produtoModel->buscarProdutoPorId($_GET['visualizar']);
             if ($produtoCompleto) {
                 $precoFormatado = 'R$ ' . number_format($produtoCompleto['preco'], 2, ',', '.');
                 $estoqueTotal = (int)$produtoCompleto['estoque_total'];
-                
+
                 $produtoVisualizacao = [
                     'id' => $produtoCompleto['id_produto'],
                     'nome' => $produtoCompleto['nome'],
@@ -318,25 +320,23 @@ class AdminController
             }
         }
 
-        // Inclui a view passando as variáveis prontas
+        /* REQUIRE A VIEW PARA MOSTRAR O FRONT END */
         require_once __DIR__ . "/../view/admin/produtos.php";
     }
 
-    /**
-     * Processa o cadastro de um novo produto
-     */
+    /* PROCESSA DADOS DE UM NOVO PRODUTO */
     public function cadastrarProduto()
     {
-        // Protege a rota - só admin pode acessar
+        /* Protege a rota - só admin pode acessar */
         AuthController::protegerAdmin();
 
-        // Verifica se é POST
+        /* Verifica se é POST */
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('Método não permitido'));
             exit;
         }
 
-        // Pega dados do POST
+        /* PEGA OS DADOS QUE FORAM DECLARADOS NO POST */
         $nome = trim($_POST['nome'] ?? '');
         $descricao = trim($_POST['descricao'] ?? '');
         $categoria = trim($_POST['categoria'] ?? '');
@@ -345,7 +345,7 @@ class AdminController
         $cores = trim($_POST['cores'] ?? '');
         $imagem = trim($_POST['imagem'] ?? '');
 
-        // Validações básicas
+        /* VALIDAÇÕES BÁSICAS */
         if (empty($nome)) {
             header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('Nome é obrigatório'));
             exit;
@@ -366,7 +366,7 @@ class AdminController
             exit;
         }
 
-        // Cria o produto
+        /* SE PASSAR POR TODAS AS VALIDAÇÕES  ATÉ AQUI CHAMA A FUNÇÃO DE INSERIR DADOS NO BANCO */
         $idProduto = $this->produtoModel->criarProduto($nome, $descricao, $categoria, $preco, $tamanhos, $cores, $imagem);
 
         if ($idProduto) {
@@ -378,21 +378,19 @@ class AdminController
         }
     }
 
-    /**
-     * Processa a atualização de um produto
-     */
+    /* PROCESSA A ATUALIZAÇÃO DO PRODUTO */
     public function atualizarProduto()
     {
-        // Protege a rota - só admin pode acessar
+        /* PROTEGE A ROTA PARA SOMENTE O ADMIN PODER ACESSAR */
         AuthController::protegerAdmin();
 
-        // Verifica se é POST
+        /* Verifica se é POST */
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('Método não permitido'));
             exit;
         }
 
-        // Pega dados do POST
+        /* Pega dados do POST */
         $idProduto = $_POST['id'] ?? null;
         $nome = trim($_POST['nome'] ?? '');
         $descricao = trim($_POST['descricao'] ?? '');
@@ -402,7 +400,7 @@ class AdminController
         $cores = trim($_POST['cores'] ?? '');
         $imagem = trim($_POST['imagem'] ?? '');
 
-        // Validações
+        /* VALIDAÇÕES BÁSICAS */
         if (!$idProduto) {
             header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('ID do produto não informado'));
             exit;
@@ -418,7 +416,7 @@ class AdminController
             exit;
         }
 
-        // Atualiza o produto
+        /* SE PASSAR POR TODAS AS VALIDAÇÕES ATÉ AGORA CHAMA A FUNÇÃO DE ATUALIZAR OS DADOS NO BANCO */
         $resultado = $this->produtoModel->atualizarProduto($idProduto, $nome, $descricao, $categoria, $preco, $tamanhos, $cores, $imagem);
 
         if ($resultado) {
@@ -430,30 +428,28 @@ class AdminController
         }
     }
 
-    /**
-     * Processa a exclusão de um produto
-     */
+    /* PROCESSA A EXCLUSÃO DE UM PRODUTO */
     public function excluirProduto()
     {
-        // Protege a rota - só admin pode acessar
+        /* PROTEGE A ROTA PARA SOMENTE O ADMIN PODER EXECUTAR A AÇÃO */
         AuthController::protegerAdmin();
 
-        // Verifica se é POST
+        /* Verifica se é POST */
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('Método não permitido'));
             exit;
         }
 
-        // Pega ID do POST
+        /* Pega ID do POST */
         $idProduto = $_POST['id'] ?? null;
 
-        // Validação
+        /* VALIDAÇÃO BÁSICA DAS INFORMAÇÕES */
         if (!$idProduto) {
             header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('ID do produto não informado'));
             exit;
         }
 
-        // Exclui o produto
+        /* SE PASSAR PELA VALIDAÇÃO, CHAMA A FUNÇÃO DE EXCLUIR O PRODUTO E PASSA O ID DO MESMO COMO PARÂMETRO */
         $resultado = $this->produtoModel->excluirProduto($idProduto);
 
         if ($resultado) {
@@ -465,56 +461,7 @@ class AdminController
         }
     }
 
-    /**
-     * Retorna dados completos de um produto em JSON
-     */
-    public function buscarProduto()
-    {
-        // Protege a rota - só admin pode acessar
-        AuthController::protegerAdmin();
-
-        // Verifica se foi passado o ID
-        $idProduto = $_GET['id'] ?? null;
-
-        if (!$idProduto) {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'ID do produto não informado']);
-            exit;
-        }
-
-        // Busca dados do produto
-        $produto = $this->produtoModel->buscarProdutoPorId($idProduto);
-
-        if (!$produto) {
-            header('Content-Type: application/json');
-            echo json_encode(['erro' => 'Produto não encontrado']);
-            exit;
-        }
-
-        // Formata preço
-        $precoFormatado = 'R$ ' . number_format($produto['preco'], 2, ',', '.');
-
-        // Prepara resposta
-        $resposta = [
-            'id' => $produto['id_produto'],
-            'nome' => $produto['nome'],
-            'descricao' => $produto['descricao'],
-            'categoria' => $produto['categoria'] ?? 'Sem categoria',
-            'preco' => $precoFormatado,
-            'tamanhos' => $produto['tamanhos_disponiveis'],
-            'cores' => $produto['cores_disponiveis'],
-            'estoque_total' => (int)$produto['estoque_total'],
-            'imagem' => $produto['imagens']
-        ];
-
-        header('Content-Type: application/json');
-        echo json_encode($resposta);
-        exit;
-    }
-
-    /**
-     * Função auxiliar para formatar status do estoque
-     */
+    /* FUNÇÃO DE FORMATAR E PASSAR A CLASSE REFERENTE A QUANTRIDADE DE ESTOQUE */
     private function formatarStatusEstoque($quantidade)
     {
         if ($quantidade == 0) {

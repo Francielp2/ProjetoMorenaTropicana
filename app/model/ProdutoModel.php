@@ -7,14 +7,14 @@ class ProdutoModel
 {
     /* INICIA O OBJETO DE CONEXÃO E ARMAZENA SEU VALOR NA VARIÁVEL CONN */
     private $conn;
-    
+
     public function __construct()
     {
         $database = new Database();
         $this->conn = $database->conexao();
     }
 
-    /* FUNÇÃO QUE LISTA TODOS OS PRODUTOS */
+    /* FUNÇÃO QUE LISTA TODOS OS PRODUTOS E RETORNA UM ARRAY CONTENDO OS DADOS*/
     public function listarTodosProdutos()
     {
         try {
@@ -81,11 +81,11 @@ class ProdutoModel
                 $params[':categoria'] = $filtroCategoria;
             }
 
-            $sql .= " GROUP BY p.id_produto ORDER BY p.id_produto ASC";
+            $sql .= " GROUP BY p.id_produto ORDER BY p.id_produto ASC";/* PEGA O ARQUIVO A CONSULTA FINAL SALVA EM SQL, E ADICIONA UMA ORDANAÇÃO EM ORDEM CRESCENTE DE ACORDO COM O ID */
 
             $stmt = $this->conn->prepare($sql);
 
-            /* Bind dos parâmetros */
+            /* FOREACH RESPONSÁVEL POR NORMALIZAR TODOS OS PARÂMETROS PASSADOS */
             foreach ($params as $key => $value) {
                 $stmt->bindValue($key, $value, PDO::PARAM_STR);
             }
@@ -118,7 +118,7 @@ class ProdutoModel
         }
     }
 
-    /* FUNÇÃO QUE CRIA UM NOVO PRODUTO */
+    /* FUNÇÃO QUE CRIA UM NOVO PRODUTO AS VALIDAÇÕES SÃO FEITAS NO CONTROLER, ESSA FUNÇÃO SÓ TENTA INSERIR OS VALORES NO BANCOD E DADOS*/
     public function criarProduto($nome, $descricao, $categoria, $preco, $tamanhos, $cores, $imagem = null)
     {
         try {
@@ -126,7 +126,7 @@ class ProdutoModel
                 INSERT INTO Produto (nome, descricao, categoria, preco, tamanhos_disponiveis, cores_disponiveis, imagens)
                 VALUES (:nome, :descricao, :categoria, :preco, :tamanhos, :cores, :imagem)
             ");
-            
+
             $stmt->bindParam(':nome', $nome);
             $stmt->bindParam(':descricao', $descricao);
             $stmt->bindParam(':categoria', $categoria);
@@ -134,7 +134,7 @@ class ProdutoModel
             $stmt->bindParam(':tamanhos', $tamanhos);
             $stmt->bindParam(':cores', $cores);
             $stmt->bindParam(':imagem', $imagem);
-            
+
             $stmt->execute();
             return $this->conn->lastInsertId();
         } catch (PDOException $e) {
@@ -142,7 +142,7 @@ class ProdutoModel
         }
     }
 
-    /* FUNÇÃO QUE ATUALIZA UM PRODUTO */
+    /* FUNÇÃO QUE ATUALIZA UM PRODUTO AS VALIDAÇÕES SÃO FEITAS NO CONTROLER, ESSA FUNÇÃO SÓ TENTA INSERIR OS VALORES NO BANCOD E DADOS*/
     public function atualizarProduto($idProduto, $nome, $descricao, $categoria, $preco, $tamanhos, $cores, $imagem = null)
     {
         try {
@@ -172,7 +172,7 @@ class ProdutoModel
                     WHERE id_produto = :id
                 ");
             }
-            
+
             $stmt->bindParam(':nome', $nome);
             $stmt->bindParam(':descricao', $descricao);
             $stmt->bindParam(':categoria', $categoria);
@@ -180,7 +180,7 @@ class ProdutoModel
             $stmt->bindParam(':tamanhos', $tamanhos);
             $stmt->bindParam(':cores', $cores);
             $stmt->bindParam(':id', $idProduto);
-            
+
             $stmt->execute();
             return true;
         } catch (PDOException $e) {
@@ -188,7 +188,7 @@ class ProdutoModel
         }
     }
 
-    /* FUNÇÃO QUE EXCLUI UM PRODUTO */
+    /* FUNÇÃO QUE EXCLUI UM PRODUTO AS VALIDAÇÕES SÃO FEITAS NO CONTROLER, ESSA FUNÇÃO SÓ TENTA EXCLUITR VALORES DO BANCO DE DADOS */
     public function excluirProduto($idProduto)
     {
         try {
@@ -202,7 +202,7 @@ class ProdutoModel
         }
     }
 
-    /* FUNÇÃO QUE BUSCA TODAS AS CATEGORIAS EXISTENTES */
+    /* FUNÇÃO QUE BUSCA TODAS AS CATEGORIAS EXISTENTES PARA SEREM EXIBIDAS NA HORA DE FILTRAR*/
     public function listarCategorias()
     {
         try {
