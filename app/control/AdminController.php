@@ -4,17 +4,20 @@ require_once __DIR__ . "/../config/config.php";
 require_once __DIR__ . "/AuthController.php";
 require_once __DIR__ . "/../model/UsuarioModel.php";
 require_once __DIR__ . "/../model/ProdutoModel.php";
+require_once __DIR__ . "/../model/PedidoModel.php";
 
 class AdminController
 {
-    /* instância o usuario model e o produto model quando o controler for instânciado */
+    /* instância o usuario model, produto model e pedido model quando o controler for instânciado */
     private $usuarioModel;
     private $produtoModel;
+    private $pedidoModel;
 
     public function __construct()
     {
         $this->usuarioModel = new UsuarioModel();
         $this->produtoModel = new ProdutoModel();
+        $this->pedidoModel = new PedidoModel();
     }
     /* ROTEADOR QUE CHAMA PÁGINA E SEUS MÉTODOS ESPERCIFICOS DE ACORDO COM A AÇÃO SOLICITADA */
     public function index()
@@ -39,9 +42,6 @@ class AdminController
             case 'produtos':
                 $this->produtos();
                 break;
-            case 'produtos':
-                $this->produtos();
-                break;
             case 'atualizarProduto':
                 $this->atualizarProduto();
                 break;
@@ -53,6 +53,9 @@ class AdminController
                 break;
             case 'pedidos':
                 $this->pedidos();
+                break;
+            case 'atualizarStatusPedido':
+                $this->atualizarStatusPedido();
                 break;
             case 'estoque':
                 $this->estoque();
@@ -481,12 +484,269 @@ class AdminController
         /* Protege a rota - só admin pode acessar */
         AuthController::protegerAdmin();
 
-        /* DEFINE O TITULO DA PÁGINA COMO PEDIDOS PARA SER USADO NO HEADER DE ADMIN E DECLARA A AÇÃO DA URL COMO PEDIDOS PARA QUE A PÁGINA DE USUÁRIO SEJA EXIBIDA*/
+        /* PEGA POR MEIO DO GET OS PARÂMETROS QUE FORAM USADOS PARA FAZER A PESQUISA NA TABELA DE PEDIDOS E SE NÃO TIVER NADA PASSA VALOR VAZIO */
+        $termoPesquisa = $_GET['termo'] ?? $_GET['pesquisa'] ?? '';
+        $filtroStatusPedido = $_GET['status_pedido'] ?? '';
+        $filtroStatusPagamento = $_GET['status_pagamento'] ?? '';
+        $dataInicial = $_GET['data_inicial'] ?? '';
+        $dataFinal = $_GET['data_final'] ?? '';
+        $valorMin = $_GET['valor_min'] ?? '';
+        $valorMax = $_GET['valor_max'] ?? '';
+
+        /* SE UM DOS PARÂMETROS DE PESQUISA NÃO FOR VAZIO, CHAMA A FUNÇÃO DE PESQUISA PEDIDO E SE TODOS OS PARÂMETROS FOREM VAZIOS (SE O USUÁRIO NÃO PESUISOU NADA) RETORNA TODOS OS PEDIDOS */
+        if (!empty($termoPesquisa) || !empty($filtroStatusPedido) || !empty($filtroStatusPagamento) || !empty($dataInicial) || !empty($dataFinal) || !empty($valorMin) || !empty($valorMax)) {
+            $pedidos = $this->pedidoModel->buscarPedidosPorTermo($termoPesquisa, $filtroStatusPedido, $filtroStatusPagamento, $dataInicial, $dataFinal, $valorMin, $valorMax);
+        } else {
+            $pedidos = $this->pedidoModel->listarTodosPedidos();
+        }
+
+        /* FORMATA OS PEDIDOS PARA SEREM EXIBIDOS */
+        $pedidosFormatados = [];
+        foreach ($pedidos as $pedido) {
+            /* Formata data (dd/mm/yyyy hh:mm) */
+            $dataFormatada = '';
+            if (!empty($pedido['data_pedido'])) {
+                $dataObj = new DateTime($pedido['data_pedido']);
+                $dataFormatada = $dataObj->format('d/m/Y H:i');
+            }
+
+            /* Calcula valor total sempre a partir dos itens do pedido para garantir precisão */
+            $itensPedido = $this->pedidoModel->buscarItensPedido($pedido['id_pedido']);
+            $valorTotal = 0;
+            if (!empty($itensPedido) && is_array($itensPedido)) {
+                foreach ($itensPedido as $item) {
+                    $precoUnitario = floatval($item['preco_unitario'] ?? 0);
+                    $quantidade = intval($item['quantidade'] ?? 0);
+                    $valorTotal += $precoUnitario * $quantidade;
+                }
+            }
+            /* Se não houver itens ou o cálculo resultar em zero, usa o valor_total da tabela como fallback */
+            if ($valorTotal == 0 && !empty($pedido['valor_total'])) {
+                $valorTotal = floatval($pedido['valor_total']);
+            }
+            $valorFormatado = 'R$ ' . number_format($valorTotal, 2, ',', '.');
+
+            /* Determina classe CSS baseada no status do pedido */
+            $statusPedido = $pedido['status_pedido'] ?? 'PENDENTE';
+            $statusPedidoClasse = '';
+            $statusPedidoTexto = '';
+            switch ($statusPedido) {
+                case 'PENDENTE':
+                    $statusPedidoClasse = 'admin-badge-warning';
+                    $statusPedidoTexto = 'Pendente';
+                    break;
+                case 'FINALIZADO':
+                    $statusPedidoClasse = 'admin-badge-info';
+                    $statusPedidoTexto = 'Finalizado';
+                    break;
+                case 'CANCELADO':
+                    $statusPedidoClasse = 'admin-badge-danger';
+                    $statusPedidoTexto = 'Cancelado';
+                    break;
+                default:
+                    $statusPedidoClasse = 'admin-badge-warning';
+                    $statusPedidoTexto = $statusPedido;
+            }
+
+            /* Determina classe CSS baseada no status do pagamento */
+            $statusPagamento = $pedido['status_pagamento'] ?? 'PENDENTE';
+            $statusPagamentoClasse = '';
+            $statusPagamentoTexto = '';
+            switch ($statusPagamento) {
+                case 'PENDENTE':
+                    $statusPagamentoClasse = 'admin-badge-warning';
+                    $statusPagamentoTexto = 'Pendente';
+                    break;
+                case 'CONFIRMADO':
+                    $statusPagamentoClasse = 'admin-badge-success';
+                    $statusPagamentoTexto = 'Confirmado';
+                    break;
+                case 'CANCELADO':
+                    $statusPagamentoClasse = 'admin-badge-danger';
+                    $statusPagamentoTexto = 'Cancelado';
+                    break;
+                default:
+                    $statusPagamentoClasse = 'admin-badge-warning';
+                    $statusPagamentoTexto = 'Pendente';
+            }
+
+            /* ARRAY COM OS RESULTADOS FORMATADOS */
+            $pedidosFormatados[] = [
+                'id' => $pedido['id_pedido'],
+                'cliente' => $pedido['nome_cliente'] ?? 'Cliente não encontrado',
+                'data' => $dataFormatada,
+                'valor_total' => $valorFormatado,
+                'status_pedido' => $statusPedidoTexto,
+                'status_pedido_classe' => $statusPedidoClasse,
+                'status_pagamento' => $statusPagamentoTexto,
+                'status_pagamento_classe' => $statusPagamentoClasse
+            ];
+        }
+
+        /* DEFINE O TITULO DA PÁGINA COMO PEDIDOS PARA SER USADO NO HEADER DE ADMIN E DECLARA A AÇÃO DA URL COMO PEDIDOS PARA QUE A PÁGINA DE PEDIDOS SEJA EXIBIDA*/
         $titulo_pagina = "Pedidos";
         $_GET['acao'] = 'pedidos';
 
+        /* DECLARA OS FILTROS PARA QUE ELES FIQUEM SELECIONADOS NA VIEW */
+        $filtros = [
+            'termo' => $termoPesquisa,
+            'status_pedido' => $filtroStatusPedido,
+            'status_pagamento' => $filtroStatusPagamento,
+            'data_inicial' => $dataInicial,
+            'data_final' => $dataFinal,
+            'valor_min' => $valorMin,
+            'valor_max' => $valorMax
+        ];
+
+        /* SE FOR ENVIADO NA URL PEGA O VISUALIZAR QUE CONTÉM O ID DO PEDIDO */
+        $pedidoVisualizacao = null;
+        if (isset($_GET['visualizar']) && !empty($_GET['visualizar'])) {
+            $pedidoCompleto = $this->pedidoModel->buscarPedidoPorId($_GET['visualizar']);
+            if ($pedidoCompleto) {
+                /* Formata dados do pedido para visualização */
+                $dataFormatada = '';
+                if (!empty($pedidoCompleto['data_pedido'])) {
+                    $dataObj = new DateTime($pedidoCompleto['data_pedido']);
+                    $dataFormatada = $dataObj->format('d/m/Y H:i');
+                }
+
+                /* Calcula valor total sempre a partir dos itens do pedido para garantir precisão */
+                $valorTotalCompleto = 0;
+                if (!empty($pedidoCompleto['itens']) && is_array($pedidoCompleto['itens'])) {
+                    foreach ($pedidoCompleto['itens'] as $item) {
+                        $precoUnitario = floatval($item['preco_unitario'] ?? 0);
+                        $quantidade = intval($item['quantidade'] ?? 0);
+                        $valorTotalCompleto += $precoUnitario * $quantidade;
+                    }
+                }
+                /* Se não houver itens ou o cálculo resultar em zero, usa o valor_total da tabela como fallback */
+                if ($valorTotalCompleto == 0 && !empty($pedidoCompleto['valor_total'])) {
+                    $valorTotalCompleto = floatval($pedidoCompleto['valor_total']);
+                }
+                $valorFormatado = 'R$ ' . number_format($valorTotalCompleto, 2, ',', '.');
+
+                $statusPedidoTexto = '';
+                switch ($pedidoCompleto['status_pedido']) {
+                    case 'PENDENTE':
+                        $statusPedidoTexto = 'Pendente';
+                        break;
+                    case 'FINALIZADO':
+                        $statusPedidoTexto = 'Finalizado';
+                        break;
+                    case 'CANCELADO':
+                        $statusPedidoTexto = 'Cancelado';
+                        break;
+                    default:
+                        $statusPedidoTexto = $pedidoCompleto['status_pedido'];
+                }
+
+                $statusPagamentoTexto = '';
+                switch ($pedidoCompleto['status_pagamento']) {
+                    case 'PENDENTE':
+                        $statusPagamentoTexto = 'Pendente';
+                        break;
+                    case 'CONFIRMADO':
+                        $statusPagamentoTexto = 'Confirmado';
+                        break;
+                    case 'CANCELADO':
+                        $statusPagamentoTexto = 'Cancelado';
+                        break;
+                    default:
+                        $statusPagamentoTexto = 'Pendente';
+                }
+                $formaPagamentoTexto = $pedidoCompleto['forma_pagamento'] ?? 'Não informado';
+
+                /* Formata itens do pedido */
+                $itensFormatados = [];
+                foreach ($pedidoCompleto['itens'] as $item) {
+                    $precoUnitarioFormatado = 'R$ ' . number_format($item['preco_unitario'], 2, ',', '.');
+                    $subtotal = $item['preco_unitario'] * $item['quantidade'];
+                    $subtotalFormatado = 'R$ ' . number_format($subtotal, 2, ',', '.');
+
+                    $itensFormatados[] = [
+                        'nome' => $item['nome_produto'],
+                        'quantidade' => $item['quantidade'],
+                        'preco_unitario' => $precoUnitarioFormatado,
+                        'subtotal' => $subtotalFormatado
+                    ];
+                }
+
+                /* DADOS QUE VÃO APARECER NO MODAL DE VISUALIZAÇÃO */
+                $pedidoVisualizacao = [
+                    'id' => $pedidoCompleto['id_pedido'],
+                    'cliente' => $pedidoCompleto['nome_cliente'] ?? 'Cliente não encontrado',
+                    'email' => $pedidoCompleto['email_cliente'] ?? '',
+                    'data' => $dataFormatada,
+                    'status_pedido' => $statusPedidoTexto,
+                    'valor_total' => $valorFormatado,
+                    'status_pagamento' => $statusPagamentoTexto,
+                    'forma_pagamento' => $formaPagamentoTexto,
+                    'itens' => $itensFormatados
+                ];
+            }
+        }
+
+        /* SE FOR ENVIADO NA URL PEGA O EDITAR QUE CONTÉM O ID DO PEDIDO */
+        $pedidoEdicao = null;
+        if (isset($_GET['editar']) && !empty($_GET['editar'])) {
+            $pedidoCompleto = $this->pedidoModel->buscarPedidoPorId($_GET['editar']);
+            if ($pedidoCompleto) {
+                /* DADOS QUE VÃO APARECER NO MODAL DE EDIÇÃO */
+                $pedidoEdicao = [
+                    'id' => $pedidoCompleto['id_pedido'],
+                    'status_pedido' => $pedidoCompleto['status_pedido'],
+                    'status_pagamento' => $pedidoCompleto['status_pagamento'] ?? 'PENDENTE'
+                ];
+            }
+        }
+
         /* Inclui a view */
         require_once __DIR__ . "/../view/admin/pedidos.php";
+    }
+
+    /* PROCESSA A ATUALIZAÇÃO DO STATUS DO PEDIDO */
+    public function atualizarStatusPedido()
+    {
+        /* PROTEGE A ROTA PARA SOMENTE O ADMIN PODER EXECUTAR A AÇÃO */
+        AuthController::protegerAdmin();
+
+        /* Verifica se é POST */
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=pedidos&erro=' . urlencode('Método não permitido'));
+            exit;
+        }
+
+        /* Pega dados do POST */
+        $idPedido = $_POST['id'] ?? null;
+        $statusPedido = $_POST['status_pedido'] ?? null;
+        $statusPagamento = $_POST['status_pagamento'] ?? null;
+
+        /* VALIDAÇÕES BÁSICAS */
+        if (!$idPedido) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=pedidos&erro=' . urlencode('ID do pedido não informado'));
+            exit;
+        }
+
+        if (!$statusPedido || !in_array($statusPedido, ['PENDENTE', 'FINALIZADO', 'CANCELADO'])) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=pedidos&erro=' . urlencode('Status do pedido inválido'));
+            exit;
+        }
+
+        if ($statusPagamento && !in_array($statusPagamento, ['PENDENTE', 'CONFIRMADO', 'CANCELADO'])) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=pedidos&erro=' . urlencode('Status do pagamento inválido'));
+            exit;
+        }
+
+        /* SE PASSAR POR TODAS AS VALIDAÇÕES ATÉ AGORA CHAMA A FUNÇÃO DE ATUALIZAR OS DADOS NO BANCO */
+        $resultado = $this->pedidoModel->atualizarStatusPedido($idPedido, $statusPedido, $statusPagamento);
+
+        if ($resultado) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=pedidos&sucesso=' . urlencode('Status do pedido atualizado com sucesso!'));
+            exit;
+        } else {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=pedidos&erro=' . urlencode('Erro ao atualizar status do pedido. Tente novamente.'));
+            exit;
+        }
     }
 
     /* EXIBE A PÁGINA DE ESTOQUE */

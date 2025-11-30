@@ -36,6 +36,7 @@ CREATE TABLE Endereco (
     bairro VARCHAR(100),
     rua VARCHAR(100),
     numero VARCHAR(10),
+    complemento VARCHAR(100) NULL,
     FOREIGN KEY (id_cliente) REFERENCES Cliente(id_usuario)
 		ON DELETE CASCADE
 		ON UPDATE CASCADE
@@ -79,7 +80,7 @@ CREATE TABLE Pedido (
     id_pedido INT AUTO_INCREMENT PRIMARY KEY,
     id_cliente INT,
     data_pedido DATETIME DEFAULT CURRENT_TIMESTAMP,
-    status_pedido ENUM('FINALIZADO','CANCELADO','ENTREGUE','PENDENTE') DEFAULT 'PENDENTE',
+    status_pedido ENUM('FINALIZADO','CANCELADO','PENDENTE') DEFAULT 'PENDENTE',
     valor_total DECIMAL(10,2),
     FOREIGN KEY (id_cliente) REFERENCES Cliente(id_usuario)
         ON DELETE SET NULL
@@ -104,7 +105,7 @@ CREATE TABLE Pagamento (
     id_pagamento INT AUTO_INCREMENT PRIMARY KEY,
     id_pedido INT,
     data_pagamento DATETIME DEFAULT CURRENT_TIMESTAMP,
-    status_pagamento ENUM('CONFIRMADO','PENDENTE') DEFAULT 'PENDENTE',
+    status_pagamento ENUM('CONFIRMADO','PENDENTE','CANCELADO') DEFAULT 'PENDENTE',
     forma_pagamento ENUM('Cartão', 'Pix', 'Boleto'),
     FOREIGN KEY (id_pedido) REFERENCES Pedido(id_pedido)
         ON DELETE CASCADE
