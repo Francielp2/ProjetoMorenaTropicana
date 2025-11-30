@@ -1,17 +1,20 @@
 <?php
-/* chama os arquivos necessários de config e de model usuario e de controler de autenticação */
+/* chama os arquivos necessários de config e de model usuario, produto e de controler de autenticação */
 require_once __DIR__ . "/../config/config.php";
 require_once __DIR__ . "/AuthController.php";
 require_once __DIR__ . "/../model/UsuarioModel.php";
+require_once __DIR__ . "/../model/ProdutoModel.php";
 
 class AdminController
 {
-    /* instância o usuario model quando o controler for instânciado */
+    /* instância o usuario model e o produto model quando o controler for instânciado */
     private $usuarioModel;
+    private $produtoModel;
 
     public function __construct()
     {
         $this->usuarioModel = new UsuarioModel();
+        $this->produtoModel = new ProdutoModel();
     }
     /* ROTEADOR QUE CHAMA PÁGINA E SEUS MÉTODOS ESPERCIFICOS DE ACORDO COM A AÇÃO SOLICITADA */
     public function index()
@@ -35,6 +38,18 @@ class AdminController
                 break;
             case 'produtos':
                 $this->produtos();
+                break;
+            case 'buscarProduto':
+                $this->buscarProduto();
+                break;
+            case 'atualizarProduto':
+                $this->atualizarProduto();
+                break;
+            case 'excluirProduto':
+                $this->excluirProduto();
+                break;
+            case 'cadastrarProduto':
+                $this->cadastrarProduto();
                 break;
             case 'pedidos':
                 $this->pedidos();
@@ -206,18 +221,311 @@ class AdminController
         require_once __DIR__ . "/../view/admin/usuarios.php";
     }
 
-    /* EXIBE A PÁGINA DE PRODUTOS E  */
+   /**
+     * Exibe a página de produtos
+     */
     private function produtos()
     {
-        /*  Protege a rota - só admin pode acessar */
+        // Protege a rota - só admin pode acessar
         AuthController::protegerAdmin();
 
-        /* DEFINE O TITULO DA PÁGINA COMO PRODUTOS PARA SER USADO NO HEADER DE ADMIN E DECLARA A AÇÃO DA URL COMO PRODUTOS PARA QUE A PÁGINA DE USUÁRIO SEJA EXIBIDA*/
+        // Pega parâmetros de pesquisa e filtros via GET
+        $termoPesquisa = $_GET['termo'] ?? $_GET['pesquisa'] ?? '';
+        $filtroCategoria = $_GET['categoria'] ?? '';
+
+        // Busca produtos (com ou sem filtro)
+        if (!empty($termoPesquisa) || !empty($filtroCategoria)) {
+            $produtos = $this->produtoModel->buscarProdutosPorTermo($termoPesquisa, $filtroCategoria);
+        } else {
+            $produtos = $this->produtoModel->listarTodosProdutos();
+        }
+
+        // Busca categorias para o filtro
+        $categorias = $this->produtoModel->listarCategorias();
+
+        // Formata os produtos para exibição
+        $produtosFormatados = [];
+        foreach ($produtos as $produto) {
+            // Formata preço (R$ XXX,XX)
+            $precoFormatado = 'R$ ' . number_format($produto['preco'], 2, ',', '.');
+            
+            // Determina status do estoque
+            $estoqueTotal = (int)$produto['estoque_total'];
+            $statusEstoque = $this->formatarStatusEstoque($estoqueTotal);
+
+            $produtosFormatados[] = [
+                'id' => $produto['id_produto'],
+                'nome' => $produto['nome'],
+                'categoria' => $produto['categoria'] ?? 'Sem categoria',
+                'preco' => $precoFormatado,
+                'preco_numerico' => $produto['preco'],
+                'estoque' => $estoqueTotal,
+                'status_estoque' => $statusEstoque['texto'],
+                'status_classe' => $statusEstoque['classe'],
+                'descricao' => $produto['descricao'],
+                'tamanhos' => $produto['tamanhos_disponiveis'],
+                'cores' => $produto['cores_disponiveis'],
+                'imagem' => $produto['imagens']
+            ];
+        }
+
         $titulo_pagina = "Produtos";
         $_GET['acao'] = 'produtos';
 
-        /* Inclui a view de produtos */
+        // Passa filtros para a view manter os valores selecionados
+        $filtros = [
+            'termo' => $termoPesquisa,
+            'categoria' => $filtroCategoria
+        ];
+
+        // Busca dados do produto para edição (se houver ID na URL)
+        $produtoEdicao = null;
+        if (isset($_GET['editar']) && !empty($_GET['editar'])) {
+            $produtoCompleto = $this->produtoModel->buscarProdutoPorId($_GET['editar']);
+            if ($produtoCompleto) {
+                $produtoEdicao = [
+                    'id' => $produtoCompleto['id_produto'],
+                    'nome' => $produtoCompleto['nome'],
+                    'descricao' => $produtoCompleto['descricao'],
+                    'categoria' => $produtoCompleto['categoria'],
+                    'preco' => number_format($produtoCompleto['preco'], 2, '.', ''),
+                    'tamanhos' => $produtoCompleto['tamanhos_disponiveis'],
+                    'cores' => $produtoCompleto['cores_disponiveis'],
+                    'imagem' => $produtoCompleto['imagens']
+                ];
+            }
+        }
+
+        // Busca dados do produto para visualização (se houver ID na URL)
+        $produtoVisualizacao = null;
+        if (isset($_GET['visualizar']) && !empty($_GET['visualizar'])) {
+            $produtoCompleto = $this->produtoModel->buscarProdutoPorId($_GET['visualizar']);
+            if ($produtoCompleto) {
+                $precoFormatado = 'R$ ' . number_format($produtoCompleto['preco'], 2, ',', '.');
+                $estoqueTotal = (int)$produtoCompleto['estoque_total'];
+                
+                $produtoVisualizacao = [
+                    'id' => $produtoCompleto['id_produto'],
+                    'nome' => $produtoCompleto['nome'],
+                    'descricao' => $produtoCompleto['descricao'],
+                    'categoria' => $produtoCompleto['categoria'] ?? 'Sem categoria',
+                    'preco' => $precoFormatado,
+                    'tamanhos' => $produtoCompleto['tamanhos_disponiveis'],
+                    'cores' => $produtoCompleto['cores_disponiveis'],
+                    'estoque_total' => $estoqueTotal,
+                    'imagem' => $produtoCompleto['imagens']
+                ];
+            }
+        }
+
+        // Inclui a view passando as variáveis prontas
         require_once __DIR__ . "/../view/admin/produtos.php";
+    }
+
+    /**
+     * Processa o cadastro de um novo produto
+     */
+    public function cadastrarProduto()
+    {
+        // Protege a rota - só admin pode acessar
+        AuthController::protegerAdmin();
+
+        // Verifica se é POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('Método não permitido'));
+            exit;
+        }
+
+        // Pega dados do POST
+        $nome = trim($_POST['nome'] ?? '');
+        $descricao = trim($_POST['descricao'] ?? '');
+        $categoria = trim($_POST['categoria'] ?? '');
+        $preco = $_POST['preco'] ?? 0;
+        $tamanhos = trim($_POST['tamanhos'] ?? '');
+        $cores = trim($_POST['cores'] ?? '');
+        $imagem = trim($_POST['imagem'] ?? '');
+
+        // Validações básicas
+        if (empty($nome)) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('Nome é obrigatório'));
+            exit;
+        }
+
+        if (empty($descricao)) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('Descrição é obrigatória'));
+            exit;
+        }
+
+        if (empty($categoria)) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('Categoria é obrigatória'));
+            exit;
+        }
+
+        if ($preco <= 0) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('Preço deve ser maior que zero'));
+            exit;
+        }
+
+        // Cria o produto
+        $idProduto = $this->produtoModel->criarProduto($nome, $descricao, $categoria, $preco, $tamanhos, $cores, $imagem);
+
+        if ($idProduto) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&sucesso=' . urlencode('Produto cadastrado com sucesso!'));
+            exit;
+        } else {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('Erro ao cadastrar produto. Tente novamente.'));
+            exit;
+        }
+    }
+
+    /**
+     * Processa a atualização de um produto
+     */
+    public function atualizarProduto()
+    {
+        // Protege a rota - só admin pode acessar
+        AuthController::protegerAdmin();
+
+        // Verifica se é POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('Método não permitido'));
+            exit;
+        }
+
+        // Pega dados do POST
+        $idProduto = $_POST['id'] ?? null;
+        $nome = trim($_POST['nome'] ?? '');
+        $descricao = trim($_POST['descricao'] ?? '');
+        $categoria = trim($_POST['categoria'] ?? '');
+        $preco = $_POST['preco'] ?? 0;
+        $tamanhos = trim($_POST['tamanhos'] ?? '');
+        $cores = trim($_POST['cores'] ?? '');
+        $imagem = trim($_POST['imagem'] ?? '');
+
+        // Validações
+        if (!$idProduto) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('ID do produto não informado'));
+            exit;
+        }
+
+        if (empty($nome)) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('Nome é obrigatório'));
+            exit;
+        }
+
+        if ($preco <= 0) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('Preço deve ser maior que zero'));
+            exit;
+        }
+
+        // Atualiza o produto
+        $resultado = $this->produtoModel->atualizarProduto($idProduto, $nome, $descricao, $categoria, $preco, $tamanhos, $cores, $imagem);
+
+        if ($resultado) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&sucesso=' . urlencode('Produto atualizado com sucesso!'));
+            exit;
+        } else {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('Erro ao atualizar produto. Tente novamente.'));
+            exit;
+        }
+    }
+
+    /**
+     * Processa a exclusão de um produto
+     */
+    public function excluirProduto()
+    {
+        // Protege a rota - só admin pode acessar
+        AuthController::protegerAdmin();
+
+        // Verifica se é POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('Método não permitido'));
+            exit;
+        }
+
+        // Pega ID do POST
+        $idProduto = $_POST['id'] ?? null;
+
+        // Validação
+        if (!$idProduto) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('ID do produto não informado'));
+            exit;
+        }
+
+        // Exclui o produto
+        $resultado = $this->produtoModel->excluirProduto($idProduto);
+
+        if ($resultado) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&sucesso=' . urlencode('Produto excluído com sucesso!'));
+            exit;
+        } else {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('Erro ao excluir produto. Tente novamente.'));
+            exit;
+        }
+    }
+
+    /**
+     * Retorna dados completos de um produto em JSON
+     */
+    public function buscarProduto()
+    {
+        // Protege a rota - só admin pode acessar
+        AuthController::protegerAdmin();
+
+        // Verifica se foi passado o ID
+        $idProduto = $_GET['id'] ?? null;
+
+        if (!$idProduto) {
+            header('Content-Type: application/json');
+            echo json_encode(['erro' => 'ID do produto não informado']);
+            exit;
+        }
+
+        // Busca dados do produto
+        $produto = $this->produtoModel->buscarProdutoPorId($idProduto);
+
+        if (!$produto) {
+            header('Content-Type: application/json');
+            echo json_encode(['erro' => 'Produto não encontrado']);
+            exit;
+        }
+
+        // Formata preço
+        $precoFormatado = 'R$ ' . number_format($produto['preco'], 2, ',', '.');
+
+        // Prepara resposta
+        $resposta = [
+            'id' => $produto['id_produto'],
+            'nome' => $produto['nome'],
+            'descricao' => $produto['descricao'],
+            'categoria' => $produto['categoria'] ?? 'Sem categoria',
+            'preco' => $precoFormatado,
+            'tamanhos' => $produto['tamanhos_disponiveis'],
+            'cores' => $produto['cores_disponiveis'],
+            'estoque_total' => (int)$produto['estoque_total'],
+            'imagem' => $produto['imagens']
+        ];
+
+        header('Content-Type: application/json');
+        echo json_encode($resposta);
+        exit;
+    }
+
+    /**
+     * Função auxiliar para formatar status do estoque
+     */
+    private function formatarStatusEstoque($quantidade)
+    {
+        if ($quantidade == 0) {
+            return ['texto' => 'Esgotado', 'classe' => 'admin-badge-danger'];
+        } elseif ($quantidade < 3) {
+            return ['texto' => 'Crítico', 'classe' => 'admin-badge-danger'];
+        } elseif ($quantidade < 10) {
+            return ['texto' => 'Baixo', 'classe' => 'admin-badge-warning'];
+        } else {
+            return ['texto' => 'Disponível', 'classe' => 'admin-badge-success'];
+        }
     }
 
     /* EXIBE A PÁGINA DE PEDIDOS */
