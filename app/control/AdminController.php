@@ -333,6 +333,66 @@ class AdminController
         require_once __DIR__ . "/../view/admin/produtos.php";
     }
 
+    /* FUNÇÃO PRIVADA PARA FAZER UPLOAD DE IMAGEM */
+    private function fazerUploadImagem($arquivo, $idProduto = null)
+    {
+        // Verifica se um arquivo foi enviado
+        if (!isset($arquivo) || $arquivo['error'] !== UPLOAD_ERR_OK) {
+            return null;
+        }
+
+        // Validações do arquivo
+        $tiposPermitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        $tamanhoMaximo = 5 * 1024 * 1024; // 5MB
+
+        if (!in_array($arquivo['type'], $tiposPermitidos)) {
+            return false; // Tipo de arquivo não permitido
+        }
+
+        if ($arquivo['size'] > $tamanhoMaximo) {
+            return false; // Arquivo muito grande
+        }
+
+        // Gera nome único para o arquivo
+        $extensao = strtolower(pathinfo($arquivo['name'], PATHINFO_EXTENSION));
+        $prefixo = $idProduto ? 'produto_' . $idProduto . '_' : 'produto_';
+        $nomeArquivo = $prefixo . time() . '_' . uniqid() . '.' . $extensao;
+        
+        // Caminho completo do arquivo
+        $pastaUpload = __DIR__ . '/../../public/uploads/produtos/';
+        $caminhoCompleto = $pastaUpload . $nomeArquivo;
+
+        // Cria a pasta se não existir
+        if (!is_dir($pastaUpload)) {
+            mkdir($pastaUpload, 0755, true);
+        }
+
+        // Move o arquivo
+        if (move_uploaded_file($arquivo['tmp_name'], $caminhoCompleto)) {
+            // Retorna o caminho relativo para salvar no banco
+            return '/public/uploads/produtos/' . $nomeArquivo;
+        }
+
+        return false;
+    }
+
+    /* FUNÇÃO PRIVADA PARA EXCLUIR IMAGEM ANTIGA */
+    private function excluirImagemAntiga($caminhoImagem)
+    {
+        if (empty($caminhoImagem)) {
+            return;
+        }
+
+        // Remove a barra inicial se existir
+        $caminhoImagem = ltrim($caminhoImagem, '/');
+        $caminhoCompleto = __DIR__ . '/../../' . $caminhoImagem;
+
+        // Verifica se o arquivo existe e exclui
+        if (file_exists($caminhoCompleto) && is_file($caminhoCompleto)) {
+            unlink($caminhoCompleto);
+        }
+    }
+
     /* PROCESSA DADOS DE UM NOVO PRODUTO */
     public function cadastrarProduto()
     {
@@ -350,7 +410,6 @@ class AdminController
         $descricao = trim($_POST['descricao'] ?? '');
         $categoria = trim($_POST['categoria'] ?? '');
         $preco = $_POST['preco'] ?? 0;
-        $imagem = trim($_POST['imagem'] ?? '');
 
         /* VALIDAÇÕES BÁSICAS */
         if (empty($nome)) {
@@ -373,13 +432,41 @@ class AdminController
             exit;
         }
 
+        /* PROCESSAR UPLOAD DE IMAGEM */
+        $caminhoImagem = null;
+        if (isset($_FILES['imagem']) && $_FILES['imagem']['error'] === UPLOAD_ERR_OK) {
+            $resultadoUpload = $this->fazerUploadImagem($_FILES['imagem']);
+            if ($resultadoUpload === false) {
+                header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('Erro ao fazer upload da imagem. Verifique o formato e tamanho do arquivo.'));
+                exit;
+            }
+            $caminhoImagem = $resultadoUpload;
+        }
+
         /* SE PASSAR POR TODAS AS VALIDAÇÕES  ATÉ AQUI CHAMA A FUNÇÃO DE INSERIR DADOS NO BANCO */
-        $idProduto = $this->produtoModel->criarProduto($nome, $descricao, $categoria, $preco, $imagem);
+        $idProduto = $this->produtoModel->criarProduto($nome, $descricao, $categoria, $preco, $caminhoImagem);
 
         if ($idProduto) {
+            // Se o upload foi feito antes de criar o produto, renomeia o arquivo com o ID
+            if ($caminhoImagem && strpos($caminhoImagem, 'produto_') !== false && strpos($caminhoImagem, 'produto_' . $idProduto . '_') === false) {
+                $caminhoAntigo = __DIR__ . '/../../' . ltrim($caminhoImagem, '/');
+                $nomeArquivo = basename($caminhoImagem);
+                $novoNomeArquivo = 'produto_' . $idProduto . '_' . substr($nomeArquivo, strpos($nomeArquivo, '_', 8) + 1);
+                $caminhoNovo = __DIR__ . '/../../public/uploads/produtos/' . $novoNomeArquivo;
+                
+                if (file_exists($caminhoAntigo)) {
+                    rename($caminhoAntigo, $caminhoNovo);
+                    $novoCaminho = '/public/uploads/produtos/' . $novoNomeArquivo;
+                    $this->produtoModel->atualizarProduto($idProduto, $nome, $descricao, $categoria, $preco, $novoCaminho);
+                }
+            }
             header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&sucesso=' . urlencode('Produto cadastrado com sucesso!'));
             exit;
         } else {
+            // Se falhou ao criar produto, exclui a imagem que foi enviada
+            if ($caminhoImagem) {
+                $this->excluirImagemAntiga($caminhoImagem);
+            }
             header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('Erro ao cadastrar produto. Tente novamente.'));
             exit;
         }
@@ -403,7 +490,6 @@ class AdminController
         $descricao = trim($_POST['descricao'] ?? '');
         $categoria = trim($_POST['categoria'] ?? '');
         $preco = $_POST['preco'] ?? 0;
-        $imagem = trim($_POST['imagem'] ?? '');
 
         /* VALIDAÇÕES BÁSICAS */
         if (!$idProduto) {
@@ -421,13 +507,38 @@ class AdminController
             exit;
         }
 
+        /* Busca o produto atual para pegar a imagem antiga */
+        $produtoAtual = $this->produtoModel->buscarProdutoPorId($idProduto);
+        $imagemAntiga = $produtoAtual['imagens'] ?? null;
+
+        /* PROCESSAR UPLOAD DE NOVA IMAGEM (se enviada) */
+        $caminhoImagem = $imagemAntiga; // Mantém a imagem antiga por padrão
+        if (isset($_FILES['imagem']) && $_FILES['imagem']['error'] === UPLOAD_ERR_OK) {
+            $resultadoUpload = $this->fazerUploadImagem($_FILES['imagem'], $idProduto);
+            if ($resultadoUpload === false) {
+                header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('Erro ao fazer upload da imagem. Verifique o formato e tamanho do arquivo.'));
+                exit;
+            }
+            if ($resultadoUpload !== null) {
+                // Exclui a imagem antiga se uma nova foi enviada
+                if ($imagemAntiga) {
+                    $this->excluirImagemAntiga($imagemAntiga);
+                }
+                $caminhoImagem = $resultadoUpload;
+            }
+        }
+
         /* SE PASSAR POR TODAS AS VALIDAÇÕES ATÉ AGORA CHAMA A FUNÇÃO DE ATUALIZAR OS DADOS NO BANCO */
-        $resultado = $this->produtoModel->atualizarProduto($idProduto, $nome, $descricao, $categoria, $preco, $imagem);
+        $resultado = $this->produtoModel->atualizarProduto($idProduto, $nome, $descricao, $categoria, $preco, $caminhoImagem);
 
         if ($resultado) {
             header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&sucesso=' . urlencode('Produto atualizado com sucesso!'));
             exit;
         } else {
+            // Se falhou ao atualizar e uma nova imagem foi enviada, exclui a nova imagem
+            if ($caminhoImagem !== $imagemAntiga && $caminhoImagem) {
+                $this->excluirImagemAntiga($caminhoImagem);
+            }
             header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&erro=' . urlencode('Erro ao atualizar produto. Tente novamente.'));
             exit;
         }

@@ -124,7 +124,7 @@ $produtoVisualizacao = $produtoVisualizacao ?? null;
                 <button class="admin-modal-close" onclick="fecharModal()">&times;</button>
             </div>
             <div class="admin-modal-body" style="padding: 1.5rem;">
-                <form method="POST" action="<?= BASE_URL ?>/app/control/AdminController.php?acao=cadastrarProduto" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                <form method="POST" action="<?= BASE_URL ?>/app/control/AdminController.php?acao=cadastrarProduto" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 1.25rem;">
 
                     <div class="admin-form-group" style="margin: 0;">
                         <label class="admin-form-label">Nome do Produto</label>
@@ -149,8 +149,9 @@ $produtoVisualizacao = $produtoVisualizacao ?? null;
 
 
                     <div class="admin-form-group" style="margin: 0;">
-                        <label class="admin-form-label">URL da Imagem</label>
-                        <input type="text" class="admin-form-input" name="imagem" placeholder="https://...">
+                        <label class="admin-form-label">Imagem do Produto</label>
+                        <input type="file" class="admin-form-input" name="imagem" accept="image/*">
+                        <small style="color: #666; font-size: 0.875rem; margin-top: 0.25rem; display: block;">Formatos aceitos: JPG, PNG, GIF, WEBP (máx. 5MB)</small>
                     </div>
 
                     <div style="display: flex; gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e0e0e0;">
@@ -177,7 +178,7 @@ $produtoVisualizacao = $produtoVisualizacao ?? null;
                 <button class="admin-modal-close" onclick="fecharModal()">&times;</button>
             </div>
             <div class="admin-modal-body" style="padding: 1.5rem;">
-                <form method="POST" action="<?= BASE_URL ?>/app/control/AdminController.php?acao=atualizarProduto" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                <form method="POST" action="<?= BASE_URL ?>/app/control/AdminController.php?acao=atualizarProduto" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 1.25rem;">
                     <input type="hidden" name="id" value="<?= htmlspecialchars($produtoEdicao['id']) ?>">
 
                     <div class="admin-form-group" style="margin: 0;">
@@ -203,8 +204,15 @@ $produtoVisualizacao = $produtoVisualizacao ?? null;
 
 
                     <div class="admin-form-group" style="margin: 0;">
-                        <label class="admin-form-label">URL da Imagem</label>
-                        <input type="text" class="admin-form-input" name="imagem" value="<?= htmlspecialchars($produtoEdicao['imagem']) ?>">
+                        <label class="admin-form-label">Imagem do Produto</label>
+                        <?php if (!empty($produtoEdicao['imagem'])): ?>
+                            <div style="margin-bottom: 0.5rem;">
+                                <img src="<?= BASE_URL . htmlspecialchars($produtoEdicao['imagem']) ?>" alt="Imagem atual" style="max-width: 200px; max-height: 200px; border-radius: 5px; border: 1px solid #e0e0e0;">
+                                <p style="font-size: 0.875rem; color: #666; margin-top: 0.25rem;">Imagem atual</p>
+                            </div>
+                        <?php endif; ?>
+                        <input type="file" class="admin-form-input" name="imagem" accept="image/*">
+                        <small style="color: #666; font-size: 0.875rem; margin-top: 0.25rem; display: block;">Deixe em branco para manter a imagem atual. Formatos aceitos: JPG, PNG, GIF, WEBP (máx. 5MB)</small>
                     </div>
 
                     <div style="display: flex; gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e0e0e0;">
@@ -258,6 +266,14 @@ $produtoVisualizacao = $produtoVisualizacao ?? null;
                         <label class="admin-form-label">Estoque Total</label>
                         <input type="text" class="admin-form-input" value="<?= htmlspecialchars($produtoVisualizacao['estoque_total']) ?> unidades" readonly>
                     </div>
+                    <?php if (!empty($produtoVisualizacao['imagem'])): ?>
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Imagem do Produto</label>
+                            <div style="text-align: center;">
+                                <img src="<?= BASE_URL . htmlspecialchars($produtoVisualizacao['imagem']) ?>" alt="Imagem do produto" style="max-width: 300px; max-height: 300px; border-radius: 5px; border: 1px solid #e0e0e0;">
+                            </div>
+                        </div>
+                    <?php endif; ?>
                     <div style="margin-top: 1.5rem;">
                         <button type="button" class="admin-btn admin-btn-secondary" onclick="fecharModal()" style="width: 100%;">
                             Fechar
