@@ -5,19 +5,22 @@ require_once __DIR__ . "/AuthController.php";
 require_once __DIR__ . "/../model/UsuarioModel.php";
 require_once __DIR__ . "/../model/ProdutoModel.php";
 require_once __DIR__ . "/../model/PedidoModel.php";
+require_once __DIR__ . "/../model/EstoqueModel.php";
 
 class AdminController
 {
-    /* instância o usuario model, produto model e pedido model quando o controler for instânciado */
+    /* instância o usuario model, produto model, pedido model e estoque model quando o controler for instânciado */
     private $usuarioModel;
     private $produtoModel;
     private $pedidoModel;
+    private $estoqueModel;
 
     public function __construct()
     {
         $this->usuarioModel = new UsuarioModel();
         $this->produtoModel = new ProdutoModel();
         $this->pedidoModel = new PedidoModel();
+        $this->estoqueModel = new EstoqueModel();
     }
     /* ROTEADOR QUE CHAMA PÁGINA E SEUS MÉTODOS ESPERCIFICOS DE ACORDO COM A AÇÃO SOLICITADA */
     public function index()
@@ -59,6 +62,15 @@ class AdminController
                 break;
             case 'estoque':
                 $this->estoque();
+                break;
+            case 'cadastrarEntradaEstoque':
+                $this->cadastrarEntradaEstoque();
+                break;
+            case 'atualizarEstoque':
+                $this->atualizarEstoque();
+                break;
+            case 'adicionarQuantidadeEstoque':
+                $this->adicionarQuantidadeEstoque();
                 break;
             default:
                 $this->usuarios();
@@ -468,11 +480,11 @@ class AdminController
     private function formatarStatusEstoque($quantidade)
     {
         if ($quantidade == 0) {
-            return ['texto' => 'Esgotado', 'classe' => 'admin-badge-danger'];
+            return ['texto' => 'Sem Estoque', 'classe' => 'admin-badge-danger'];
         } elseif ($quantidade < 3) {
-            return ['texto' => 'Crítico', 'classe' => 'admin-badge-danger'];
+            return ['texto' => 'Estoque Crítico', 'classe' => 'admin-badge-danger'];
         } elseif ($quantidade < 10) {
-            return ['texto' => 'Baixo', 'classe' => 'admin-badge-warning'];
+            return ['texto' => 'Estoque Baixo', 'classe' => 'admin-badge-warning'];
         } else {
             return ['texto' => 'Disponível', 'classe' => 'admin-badge-success'];
         }
@@ -755,12 +767,237 @@ class AdminController
         /* Protege a rota - só admin pode acessar */
         AuthController::protegerAdmin();
 
-        /* DEFINE O TITULO DA PÁGINA COMO ESTOQUE PARA SER USADO NO HEADER DE ADMIN E DECLARA A AÇÃO DA URL COMO ESTOQUE PARA QUE A PÁGINA DE USUÁRIO SEJA EXIBIDA*/
+        /* PEGA POR MEIO DO GET OS PARÂMETROS QUE FORAM USADOS PARA FAZER A PESQUISA NA TABELA DE ESTOQUE E SE NÃO TIVER NADA PASSA VALOR VAZIO */
+        $termoPesquisa = $_GET['termo'] ?? $_GET['pesquisa'] ?? '';
+        $filtroStatus = $_GET['status'] ?? '';
+
+        /* SE UM DOS PARÂMETROS DE PESQUISA NÃO FOR VAZIO, CHAMA A FUNÇÃO DE PESQUISA ESTOQUE E SE TODOS OS PARÂMETROS FOREM VAZIOS (SE O USUÁRIO NÃO PESUISOU NADA) RETORNA TODOS OS ESTOQUES */
+        if (!empty($termoPesquisa) || !empty($filtroStatus)) {
+            $estoques = $this->estoqueModel->buscarEstoquesPorTermo($termoPesquisa, $filtroStatus);
+        } else {
+            $estoques = $this->estoqueModel->listarTodosEstoques();
+        }
+
+        /* FORMATA OS ESTOQUES PARA SEREM EXIBIDOS */
+        $estoquesFormatados = [];
+        foreach ($estoques as $estoque) {
+            /* Formata data (dd/mm/yyyy) */
+            $dataFormatada = '';
+            if (!empty($estoque['data_cadastro'])) {
+                $dataObj = new DateTime($estoque['data_cadastro']);
+                $dataFormatada = $dataObj->format('d/m/Y');
+            }
+
+            /* Determina status do estoque baseado na quantidade */
+            $quantidade = (int)$estoque['quantidade'];
+            $statusEstoque = $this->formatarStatusEstoque($quantidade);
+
+            /* ARRAY COM OS RESULTADOS FORMATADOS */
+            $estoquesFormatados[] = [
+                'id' => $estoque['id_estoque'],
+                'id_produto' => $estoque['id_produto'],
+                'produto' => $estoque['nome_produto'],
+                'modelo' => $estoque['modelo_produto'] ?? 'Não informado',
+                'quantidade' => $quantidade,
+                'data_cadastro' => $dataFormatada,
+                'status' => $statusEstoque['texto'],
+                'status_classe' => $statusEstoque['classe']
+            ];
+        }
+
+        /* CALCULA O RESUMO DO ESTOQUE */
+        $resumoEstoque = $this->estoqueModel->calcularResumoEstoque();
+
+        /* BUSCA LISTA DE PRODUTOS PARA OS SELECTS */
+        $produtos = $this->estoqueModel->listarProdutos();
+
+        /* DEFINE O TITULO DA PÁGINA COMO ESTOQUE PARA SER USADO NO HEADER DE ADMIN E DECLARA A AÇÃO DA URL COMO ESTOQUE PARA QUE A PÁGINA DE ESTOQUE SEJA EXIBIDA*/
         $titulo_pagina = "Estoque";
         $_GET['acao'] = 'estoque';
 
+        /* DECLARA OS FILTROS PARA QUE ELES FIQUEM SELECIONADOS NA VIEW */
+        $filtros = [
+            'termo' => $termoPesquisa,
+            'status' => $filtroStatus
+        ];
+
+        /* SE FOR ENVIADO NA URL PEGA O EDITAR QUE CONTÉM O ID DO ESTOQUE */
+        $estoqueEdicao = null;
+        if (isset($_GET['editar']) && !empty($_GET['editar'])) {
+            $estoqueCompleto = $this->estoqueModel->buscarEstoquePorId($_GET['editar']);
+            if ($estoqueCompleto) {
+                $dataFormatada = '';
+                if (!empty($estoqueCompleto['data_cadastro'])) {
+                    $dataObj = new DateTime($estoqueCompleto['data_cadastro']);
+                    $dataFormatada = $dataObj->format('Y-m-d');
+                }
+
+                /* DADOS QUE VÃO APARECER NO MODAL DE EDIÇÃO */
+                $estoqueEdicao = [
+                    'id' => $estoqueCompleto['id_estoque'],
+                    'id_produto' => $estoqueCompleto['id_produto'],
+                    'produto' => $estoqueCompleto['nome_produto'],
+                    'modelo' => $estoqueCompleto['modelo_produto'] ?? '',
+                    'quantidade' => $estoqueCompleto['quantidade'],
+                    'data_cadastro' => $dataFormatada
+                ];
+            }
+        }
+
+        /* SE FOR ENVIADO NA URL PEGA O ADICIONAR QUE CONTÉM O ID DO ESTOQUE */
+        $estoqueAdicionar = null;
+        if (isset($_GET['adicionar']) && !empty($_GET['adicionar'])) {
+            $estoqueCompleto = $this->estoqueModel->buscarEstoquePorId($_GET['adicionar']);
+            if ($estoqueCompleto) {
+                /* DADOS QUE VÃO APARECER NO MODAL DE ADICIONAR */
+                $estoqueAdicionar = [
+                    'id' => $estoqueCompleto['id_estoque'],
+                    'id_produto' => $estoqueCompleto['id_produto'],
+                    'produto' => $estoqueCompleto['nome_produto'],
+                    'quantidade_atual' => $estoqueCompleto['quantidade']
+                ];
+            }
+        }
+
         /* Inclui a view */
         require_once __DIR__ . "/../view/admin/estoque.php";
+    }
+
+    /* PROCESSA O CADASTRO DE UMA NOVA ENTRADA DE ESTOQUE */
+    public function cadastrarEntradaEstoque()
+    {
+        /* PROTEGE A ROTA PARA SOMENTE O ADMIN PODER EXECUTAR A AÇÃO */
+        AuthController::protegerAdmin();
+
+        /* Verifica se é POST */
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&erro=' . urlencode('Método não permitido'));
+            exit;
+        }
+
+        /* PEGA OS DADOS QUE FORAM DECLARADOS NO POST */
+        $idProduto = $_POST['id_produto'] ?? null;
+        $quantidade = $_POST['quantidade'] ?? 0;
+        $modeloProduto = trim($_POST['modelo'] ?? '');
+        $dataCadastro = $_POST['data'] ?? null;
+
+        /* VALIDAÇÕES BÁSICAS */
+        if (!$idProduto) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&erro=' . urlencode('Produto é obrigatório'));
+            exit;
+        }
+
+        if ($quantidade <= 0) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&erro=' . urlencode('Quantidade deve ser maior que zero'));
+            exit;
+        }
+
+        if (empty($modeloProduto)) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&erro=' . urlencode('Modelo do produto é obrigatório'));
+            exit;
+        }
+
+        /* SE PASSAR POR TODAS AS VALIDAÇÕES ATÉ AQUI CHAMA A FUNÇÃO DE INSERIR DADOS NO BANCO */
+        $idEstoque = $this->estoqueModel->criarEntradaEstoque($idProduto, $quantidade, $modeloProduto, $dataCadastro);
+
+        if ($idEstoque) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&sucesso=' . urlencode('Entrada de estoque cadastrada com sucesso!'));
+            exit;
+        } else {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&erro=' . urlencode('Erro ao cadastrar entrada de estoque. Tente novamente.'));
+            exit;
+        }
+    }
+
+    /* PROCESSA A ATUALIZAÇÃO DE UM REGISTRO DE ESTOQUE */
+    public function atualizarEstoque()
+    {
+        /* PROTEGE A ROTA PARA SOMENTE O ADMIN PODER EXECUTAR A AÇÃO */
+        AuthController::protegerAdmin();
+
+        /* Verifica se é POST */
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&erro=' . urlencode('Método não permitido'));
+            exit;
+        }
+
+        /* Pega dados do POST */
+        $idEstoque = $_POST['id'] ?? null;
+        $quantidade = $_POST['quantidade'] ?? 0;
+        $modeloProduto = trim($_POST['modelo'] ?? '');
+        $dataCadastro = $_POST['data'] ?? null;
+
+        /* VALIDAÇÕES BÁSICAS */
+        if (!$idEstoque) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&erro=' . urlencode('ID do estoque não informado'));
+            exit;
+        }
+
+        if ($quantidade < 0) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&erro=' . urlencode('Quantidade não pode ser negativa'));
+            exit;
+        }
+
+        if (empty($modeloProduto)) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&erro=' . urlencode('Modelo do produto é obrigatório'));
+            exit;
+        }
+
+        if (empty($dataCadastro)) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&erro=' . urlencode('Data de cadastro é obrigatória'));
+            exit;
+        }
+
+        /* SE PASSAR POR TODAS AS VALIDAÇÕES ATÉ AGORA CHAMA A FUNÇÃO DE ATUALIZAR OS DADOS NO BANCO */
+        $resultado = $this->estoqueModel->atualizarEstoque($idEstoque, $quantidade, $modeloProduto, $dataCadastro);
+
+        if ($resultado) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&sucesso=' . urlencode('Estoque atualizado com sucesso!'));
+            exit;
+        } else {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&erro=' . urlencode('Erro ao atualizar estoque. Tente novamente.'));
+            exit;
+        }
+    }
+
+    /* PROCESSA A ADIÇÃO DE QUANTIDADE A UM REGISTRO DE ESTOQUE EXISTENTE */
+    public function adicionarQuantidadeEstoque()
+    {
+        /* PROTEGE A ROTA PARA SOMENTE O ADMIN PODER EXECUTAR A AÇÃO */
+        AuthController::protegerAdmin();
+
+        /* Verifica se é POST */
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&erro=' . urlencode('Método não permitido'));
+            exit;
+        }
+
+        /* Pega dados do POST */
+        $idEstoque = $_POST['id'] ?? null;
+        $quantidadeAdicionar = $_POST['quantidade'] ?? 0;
+        $dataCadastro = $_POST['data'] ?? null;
+
+        /* VALIDAÇÕES BÁSICAS */
+        if (!$idEstoque) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&erro=' . urlencode('ID do estoque não informado'));
+            exit;
+        }
+
+        if ($quantidadeAdicionar <= 0) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&erro=' . urlencode('Quantidade a adicionar deve ser maior que zero'));
+            exit;
+        }
+
+        /* SE PASSAR POR TODAS AS VALIDAÇÕES ATÉ AGORA CHAMA A FUNÇÃO DE ADICIONAR QUANTIDADE NO BANCO */
+        $resultado = $this->estoqueModel->adicionarQuantidadeEstoque($idEstoque, $quantidadeAdicionar, $dataCadastro);
+
+        if ($resultado) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&sucesso=' . urlencode('Quantidade adicionada ao estoque com sucesso!'));
+            exit;
+        } else {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&erro=' . urlencode('Erro ao adicionar quantidade ao estoque. Tente novamente.'));
+            exit;
+        }
     }
 
     /* Processa a atualização de um usuário */

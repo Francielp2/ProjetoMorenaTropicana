@@ -1,3 +1,9 @@
+commit f0bde2c2837eb3fd8e8a98d1aa3f10553938ed68
+Author: Franciel Prates <francielprates570@gmail.com>
+Date:   Sun Nov 30 19:25:48 2025 -0300
+
+    Implementação das funcionalidades da págiona de pedidos
+
 commit 81fe9c0decbce172b82d689c0b5dfe255ba4fa3d
 Author: Franciel Prates <francielprates570@gmail.com>
 Date:   Sun Nov 30 15:13:27 2025 -0300

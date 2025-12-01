@@ -40,7 +40,7 @@ class PedidoModel
         }
     }
 
-    /* FUNÇÃO QUE BUSCA PEDIDOS POR TERMO E FILTROS */
+    /* FUNÇÃO QUE BUSCA PEDIDOS POR TERMO E FILTROS E RETORNA UM ARRAY COM OS DADOS DE USUÁRIO COMPLETO */
     public function buscarPedidosPorTermo($termo = '', $filtroStatusPedido = '', $filtroStatusPagamento = '', $dataInicial = '', $dataFinal = '', $valorMin = '', $valorMax = '')
     {
         try {
@@ -49,7 +49,7 @@ class PedidoModel
             $filtroStatusPedido = trim($filtroStatusPedido);
             $filtroStatusPagamento = trim($filtroStatusPagamento);
 
-            /* CRIA UM CÓDIGO BASE DE PESQUISA SQL */
+            /* CRIA UM CÓDIGO BASE DE PESQUISA SQL ESSE CÓDIGO SERÁ IMPLEMETADO DE ACORDO COM OS FILTROS QUE TIVER*/
             $sql = "
                 SELECT 
                     p.id_pedido,
@@ -144,7 +144,7 @@ class PedidoModel
         }
     }
 
-    /* FUNÇÃO QUE BUSCA UM PEDIDO ESPECÍFICO POR ID COM TODOS OS DETALHES */
+    /* FUNÇÃO QUE BUSCA UM PEDIDO ESPECÍFICO POR ID COM TODOS OS DETALHES E RETORNA UM ARRAY ASSOCIATIVO COM OS DADOS*/
     public function buscarPedidoPorId($idPedido)
     {
         try {
@@ -197,7 +197,7 @@ class PedidoModel
         }
     }
 
-    /* FUNÇÃO QUE BUSCA APENAS OS ITENS DE UM PEDIDO */
+    /* FUNÇÃO QUE BUSCA APENAS OS ITENS DE UM PEDIDO E RETORNA UM ARRAY ASSOCIATIVO COM OS DADOS*/
     public function buscarItensPedido($idPedido)
     {
         try {
@@ -220,7 +220,7 @@ class PedidoModel
     public function atualizarStatusPedido($idPedido, $statusPedido, $statusPagamento = null)
     {
         try {
-            $this->conn->beginTransaction();
+            $this->conn->beginTransaction();/* INICIA TRANSAÇÃO */
 
             /* Atualiza status do pedido */
             $stmt = $this->conn->prepare("
@@ -262,10 +262,10 @@ class PedidoModel
                 }
             }
 
-            $this->conn->commit();
+            $this->conn->commit();/* FINALIZA TRANSAÇÃO */
             return true;
         } catch (PDOException $e) {
-            $this->conn->rollBack();
+            $this->conn->rollBack();/* SE ALGO DER ERRADO, NENHUM DADO SERÁ INSERIDO */
             return false;
         }
     }
