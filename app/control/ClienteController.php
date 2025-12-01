@@ -1,20 +1,23 @@
 <?php
 
-/* CHAMA OS ARQUIVOS DE CONFIG O CONTROLADOR DE AUTENTICAÇÃO E O MODEL DE USUÁRIO */
+/* CHAMA OS ARQUIVOS DE CONFIG O CONTROLADOR DE AUTENTICAÇÃO E OS MODELS NECESSÁRIOS */
 require_once __DIR__ . "/../config/config.php";
 require_once __DIR__ . "/AuthController.php";
 require_once __DIR__ . "/../model/UsuarioModel.php";
+require_once __DIR__ . "/../model/PedidoModel.php";
 require_once __DIR__ . "/../model/ProdutoModel.php";
 
 class ClienteController
 {
-    /* Ao instanciar o objeto já instancia junto o model de usuário */
+    /* Ao instanciar o objeto já instancia junto os models necessários */
     private $usuarioModel;
+    private $pedidoModel;
     private $produtoModel;
 
     public function __construct()
     {
         $this->usuarioModel = new UsuarioModel();
+        $this->pedidoModel = new PedidoModel();
         $this->produtoModel = new ProdutoModel();
     }
     /* Roteador que leva para cada página de cliente */
@@ -289,53 +292,133 @@ class ClienteController
         $mensagem = '';
         $tipoMensagem = '';
 
-        // TODO: Aqui será implementada a lógica de buscar pedidos do banco de dados
-        // Por enquanto, vamos criar dados de exemplo para o front funcionar
+        // Verifica se usuário está logado
+        $idCliente = $_SESSION['usuario_id'] ?? null;
+        if (!$idCliente) {
+            header("Location: " . BASE_URL . "/app/control/LoginController.php");
+            exit;
+        }
 
-        $pedidosFormatados = [
-            [
-                'id' => 1,
-                'id_formatado' => '000001',
-                'data' => '25/11/2024',
-                'hora' => '14:30',
-                'status' => 'Pendente',
-                'status_classe' => 'avaliacao', // classe do CSS para cor amarela
-                'valor_total' => 'R$ 299,90',
-                'pagamento_status' => 'Aguardando',
-                'pagamento_classe' => 'avaliacao',
-                'total_itens' => 3,
-                'pode_pagar' => true,
-                'pode_cancelar' => true
-            ],
-            [
-                'id' => 2,
-                'id_formatado' => '000002',
-                'data' => '20/11/2024',
-                'hora' => '10:15',
-                'status' => 'Finalizado',
-                'status_classe' => 'avaliacao', // será usado para verde
-                'valor_total' => 'R$ 450,00',
-                'pagamento_status' => 'Confirmado',
-                'pagamento_classe' => 'avaliacao',
-                'total_itens' => 5,
-                'pode_pagar' => false,
-                'pode_cancelar' => false
-            ],
-            [
-                'id' => 3,
-                'id_formatado' => '000003',
-                'data' => '15/11/2024',
-                'hora' => '16:45',
-                'status' => 'Cancelado',
-                'status_classe' => 'avaliacao',
-                'valor_total' => 'R$ 189,90',
-                'pagamento_status' => 'Cancelado',
-                'pagamento_classe' => 'avaliacao',
-                'total_itens' => 2,
-                'pode_pagar' => false,
-                'pode_cancelar' => false
-            ]
-        ];
+        /* Processa ações de pagar ou cancelar pedido (POST) */
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao_pedido'], $_POST['id_pedido'])) {
+            $acaoPedido = $_POST['acao_pedido'];
+            $idPedido = (int)($_POST['id_pedido']);
+
+            // Garante que o pedido pertence ao cliente logado
+            $pedido = $this->pedidoModel->buscarPedidoPorId($idPedido);
+            if (!$pedido || (int)($pedido['id_cliente'] ?? 0) !== (int)$idCliente) {
+                $mensagem = "Pedido não encontrado para este usuário.";
+                $tipoMensagem = 'erro';
+            } else {
+                if ($acaoPedido === 'pagar') {
+                    // Se o usuário pagar: pedido FINALIZADO e pagamento CONFIRMADO
+                    $ok = $this->pedidoModel->atualizarStatusPedido($idPedido, 'FINALIZADO', 'CONFIRMADO');
+                    if ($ok) {
+                        $mensagem = "Pagamento confirmado e pedido finalizado com sucesso.";
+                        $tipoMensagem = 'sucesso';
+                    } else {
+                        $mensagem = "Erro ao atualizar o status do pedido. Tente novamente.";
+                        $tipoMensagem = 'erro';
+                    }
+                } elseif ($acaoPedido === 'cancelar') {
+                    // Se cancelar: pedido CANCELADO e pagamento CANCELADO
+                    $ok = $this->pedidoModel->atualizarStatusPedido($idPedido, 'CANCELADO', 'CANCELADO');
+                    if ($ok) {
+                        $mensagem = "Pedido e pagamento cancelados com sucesso.";
+                        $tipoMensagem = 'sucesso';
+                    } else {
+                        $mensagem = "Erro ao cancelar o pedido. Tente novamente.";
+                        $tipoMensagem = 'erro';
+                    }
+                }
+            }
+        }
+
+        // Busca pedidos reais do cliente
+        $pedidosBrutos = $this->pedidoModel->listarPedidosPorCliente($idCliente);
+
+        // Formata pedidos para a view
+        $pedidosFormatados = [];
+        foreach ($pedidosBrutos as $pedido) {
+            $id = (int)$pedido['id_pedido'];
+
+            // Formata ID com zeros à esquerda
+            $idFormatado = str_pad((string)$id, 6, '0', STR_PAD_LEFT);
+
+            // Separa data e hora
+            $dataHora = $pedido['data_pedido'] ?? '';
+            $data = '';
+            $hora = '';
+            if (!empty($dataHora)) {
+                $dt = new DateTime($dataHora);
+                $data = $dt->format('d/m/Y');
+                $hora = $dt->format('H:i');
+            }
+
+            // Calcula valor total a partir do campo calculado e formata
+            $valorTotalNumero = (float)($pedido['valor_total_calculado'] ?? 0);
+            $valorTotalFormatado = 'R$ ' . number_format($valorTotalNumero, 2, ',', '.');
+
+            // Status do pedido
+            $statusPedido = strtoupper($pedido['status_pedido'] ?? 'PENDENTE');
+            $statusTexto = '';
+            $statusClasse = 'avaliacao';
+
+            switch ($statusPedido) {
+                case 'FINALIZADO':
+                    $statusTexto = 'Finalizado';
+                    break;
+                case 'CANCELADO':
+                    $statusTexto = 'Cancelado';
+                    break;
+                default:
+                    $statusTexto = 'Pendente';
+                    break;
+            }
+
+            // Status do pagamento
+            $statusPagamento = strtoupper($pedido['status_pagamento'] ?? 'PENDENTE');
+            $pagamentoTexto = '';
+            $pagamentoClasse = 'avaliacao';
+
+            switch ($statusPagamento) {
+                case 'CONFIRMADO':
+                    $pagamentoTexto = 'Confirmado';
+                    break;
+                case 'CANCELADO':
+                    $pagamentoTexto = 'Cancelado';
+                    break;
+                default:
+                    $pagamentoTexto = 'Pendente';
+                    break;
+            }
+
+            // Define se pode pagar ou cancelar
+            $podePagar = ($statusPedido === 'PENDENTE' && $statusPagamento === 'PENDENTE');
+            $podeCancelar = ($statusPedido === 'PENDENTE');
+
+            // Conta itens do pedido
+            $itens = $this->pedidoModel->buscarItensPedido($id);
+            $totalItens = 0;
+            foreach ($itens as $item) {
+                $totalItens += (int)($item['quantidade'] ?? 0);
+            }
+
+            $pedidosFormatados[] = [
+                'id' => $id,
+                'id_formatado' => $idFormatado,
+                'data' => $data,
+                'hora' => $hora,
+                'status' => $statusTexto,
+                'status_classe' => $statusClasse,
+                'valor_total' => $valorTotalFormatado,
+                'pagamento_status' => $pagamentoTexto,
+                'pagamento_classe' => $pagamentoClasse,
+                'total_itens' => $totalItens,
+                'pode_pagar' => $podePagar,
+                'pode_cancelar' => $podeCancelar
+            ];
+        }
 
         // Inclui a view passando as variáveis prontas
         require_once __DIR__ . "/../view/cliente/pedidos.php";

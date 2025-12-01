@@ -216,6 +216,33 @@ class PedidoModel
         }
     }
 
+    /* FUNÇÃO QUE LISTA TODOS OS PEDIDOS DE UM CLIENTE ESPECÍFICO */
+    public function listarPedidosPorCliente($idCliente)
+    {
+        try {
+            $stmt = $this->conn->prepare("
+                SELECT 
+                    p.id_pedido,
+                    p.data_pedido,
+                    p.status_pedido,
+                    /* Calcula valor total sempre a partir dos itens */
+                    COALESCE(SUM(pp.preco_unitario * pp.quantidade), 0) AS valor_total_calculado,
+                    pg.status_pagamento
+                FROM Pedido p
+                LEFT JOIN Produto_Pedido pp ON pp.id_pedido = p.id_pedido
+                LEFT JOIN Pagamento pg ON pg.id_pedido = p.id_pedido
+                WHERE p.id_cliente = :id_cliente
+                GROUP BY p.id_pedido, p.data_pedido, p.status_pedido, pg.status_pagamento
+                ORDER BY p.data_pedido DESC
+            ");
+            $stmt->bindParam(':id_cliente', $idCliente, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
+
     /* FUNÇÃO QUE ATUALIZA O STATUS DO PEDIDO E DO PAGAMENTO */
     public function atualizarStatusPedido($idPedido, $statusPedido, $statusPagamento = null)
     {

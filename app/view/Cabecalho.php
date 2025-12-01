@@ -47,7 +47,7 @@ $emailUsuario = $_SESSION['usuario_email'] ?? '';
                     </li>
 
                     <li class="item_topbar">
-                        <a href="#rodape" class="link_topbar">Contato</a>
+                    <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=pedidos" class="link_topbar">Meus pedidos</a>
                     </li>
                 </ul>
 

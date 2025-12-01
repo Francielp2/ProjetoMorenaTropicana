@@ -155,6 +155,12 @@
     </div>
 </div>
 
+<!-- Formulário oculto para enviar ações de pagar/cancelar para o backend -->
+<form id="formAcaoPedido" method="POST" action="<?= BASE_URL ?>/app/control/ClienteController.php?acao=pedidos" style="display: none;">
+    <input type="hidden" name="acao_pedido" id="inputAcaoPedido">
+    <input type="hidden" name="id_pedido" id="inputIdPedido">
+</form>
+
 <script>
     let pedidoIdAtual = null;
 
@@ -172,26 +178,23 @@
         document.getElementById('modalPagamento').style.display = 'none';
     }
 
-    // Confirma pagamento (será implementado depois)
+    // Confirma pagamento: envia para o backend marcar como FINALIZADO/CONFIRMADO
     function confirmarPagamento() {
         if (pedidoIdAtual) {
-            // TODO: Implementar envio para o backend
-            alert('Funcionalidade de pagamento será implementada em breve.\n\nPedido #' + pedidoIdAtual);
-            fecharModalPagamento();
-            
-            // Por enquanto, recarrega a página
-            // window.location.href = '<?= BASE_URL ?>/app/control/ClienteController.php?acao=pedidos&sucesso=' + encodeURIComponent('Pagamento confirmado!');
+            const form = document.getElementById('formAcaoPedido');
+            document.getElementById('inputAcaoPedido').value = 'pagar';
+            document.getElementById('inputIdPedido').value = pedidoIdAtual;
+            form.submit();
         }
     }
 
-    // Confirma cancelamento
+    // Confirma cancelamento: envia para o backend marcar como CANCELADO/CANCELADO
     function confirmarCancelamento(pedidoId) {
         if (confirm('Tem certeza que deseja cancelar este pedido?\n\nEsta ação não pode ser desfeita.')) {
-            // TODO: Implementar envio para o backend
-            alert('Funcionalidade de cancelamento será implementada em breve.\n\nPedido #' + pedidoId);
-            
-            // Por enquanto, apenas alerta
-            // window.location.href = '<?= BASE_URL ?>/app/control/ClienteController.php?acao=pedidos&cancelar=' + pedidoId;
+            const form = document.getElementById('formAcaoPedido');
+            document.getElementById('inputAcaoPedido').value = 'cancelar';
+            document.getElementById('inputIdPedido').value = pedidoId;
+            form.submit();
         }
     }
 
