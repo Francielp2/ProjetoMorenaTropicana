@@ -313,4 +313,64 @@ class EstoqueModel
             return [];
         }
     }
+
+    /* FUNÇÃO QUE BUSCA CORES E TAMANHOS DISPONÍVEIS PARA UM PRODUTO */
+    public function buscarCoresETamanhosPorProduto($idProduto)
+    {
+        try {
+            $stmt = $this->conn->prepare("
+                SELECT DISTINCT
+                    COALESCE(cores_disponiveis, '') as cores_disponiveis,
+                    COALESCE(tamanhos_disponiveis, '') as tamanhos_disponiveis,
+                    quantidade
+                FROM Estoque
+                WHERE id_produto = :id_produto
+                AND quantidade > 0
+                AND (
+                    (cores_disponiveis IS NOT NULL AND cores_disponiveis != '') OR
+                    (tamanhos_disponiveis IS NOT NULL AND tamanhos_disponiveis != '')
+                )
+            ");
+            $stmt->bindValue(':id_produto', $idProduto, PDO::PARAM_INT);
+            $stmt->execute();
+            $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            /* Processa os resultados para extrair cores e tamanhos únicos */
+            $cores = [];
+            $tamanhos = [];
+
+            foreach ($resultados as $row) {
+                /* Processa cores */
+                if (!empty($row['cores_disponiveis'])) {
+                    $coresArray = array_map('trim', explode(',', $row['cores_disponiveis']));
+                    foreach ($coresArray as $cor) {
+                        if (!empty($cor) && !in_array($cor, $cores)) {
+                            $cores[] = $cor;
+                        }
+                    }
+                }
+
+                /* Processa tamanhos */
+                if (!empty($row['tamanhos_disponiveis'])) {
+                    $tamanhosArray = array_map('trim', explode(',', $row['tamanhos_disponiveis']));
+                    foreach ($tamanhosArray as $tamanho) {
+                        if (!empty($tamanho) && !in_array($tamanho, $tamanhos)) {
+                            $tamanhos[] = $tamanho;
+                        }
+                    }
+                }
+            }
+
+            return [
+                'cores' => $cores,
+                'tamanhos' => $tamanhos
+            ];
+        } catch (PDOException $e) {
+            error_log("Erro ao buscar cores e tamanhos por produto: " . $e->getMessage());
+            return [
+                'cores' => [],
+                'tamanhos' => []
+            ];
+        }
+    }
 }

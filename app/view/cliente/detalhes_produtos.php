@@ -23,210 +23,223 @@
         </div>
     </section>
 
-    <section class="detalhes">
-        <div class="detalhes_conteudo container grid">
-            <div class="detalhes_esquerda">
-                <div class="detalhes_imagens grid">
-                    <img src="<?= BASE_URL ?>/public/assets/image/product-1-1.jpg" alt="" class="detalhes_imagem imagem_ativa">
-                    <img src="<?= BASE_URL ?>/public/assets/image/product-1-2.jpg" alt="" class="detalhes_imagem">
-                    <img src="<?= BASE_URL ?>/public/assets/image/product-1-3.jpg" alt="" class="detalhes_imagem">
-                </div>
-
-                <img src="<?= BASE_URL ?>/public/assets/image/product-1-1.jpg" alt="" class="detalhes_imagem_principal">
-
-            </div>
-
-            <div class="detalhes_direita">
-                <ul class="estrelas_produto">
-                    <li><i class="ri-star-fill"></i></li>
-                    <li><i class="ri-star-fill"></i></li>
-                    <li><i class="ri-star-fill"></i></li>
-                    <li><i class="ri-star-fill"></i></li>
-                    <li><i class="ri-star-fill"></i></li>
-
-                    <li class="avaliaçao_produto">(4.9)</li>
-                </ul>
-
-                <h3 class="titulo_detalhes">Nome do Produto</h3>
-                <span class="preco_produto">R$ 200,00</span>
-
-                <ul class="detalhes_ponto_chave">
-                    <li><i class="ri-check-line"></i>Look Moderno</li>
-                    <li><i class="ri-check-line"></i>Ótima qualidade de fabricação</li>
-                </ul>
-
-                <h3 class="detalhes_texto">Aproveite, 5 itens restantes no estoque</h3>
-                <div class="detalhes_progresso">
-                    <div class="barra_progresso"></div>
-                </div>
-
-                <div class="detalhes_tamanho">
-                    <span class="detalhes_tamanho_titulo">Escolha o Tamanho:</span>
-
-                    <div class="tamanho_produto">
-                        <div>
-                            <input type="radio" class="produto_tamanho_input" name="tamanho" id="x-small" checked>
-                            <label for="x-small" class="tamanho_produto_label">PP</label>
-                        </div>
-
-                        <div>
-                            <input type="radio" class="produto_tamanho_input" name="tamanho" id="small">
-                            <label for="small" class="tamanho_produto_label">P</label>
-                        </div>
-
-                        <div>
-                            <input type="radio" class="produto_tamanho_input" name="tamanho" id="medium">
-                            <label for="medium" class="tamanho_produto_label">M</label>
-                        </div>
-
-                        <div>
-                            <input type="radio" class="produto_tamanho_input" name="tamanho" id="large">
-                            <label for="large" class="tamanho_produto_label">G</label>
-                        </div>
-
-                        <div>
-                            <input type="radio" class="produto_tamanho_input" name="tamanho" id="x-large">
-                            <label for="x-large" class="tamanho_produto_label">GG</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="detalhes_cores">
-                    <span class="detalhes_cores_titulo">Cor:</span>
-
-                    <div class="produto_cores">
-                        <div>
-                            <input type="radio" name="cor" class="produto_cor_input">
-                            <span class="produto_cor" style="--background-color: hsl(0,60%,64%)"></span>
-                        </div>
-
-                        <div>
-                            <input type="radio" name="cor" class="produto_cor_input">
-                            <span class="produto_cor" style="--background-color: hsl(0, 0%, 100%)"></span>
-                        </div>
-
-                        <div>
-                            <input type="radio" name="cor" class="produto_cor_input">
-                            <span class="produto_cor" style="--background-color: hsl(159, 46%, 56%)"></span>
-                        </div>
-
-                        <div>
-                            <input type="radio" name="cor" class="produto_cor_input">
-                            <span class="produto_cor" style="--background-color: hsl(223, 60%, 66%)"></span>
-                        </div>
-
-                        <div>
-                            <input type="radio" name="cor" class="produto_cor_input">
-                            <span class="produto_cor" style="--background-color: hsl(0, 100%, 68%)"></span>
-                        </div>
-
-                        <div>
-                            <input type="radio" name="cor" class="produto_cor_input">
-                            <span class="produto_cor" style="--background-color: hsl(112, 81%, 67%)"></span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="detalhes_carrinho">
-                    <div class="adicionar_carrinho">
-                        <button type="button" class="rem">-</button>
-                        <input type="text" value="1" class="contador">
-                        <button type="button" class="add">+</button>
-                    </div>
-
-                    <a href="#" class="btn">Adicionar ao Carrinho</a>
-                </div>
-
-                <div class="detalhes_acoes">
-                    <a href="#"><i class="ri-arrow-left-right-line"></i>Adicionar para comparar</a>
-                    <a href="#"><i class="ri-heart-line"></i>Adicionar aos Favoritos</a>
-                </div>
-
-                <div class="detalhes_retorno grid">
-                    <li><i class="ri-truck-fill"></i>Frete grátis apartir de 200 reais</li>
-                    <li><i class="ri-arrow-go-back-line"></i>Devolva de graça em até 30 dias</li>
-                </div>
-
-            </div>
+    <?php if (!empty($mensagem)): ?>
+        <div style="background-color: <?= $tipoMensagem === 'sucesso' ? '#d4edda' : '#f8d7da' ?>; 
+                    color: <?= $tipoMensagem === 'sucesso' ? '#155724' : '#721c24' ?>; 
+                    padding: 15px; margin: 20px auto; max-width: 1200px; border-radius: 5px; text-align: center;">
+            <?= htmlspecialchars($mensagem) ?>
         </div>
-    </section>
+    <?php endif; ?>
 
-    <section class="detalhes_content section container">
-        <div class="aba_btns">
-            <button class="aba_btn aba_ativa" data-target="#description">Descrição</button>
-            <button class="aba_btn" data-target="#specifications">Especificações</button>
-            <!-- <button class="aba_btn" data-target="#"></button> -->
-        </div>
-
-        <div class="aba_content">
-            <div class="item_aba aba_ativa" id="description">
-                <div class="descricao grid">
-                    <div>
-                        <p class="detalhes_descricao">
-                            Essa jaqueta jeans feminina na cor cinza é a combinação perfeita entre estilo e versatilidade. Com um acabamento acetinado e corte moderno, ela traz um visual despojado e elegante que se adapta a diferentes ocasiões, do casual ao urbano. Sua tonalidade neutra permite combinações com diversas cores e estampas.
-                            <br><br>
-                            Feita em jeans de alta qualidade, a peça oferece durabilidade e conforto, com caimento leve e macio ao toque. Os detalhes em costura reforçada e botões metálicos adicionam um charme extra, ressaltando o design clássico com um toque contemporâneo. É uma escolha ideal para quem busca estar sempre bem vestida sem abrir mão da praticidade.
-                            <br><br>
-                            Use com uma camiseta básica e calça skinny para um look neutro bem urbano, ou aposte em um vestido leve e tênis para uma produção mais descontraída e cheia de personalidade. Seja qual for o seu estilo, essa jaqueta cinza jeans vai se tornar sua peça-curinga favorita no guarda-roupa.
-                        </p>
-
-                        <h3 class="titulo_descricao">Características do produto</h3>
-
-                        <ul class="lista_descricao grid">
-                            <li>Estilo casual e atemporal.</li>
-                            <li>Combina com qualquer look.</li>
-                            <li>Elegância com toque urbano.</li>
-                        </ul>
+    <?php if ($produto): ?>
+        <section class="detalhes">
+            <div class="detalhes_conteudo container grid">
+                <div class="detalhes_esquerda">
+                    <?php
+                    $imagemPrincipal = '';
+                    if (!empty($produto['imagens'])) {
+                        $imagemPrincipal = BASE_URL . $produto['imagens'];
+                    }
+                    ?>
+                    <div class="detalhes_imagens grid">
+                        <?php if (!empty($imagemPrincipal)): ?>
+                            <img src="<?= htmlspecialchars($imagemPrincipal) ?>" alt="<?= htmlspecialchars($produto['nome'] ?? '') ?>" class="detalhes_imagem imagem_ativa">
+                            <img src="<?= htmlspecialchars($imagemPrincipal) ?>" alt="<?= htmlspecialchars($produto['nome'] ?? '') ?>" class="detalhes_imagem">
+                            <img src="<?= htmlspecialchars($imagemPrincipal) ?>" alt="<?= htmlspecialchars($produto['nome'] ?? '') ?>" class="detalhes_imagem">
+                        <?php else: ?>
+                            <div class="detalhes_imagem imagem_ativa" style="display:flex;align-items:center;justify-content:center;background:#f4f4f4;min-height:100px;">
+                                <span>Sem imagem</span>
+                            </div>
+                            <div class="detalhes_imagem" style="display:flex;align-items:center;justify-content:center;background:#f4f4f4;min-height:100px;">
+                                <span>Sem imagem</span>
+                            </div>
+                            <div class="detalhes_imagem" style="display:flex;align-items:center;justify-content:center;background:#f4f4f4;min-height:100px;">
+                                <span>Sem imagem</span>
+                            </div>
+                        <?php endif; ?>
                     </div>
 
-                    <div class="descricao_imagens grid">
-                        <img src="<?= BASE_URL ?>/public/assets/image/description-1.jpg" alt="" class="descricao_imagem">
-                        <img src="<?= BASE_URL ?>/public/assets/image/description-2.jpg" alt="" class="descricao_imagem">
-                        <img src="<?= BASE_URL ?>/public/assets/image/description-3.jpg" alt="" class="descricao_imagem">
+                    <?php if (!empty($imagemPrincipal)): ?>
+                        <img src="<?= htmlspecialchars($imagemPrincipal) ?>" alt="<?= htmlspecialchars($produto['nome'] ?? '') ?>" class="detalhes_imagem_principal">
+                    <?php else: ?>
+                        <div class="detalhes_imagem_principal" style="display:flex;align-items:center;justify-content:center;background:#f4f4f4;min-height:400px;">
+                            <span>Sem imagem disponível</span>
+                        </div>
+                    <?php endif; ?>
+
+                </div>
+
+                <div class="detalhes_direita">
+                    <ul class="estrelas_produto">
+                        <li><i class="ri-star-fill"></i></li>
+                        <li><i class="ri-star-fill"></i></li>
+                        <li><i class="ri-star-fill"></i></li>
+                        <li><i class="ri-star-fill"></i></li>
+                        <li><i class="ri-star-fill"></i></li>
+
+                        <li class="avaliaçao_produto">(4.9)</li>
+                    </ul>
+
+                    <h3 class="titulo_detalhes"><?= htmlspecialchars($produto['nome'] ?? 'Produto sem nome') ?></h3>
+                    <span class="preco_produto">R$ <?= isset($produto['preco']) ? number_format((float)$produto['preco'], 2, ',', '.') : '0,00' ?></span>
+
+                    <ul class="detalhes_ponto_chave">
+                        <li><i class="ri-check-line"></i>Look Moderno</li>
+                        <li><i class="ri-check-line"></i>Ótima qualidade de fabricação</li>
+                    </ul>
+
+                    <?php
+                    $estoqueTotal = isset($produto['estoque_total']) ? (int)$produto['estoque_total'] : 0;
+                    ?>
+                    <h3 class="detalhes_texto">Aproveite, <?= $estoqueTotal ?> <?= $estoqueTotal == 1 ? 'item' : 'itens' ?> restantes no estoque</h3>
+                    <div class="detalhes_progresso">
+                        <div class="barra_progresso"></div>
                     </div>
+
+                    <form method="POST" action="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos&amp;id=<?= (int)($produto['id_produto'] ?? 0) ?>">
+                        <div class="detalhes_tamanho">
+                            <span class="detalhes_tamanho_titulo">Escolha o Tamanho:</span>
+
+                            <div class="tamanho_produto">
+                                <?php if (!empty($tamanhosDisponiveis)): ?>
+                                    <?php $primeiro = true; ?>
+                                    <?php foreach ($tamanhosDisponiveis as $tamanho): ?>
+                                        <?php $idTamanho = 'tam_' . preg_replace('/[^a-zA-Z0-9]/', '_', $tamanho); ?>
+                                        <div>
+                                            <input type="radio" class="produto_tamanho_input" name="tamanho" id="<?= $idTamanho ?>" value="<?= htmlspecialchars($tamanho) ?>" <?= $primeiro ? 'checked' : '' ?> required>
+                                            <label for="<?= $idTamanho ?>" class="tamanho_produto_label"><?= htmlspecialchars($tamanho) ?></label>
+                                        </div>
+                                        <?php $primeiro = false; ?>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <span style="font-size:0.9rem;color:#666;">Nenhum tamanho disponível cadastrado.</span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <div class="detalhes_cores">
+                            <span class="detalhes_cores_titulo">Cor:</span>
+
+                            <div class="produto_cores">
+                                <?php if (!empty($coresDisponiveis)): ?>
+                                    <?php $primeiraCor = true; ?>
+                                    <?php foreach ($coresDisponiveis as $cor): ?>
+                                        <div>
+                                            <input type="radio" name="cor" class="produto_cor_input" value="<?= htmlspecialchars($cor) ?>" <?= $primeiraCor ? 'checked' : '' ?> required>
+                                            <span class="produto_cor" style="--background-color: hsl(0,0%,80%);"></span>
+                                            <span style="font-size:0.8rem;margin-left:5px;"><?= htmlspecialchars($cor) ?></span>
+                                        </div>
+                                        <?php $primeiraCor = false; ?>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <span style="font-size:0.9rem;color:#666;">Nenhuma cor disponível cadastrada.</span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <div class="detalhes_carrinho">
+                            <div class="adicionar_carrinho">
+                                <button type="button" class="rem" onclick="diminuirQuantidade()">-</button>
+                                <input type="number" name="quantidade" id="quantidadeInput" value="1" min="1" class="contador" required>
+                                <button type="button" class="add" onclick="aumentarQuantidade()">+</button>
+                            </div>
+
+                            <button type="submit" name="adicionar_carrinho" class="btn">Adicionar ao Carrinho</button>
+                        </div>
+                    </form>
+
+                    <div class="detalhes_acoes">
+                        <a href="#"><i class="ri-arrow-left-right-line"></i>Adicionar para comparar</a>
+                        <a href="#"><i class="ri-heart-line"></i>Adicionar aos Favoritos</a>
+                    </div>
+
+                    <div class="detalhes_retorno grid">
+                        <li><i class="ri-truck-fill"></i>Frete grátis apartir de 200 reais</li>
+                        <li><i class="ri-arrow-go-back-line"></i>Devolva de graça em até 30 dias</li>
+                    </div>
+
                 </div>
             </div>
+        </section>
 
-            <div class="item_aba" id="specifications">
-                <ul class="especificacoes">
-                    <li>
-                        <h4>Marca:</h4>
-                        <span>Artisanhide</span>
-                    </li>
-                    <li>
-                        <h4>Cor:</h4>
-                        <span>Cinza</span>
-                    </li>
-                    <li>
-                        <h4>Material</h4>
-                        <span>jeans</span>
-                    </li>
-                    <li>
-                        <h4>Peso</h4>
-                        <span>250g</span>
-                    </li>
-                    <li>
-                        <h4>Qualidade</h4>
-                        <span>premium</span>
-                    </li>
-                </ul>
+        <section class="detalhes_content section container">
+            <div class="aba_btns">
+                <button class="aba_btn aba_ativa" data-target="#description">Descrição</button>
+                <button class="aba_btn" data-target="#specifications">Especificações</button>
             </div>
-        </div>
-    </section>
+
+            <div class="aba_content">
+                <div class="item_aba aba_ativa" id="description">
+                    <div class="descricao grid">
+                        <div>
+                            <p class="detalhes_descricao">
+                                <?= nl2br(htmlspecialchars($produto['descricao'] ?? 'Sem descrição para este produto.')) ?>
+                            </p>
+
+                            <h3 class="titulo_descricao">Características do produto</h3>
+
+                            <ul class="lista_descricao grid">
+                                <li>Categoria: <?= htmlspecialchars($produto['categoria'] ?? 'Não informada') ?></li>
+                                <li>Estoque disponível: <?= $estoqueTotal ?> unidades</li>
+                            </ul>
+                        </div>
+
+                        <div class="descricao_imagens grid">
+                            <?php if (!empty($imagemPrincipal)): ?>
+                                <img src="<?= htmlspecialchars($imagemPrincipal) ?>" alt="<?= htmlspecialchars($produto['nome'] ?? '') ?>" class="descricao_imagem">
+                                <img src="<?= htmlspecialchars($imagemPrincipal) ?>" alt="<?= htmlspecialchars($produto['nome'] ?? '') ?>" class="descricao_imagem">
+                                <img src="<?= htmlspecialchars($imagemPrincipal) ?>" alt="<?= htmlspecialchars($produto['nome'] ?? '') ?>" class="descricao_imagem">
+                            <?php else: ?>
+                                <div class="descricao_imagem" style="display:flex;align-items:center;justify-content:center;background:#f4f4f4;min-height:150px;">
+                                    <span>Sem imagens adicionais</span>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="item_aba" id="specifications">
+                    <ul class="especificacoes">
+                        <li>
+                            <h4>Categoria:</h4>
+                            <span><?= htmlspecialchars($produto['categoria'] ?? 'Não informada') ?></span>
+                        </li>
+                        <li>
+                            <h4>Preço:</h4>
+                            <span>R$ <?= isset($produto['preco']) ? number_format((float)$produto['preco'], 2, ',', '.') : '0,00' ?></span>
+                        </li>
+                        <li>
+                            <h4>Estoque:</h4>
+                            <span><?= $estoqueTotal ?> unidades</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    <?php else: ?>
+        <section class="container section" style="text-align: center; padding: 40px;">
+            <h2 style="color: #666; margin-bottom: 20px;">Produto não encontrado</h2>
+            <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=produtos" class="btn">Voltar para Produtos</a>
+        </section>
+    <?php endif; ?>
 </main>
 
 <script>
     const mainImg = document.querySelector('.detalhes_imagem_principal');
     const smallImg = document.querySelectorAll('.detalhes_imagem');
 
-    smallImg.forEach((img) => {
-        img.addEventListener('click', function() {
-            mainImg.src = this.src;
+    if (smallImg.length > 0 && mainImg) {
+        smallImg.forEach((img) => {
+            img.addEventListener('click', function() {
+                if (mainImg.tagName === 'IMG') {
+                    mainImg.src = this.src;
+                }
 
-            smallImg.forEach((i) => i.classList.remove('imagem_ativa'));
-            this.classList.add('imagem_ativa');
+                smallImg.forEach((i) => i.classList.remove('imagem_ativa'));
+                this.classList.add('imagem_ativa');
+            });
         });
-    });
+    }
 
     const tabs = document.querySelectorAll('[data-target]'),
         tabContents = document.querySelectorAll('.item_aba');
@@ -239,7 +252,9 @@
                 tabContent.classList.remove('aba_ativa');
             });
 
-            target.classList.add('aba_ativa');
+            if (target) {
+                target.classList.add('aba_ativa');
+            }
 
             tabs.forEach((tab) => {
                 tab.classList.remove('aba_ativa');
@@ -247,6 +262,23 @@
             tab.classList.add('aba_ativa');
         });
     });
+
+    function aumentarQuantidade() {
+        const input = document.getElementById('quantidadeInput');
+        if (input) {
+            input.value = parseInt(input.value) + 1;
+        }
+    }
+
+    function diminuirQuantidade() {
+        const input = document.getElementById('quantidadeInput');
+        if (input) {
+            const valor = parseInt(input.value);
+            if (valor > 1) {
+                input.value = valor - 1;
+            }
+        }
+    }
 </script>
 
 <?php include_once __DIR__ . "/../Rodape.php"; ?>

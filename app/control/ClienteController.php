@@ -6,6 +6,8 @@ require_once __DIR__ . "/AuthController.php";
 require_once __DIR__ . "/../model/UsuarioModel.php";
 require_once __DIR__ . "/../model/PedidoModel.php";
 require_once __DIR__ . "/../model/ProdutoModel.php";
+require_once __DIR__ . "/../model/CarrinhoModel.php";
+require_once __DIR__ . "/../model/EstoqueModel.php";
 
 class ClienteController
 {
@@ -13,12 +15,16 @@ class ClienteController
     private $usuarioModel;
     private $pedidoModel;
     private $produtoModel;
+    private $carrinhoModel;
+    private $estoqueModel;
 
     public function __construct()
     {
         $this->usuarioModel = new UsuarioModel();
         $this->pedidoModel = new PedidoModel();
         $this->produtoModel = new ProdutoModel();
+        $this->carrinhoModel = new CarrinhoModel();
+        $this->estoqueModel = new EstoqueModel();
     }
     /* Roteador que leva para cada página de cliente */
     public function index()
@@ -234,6 +240,86 @@ class ClienteController
         /* Protege a rota - só cliente pode acessar */
         AuthController::protegerCliente();
 
+        /* Inicia sessão */
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        /* Inicializa variáveis de mensagem */
+        $mensagem = '';
+        $tipoMensagem = '';
+
+        /* Pega o ID do produto da URL */
+        $idProduto = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+        if (!$idProduto) {
+            $mensagem = "Produto não encontrado.";
+            $tipoMensagem = 'erro';
+            $produto = null;
+            $coresDisponiveis = [];
+            $tamanhosDisponiveis = [];
+        } else {
+            /* Busca dados do produto */
+            $produto = $this->produtoModel->buscarProdutoPorId($idProduto);
+
+            if (!$produto) {
+                $mensagem = "Produto não encontrado.";
+                $tipoMensagem = 'erro';
+                $coresDisponiveis = [];
+                $tamanhosDisponiveis = [];
+            } else {
+                /* Busca cores e tamanhos disponíveis do estoque */
+                $coresETamanhos = $this->estoqueModel->buscarCoresETamanhosPorProduto($idProduto);
+                $coresDisponiveis = $coresETamanhos['cores'];
+                $tamanhosDisponiveis = $coresETamanhos['tamanhos'];
+            }
+        }
+
+        /* Processa adicionar ao carrinho (POST) */
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['adicionar_carrinho'])) {
+            $idCliente = $_SESSION['usuario_id'] ?? null;
+
+            if (!$idCliente) {
+                header("Location: " . BASE_URL . "/app/control/LoginController.php");
+                exit;
+            }
+
+            if (!$produto) {
+                $mensagem = "Produto não encontrado.";
+                $tipoMensagem = 'erro';
+            } else {
+                $quantidade = isset($_POST['quantidade']) ? (int)$_POST['quantidade'] : 1;
+                $cor = !empty($_POST['cor']) ? trim($_POST['cor']) : null;
+                $tamanho = !empty($_POST['tamanho']) ? trim($_POST['tamanho']) : null;
+                $precoUnitario = (float)($produto['preco'] ?? 0);
+
+                if ($quantidade <= 0) {
+                    $mensagem = "Quantidade deve ser maior que zero.";
+                    $tipoMensagem = 'erro';
+                } elseif ($precoUnitario <= 0) {
+                    $mensagem = "Erro ao obter preço do produto.";
+                    $tipoMensagem = 'erro';
+                } else {
+                    $resultado = $this->carrinhoModel->adicionarAoCarrinho(
+                        $idCliente,
+                        $idProduto,
+                        $quantidade,
+                        $cor,
+                        $tamanho,
+                        $precoUnitario
+                    );
+
+                    if ($resultado) {
+                        $mensagem = "Produto adicionado ao carrinho com sucesso!";
+                        $tipoMensagem = 'sucesso';
+                    } else {
+                        $mensagem = "Erro ao adicionar produto ao carrinho. Tente novamente.";
+                        $tipoMensagem = 'erro';
+                    }
+                }
+            }
+        }
+
         /* Inclui a view */
         require_once __DIR__ . "/../view/cliente/detalhes_produtos.php";
     }
@@ -273,6 +359,91 @@ class ClienteController
     {
         /* Protege a rota - só cliente pode acessar */
         AuthController::protegerCliente();
+
+        /* Inicia sessão */
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        /* Verifica se usuário está logado */
+        $idCliente = $_SESSION['usuario_id'] ?? null;
+        if (!$idCliente) {
+            header("Location: " . BASE_URL . "/app/control/LoginController.php");
+            exit;
+        }
+
+        /* Inicializa variáveis de mensagem */
+        $mensagem = '';
+        $tipoMensagem = '';
+
+        /* Processa ações do carrinho (POST) */
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (isset($_POST['atualizar_quantidade'])) {
+                /* Atualiza quantidade de um item */
+                $idCarrinho = isset($_POST['id_carrinho']) ? (int)$_POST['id_carrinho'] : 0;
+                $quantidade = isset($_POST['quantidade']) ? (int)$_POST['quantidade'] : 0;
+
+                if ($idCarrinho > 0) {
+                    $resultado = $this->carrinhoModel->atualizarQuantidade($idCarrinho, $quantidade, $idCliente);
+                    if ($resultado) {
+                        $mensagem = "Quantidade atualizada com sucesso!";
+                        $tipoMensagem = 'sucesso';
+                    } else {
+                        $mensagem = "Erro ao atualizar quantidade. Tente novamente.";
+                        $tipoMensagem = 'erro';
+                    }
+                }
+            } elseif (isset($_POST['remover_item'])) {
+                /* Remove um item do carrinho */
+                $idCarrinho = isset($_POST['id_carrinho']) ? (int)$_POST['id_carrinho'] : 0;
+
+                if ($idCarrinho > 0) {
+                    $resultado = $this->carrinhoModel->removerItem($idCarrinho, $idCliente);
+                    if ($resultado) {
+                        $mensagem = "Item removido do carrinho com sucesso!";
+                        $tipoMensagem = 'sucesso';
+                    } else {
+                        $mensagem = "Erro ao remover item. Tente novamente.";
+                        $tipoMensagem = 'erro';
+                    }
+                }
+            }
+        }
+
+        /* Busca itens do carrinho */
+        $itensCarrinho = $this->carrinhoModel->listarItensCarrinho($idCliente);
+
+        /* Formata itens para a view */
+        $itensFormatados = [];
+        $subtotal = 0;
+
+        foreach ($itensCarrinho as $item) {
+            $quantidade = (int)($item['quantidade'] ?? 0);
+            $precoUnitario = (float)($item['preco_unitario'] ?? 0);
+            $precoTotal = $quantidade * $precoUnitario;
+            $subtotal += $precoTotal;
+
+            $imagemProduto = !empty($item['imagens']) ? BASE_URL . $item['imagens'] : '';
+
+            $itensFormatados[] = [
+                'id_carrinho' => (int)$item['id_carrinho'],
+                'id_produto' => (int)$item['id_produto'],
+                'nome_produto' => htmlspecialchars($item['nome_produto'] ?? ''),
+                'quantidade' => $quantidade,
+                'preco_unitario' => $precoUnitario,
+                'preco_total' => $precoTotal,
+                'cor' => htmlspecialchars($item['cor'] ?? ''),
+                'tamanho' => htmlspecialchars($item['tamanho'] ?? ''),
+                'imagem' => $imagemProduto
+            ];
+        }
+
+        /* Calcula totais */
+        $subtotalFormatado = 'R$ ' . number_format($subtotal, 2, ',', '.');
+        $frete = 0; /* Por enquanto frete grátis ou pode ser calculado depois */
+        $freteFormatado = 'R$ ' . number_format($frete, 2, ',', '.');
+        $total = $subtotal + $frete;
+        $totalFormatado = 'R$ ' . number_format($total, 2, ',', '.');
 
         /* Inclui a view */
         require_once __DIR__ . "/../view/cliente/carrinho.php";

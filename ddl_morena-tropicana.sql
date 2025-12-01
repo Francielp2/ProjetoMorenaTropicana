@@ -87,11 +87,30 @@ CREATE TABLE Pedido (
         ON UPDATE CASCADE
 );
 
+CREATE TABLE Carrinho (
+    id_carrinho INT AUTO_INCREMENT PRIMARY KEY,
+    id_cliente INT NOT NULL,
+    id_produto INT NOT NULL,
+    quantidade INT DEFAULT 1,
+    cor VARCHAR(50),
+    tamanho VARCHAR(50),
+    preco_unitario DECIMAL(10,2) NOT NULL,
+    data_adicionado DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_cliente) REFERENCES Cliente(id_usuario)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    FOREIGN KEY (id_produto) REFERENCES Produto(id_produto)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
 CREATE TABLE Produto_Pedido (
     id_pedido INT NOT NULL,
     id_produto INT NOT NULL,
     quantidade INT DEFAULT 1,
     preco_unitario DECIMAL(10,2) NOT NULL,
+    cor VARCHAR(50),
+    tamanho VARCHAR(50),
     PRIMARY KEY (id_pedido, id_produto),
     FOREIGN KEY (id_pedido) REFERENCES Pedido(id_pedido)
         ON DELETE CASCADE
@@ -100,7 +119,7 @@ CREATE TABLE Produto_Pedido (
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
-
+    
 CREATE TABLE Pagamento (
     id_pagamento INT AUTO_INCREMENT PRIMARY KEY,
     id_pedido INT,
