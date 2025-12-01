@@ -1205,6 +1205,56 @@ form .subtitulo {
     font-weight: var(--espessura_500);
 }
 
+.tamanho_produto_label.selecionado {
+    background-color: var(--cor_primaria, #333);
+    color: white;
+    border-color: var(--cor_primaria, #333);
+    font-weight: 600;
+    transform: scale(1.05);
+    transition: all 0.2s ease;
+}
+
+.tamanho_produto_label {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tamanho_produto_label:hover {
+    border-color: var(--cor_primaria, #333);
+    transform: scale(1.02);
+}
+
+/* Estilo para cor selecionada */
+.cor_container {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border: 2px solid transparent;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cor_container:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+.cor_container.selecionado {
+    background-color: rgba(51, 51, 51, 0.1);
+    border-color: var(--cor_primaria, #333);
+    box-shadow: 0 0 0 2px rgba(51, 51, 51, 0.1);
+}
+
+.cor_container.selecionado .produto_cor {
+    transform: scale(1.2);
+    box-shadow: 0 0 0 2px var(--cor_primaria, #333);
+}
+
+.produto_cor {
+    transition: all 0.2s ease;
+}
+
 /* CSS do carrinho */
 
 .tabela {

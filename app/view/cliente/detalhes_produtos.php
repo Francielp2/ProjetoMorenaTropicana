@@ -105,9 +105,9 @@
                                     <?php $primeiro = true; ?>
                                     <?php foreach ($tamanhosDisponiveis as $tamanho): ?>
                                         <?php $idTamanho = 'tam_' . preg_replace('/[^a-zA-Z0-9]/', '_', $tamanho); ?>
-                                        <div>
+                                        <div class="tamanho_container" data-tamanho-id="<?= $idTamanho ?>">
                                             <input type="radio" class="produto_tamanho_input" name="tamanho" id="<?= $idTamanho ?>" value="<?= htmlspecialchars($tamanho) ?>" <?= $primeiro ? 'checked' : '' ?> required>
-                                            <label for="<?= $idTamanho ?>" class="tamanho_produto_label"><?= htmlspecialchars($tamanho) ?></label>
+                                            <label for="<?= $idTamanho ?>" class="tamanho_produto_label <?= $primeiro ? 'selecionado' : '' ?>"><?= htmlspecialchars($tamanho) ?></label>
                                         </div>
                                         <?php $primeiro = false; ?>
                                     <?php endforeach; ?>
@@ -124,8 +124,9 @@
                                 <?php if (!empty($coresDisponiveis)): ?>
                                     <?php $primeiraCor = true; ?>
                                     <?php foreach ($coresDisponiveis as $cor): ?>
-                                        <div>
-                                            <input type="radio" name="cor" class="produto_cor_input" value="<?= htmlspecialchars($cor) ?>" <?= $primeiraCor ? 'checked' : '' ?> required>
+                                        <?php $idCor = 'cor_' . preg_replace('/[^a-zA-Z0-9]/', '_', $cor); ?>
+                                        <div class="cor_container <?= $primeiraCor ? 'selecionado' : '' ?>" data-cor-id="<?= $idCor ?>">
+                                            <input type="radio" name="cor" class="produto_cor_input" id="<?= $idCor ?>" value="<?= htmlspecialchars($cor) ?>" <?= $primeiraCor ? 'checked' : '' ?> required>
                                             <span class="produto_cor" style="--background-color: hsl(0,0%,80%);"></span>
                                             <span style="font-size:0.8rem;margin-left:5px;"><?= htmlspecialchars($cor) ?></span>
                                         </div>
@@ -279,6 +280,75 @@
             }
         }
     }
+
+    // Interação visual para tamanhos
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tamanhos
+        const tamanhoInputs = document.querySelectorAll('.produto_tamanho_input');
+        tamanhoInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                // Remove classe selecionado de todos os labels
+                document.querySelectorAll('.tamanho_produto_label').forEach(label => {
+                    label.classList.remove('selecionado');
+                });
+                // Adiciona classe selecionado ao label do input marcado
+                const label = document.querySelector('label[for="' + this.id + '"]');
+                if (label) {
+                    label.classList.add('selecionado');
+                }
+            });
+
+            // Inicializa o estado visual do tamanho marcado por padrão
+            if (input.checked) {
+                const label = document.querySelector('label[for="' + input.id + '"]');
+                if (label) {
+                    label.classList.add('selecionado');
+                }
+            }
+        });
+
+        // Cores
+        const corInputs = document.querySelectorAll('.produto_cor_input');
+        corInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                // Remove classe selecionado de todos os containers de cor
+                document.querySelectorAll('.cor_container').forEach(container => {
+                    container.classList.remove('selecionado');
+                });
+                // Adiciona classe selecionado ao container do input marcado
+                const container = this.closest('.cor_container');
+                if (container) {
+                    container.classList.add('selecionado');
+                }
+            });
+
+            // Inicializa o estado visual da cor marcada por padrão
+            if (input.checked) {
+                const container = input.closest('.cor_container');
+                if (container) {
+                    container.classList.add('selecionado');
+                }
+            }
+        });
+
+        // Permite clicar no container inteiro para selecionar
+        document.querySelectorAll('.cor_container').forEach(container => {
+            container.addEventListener('click', function(e) {
+                // Não dispara se clicar diretamente no input
+                if (e.target !== this.querySelector('.produto_cor_input')) {
+                    const input = this.querySelector('.produto_cor_input');
+                    if (input) {
+                        input.checked = true;
+                        input.dispatchEvent(new Event('change'));
+                    }
+                }
+            });
+        });
+    });
 </script>
+
+<style>
+    /* Estilo para tamanho selecionado */
+</style>
 
 <?php include_once __DIR__ . "/../Rodape.php"; ?>
