@@ -26,9 +26,9 @@
                     $precoProduto = isset($produto['preco']) ? number_format((float)$produto['preco'], 2, ',', '.') : '0,00';
                     $imagemProduto = !empty($produto['imagens']) ? BASE_URL . $produto['imagens'] : '';
                 ?>
-                    <article class="cartao_produto">
+            <article class="cartao_produto">
 
-                        <div class="cabecalho_produto">
+                <div class="cabecalho_produto">
                             <?php if (!empty($imagemProduto)): ?>
                                 <img src="<?= htmlspecialchars($imagemProduto) ?>" alt="<?= $nomeProduto ?>" class="imagem_produto">
                             <?php else: ?>
@@ -37,95 +37,95 @@
                                 </div>
                             <?php endif; ?>
 
-                            <div class="conteudo_produto">
+                    <div class="conteudo_produto">
 
-                                <div class="topo_produto">
-                                    <ul class="estrelas_produto">
-                                        <li><i class="ri-star-fill"></i></li>
-                                        <li><i class="ri-star-fill"></i></li>
-                                        <li><i class="ri-star-fill"></i></li>
-                                        <li><i class="ri-star-fill"></i></li>
-                                        <li><i class="ri-star-fill"></i></li>
+                        <div class="topo_produto">
+                            <ul class="estrelas_produto">
+                                <li><i class="ri-star-fill"></i></li>
+                                <li><i class="ri-star-fill"></i></li>
+                                <li><i class="ri-star-fill"></i></li>
+                                <li><i class="ri-star-fill"></i></li>
+                                <li><i class="ri-star-fill"></i></li>
 
-                                        <li class="avaliaçao_produto">4.9</li>
-                                    </ul>
+                                <li class="avaliaçao_produto">4.9</li>
+                            </ul>
 
-                                    <div class="produto_cores">
-                                        <div>
-                                            <input type="radio" name="cor" class="produto_cor_input">
-                                            <span class="produto_cor" style="--background-color: hsl(0,60%,64%)"></span>
-                                        </div>
-
-                                        <div>
-                                            <input type="radio" name="cor" class="produto_cor_input">
-                                            <span class="produto_cor" style="--background-color: hsl(0, 0%, 100%)"></span>
-                                        </div>
-
-                                        <div>
-                                            <input type="radio" name="cor" class="produto_cor_input">
-                                            <span class="produto_cor" style="--background-color: hsl(159, 46%, 56%)"></span>
-                                        </div>
-
-                                        <div>
-                                            <input type="radio" name="cor" class="produto_cor_input">
-                                            <span class="produto_cor" style="--background-color: hsl(223, 60%, 66%)"></span>
-                                        </div>
-
-                                        <div>
-                                            <input type="radio" name="cor" class="produto_cor_input">
-                                            <span class="produto_cor" style="--background-color: hsl(0, 100%, 68%)"></span>
-                                        </div>
-
-                                        <div>
-                                            <input type="radio" name="cor" class="produto_cor_input">
-                                            <span class="produto_cor" style="--background-color: hsl(112, 81%, 67%)"></span>
-                                        </div>
-                                    </div>
-                                </div><!--fechamento do topo produtos -->
-
-                                <div class="tamanho_produto">
-                                    <div>
-                                        <input type="radio" class="produto_tamanho_input" name="tamanho" id="x-small" checked>
-                                        <label for="x-small" class="tamanho_produto_label">PP</label>
-                                    </div>
-
-                                    <div>
-                                        <input type="radio" class="produto_tamanho_input" name="tamanho" id="small">
-                                        <label for="small" class="tamanho_produto_label">P</label>
-                                    </div>
-
-                                    <div>
-                                        <input type="radio" class="produto_tamanho_input" name="tamanho" id="medium">
-                                        <label for="medium" class="tamanho_produto_label">M</label>
-                                    </div>
-
-                                    <div>
-                                        <input type="radio" class="produto_tamanho_input" name="tamanho" id="large">
-                                        <label for="large" class="tamanho_produto_label">G</label>
-                                    </div>
-
-                                    <div>
-                                        <input type="radio" class="produto_tamanho_input" name="tamanho" id="x-large">
-                                        <label for="x-large" class="tamanho_produto_label">GG</label>
-                                    </div>
+                            <div class="produto_cores">
+                                <div>
+                                    <input type="radio" name="cor" class="produto_cor_input">
+                                    <span class="produto_cor" style="--background-color: hsl(0,60%,64%)"></span>
                                 </div>
 
-                                <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos&id=<?= $idProduto ?>" class="btn btn_produto">Ver Detalhes</a>
-                            </div> <!--fechamento do conteudo produto -->
-                        </div>
+                                <div>
+                                    <input type="radio" name="cor" class="produto_cor_input">
+                                    <span class="produto_cor" style="--background-color: hsl(0, 0%, 100%)"></span>
+                                </div>
 
-                        <div class="produto_rodape">
+                                <div>
+                                    <input type="radio" name="cor" class="produto_cor_input">
+                                    <span class="produto_cor" style="--background-color: hsl(159, 46%, 56%)"></span>
+                                </div>
+
+                                <div>
+                                    <input type="radio" name="cor" class="produto_cor_input">
+                                    <span class="produto_cor" style="--background-color: hsl(223, 60%, 66%)"></span>
+                                </div>
+
+                                <div>
+                                    <input type="radio" name="cor" class="produto_cor_input">
+                                    <span class="produto_cor" style="--background-color: hsl(0, 100%, 68%)"></span>
+                                </div>
+
+                                <div>
+                                    <input type="radio" name="cor" class="produto_cor_input">
+                                    <span class="produto_cor" style="--background-color: hsl(112, 81%, 67%)"></span>
+                                </div>
+                            </div>
+                        </div><!--fechamento do topo produtos -->
+
+                        <div class="tamanho_produto">
                             <div>
-                                <h3 class="titilo_produto">
-                                    <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos&id=<?= $idProduto ?>"><?= $nomeProduto ?></a>
-                                </h3>
-                                <span class="preco_produto">R$ <?= $precoProduto ?></span>
+                                <input type="radio" class="produto_tamanho_input" name="tamanho" id="x-small" checked>
+                                <label for="x-small" class="tamanho_produto_label">PP</label>
                             </div>
 
-                            <a href="#" class="produto_favorito"> <i class="ri-heart-line"></i></a>
+                            <div>
+                                <input type="radio" class="produto_tamanho_input" name="tamanho" id="small">
+                                <label for="small" class="tamanho_produto_label">P</label>
+                            </div>
+
+                            <div>
+                                <input type="radio" class="produto_tamanho_input" name="tamanho" id="medium">
+                                <label for="medium" class="tamanho_produto_label">M</label>
+                            </div>
+
+                            <div>
+                                <input type="radio" class="produto_tamanho_input" name="tamanho" id="large">
+                                <label for="large" class="tamanho_produto_label">G</label>
+                            </div>
+
+                            <div>
+                                <input type="radio" class="produto_tamanho_input" name="tamanho" id="x-large">
+                                <label for="x-large" class="tamanho_produto_label">GG</label>
+                            </div>
                         </div>
 
-                    </article>
+                                <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos&id=<?= $idProduto ?>" class="btn btn_produto">Ver Detalhes</a>
+                    </div> <!--fechamento do conteudo produto -->
+                </div>
+
+                <div class="produto_rodape">
+                    <div>
+                        <h3 class="titilo_produto">
+                                    <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos&id=<?= $idProduto ?>"><?= $nomeProduto ?></a>
+                        </h3>
+                                <span class="preco_produto">R$ <?= $precoProduto ?></span>
+                    </div>
+
+                    <a href="#" class="produto_favorito"> <i class="ri-heart-line"></i></a>
+                </div>
+
+            </article>
                 <?php endforeach; ?>
             <?php else: ?>
                 <p style="grid-column: 1 / -1; text-align: center; font-size: 1.1rem;">Nenhum produto disponível no momento.</p>

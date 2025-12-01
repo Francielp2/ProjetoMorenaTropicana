@@ -15,9 +15,38 @@ class CarrinhoModel
     }
 
     /* FUNÇÃO QUE ADICIONA UM ITEM AO CARRINHO */
-    public function adicionarAoCarrinho($idCliente, $idProduto, $quantidade, $cor, $tamanho, $precoUnitario)
+    public function adicionarAoCarrinho($idCliente, $idProduto, $quantidade, $cor, $tamanho, $precoUnitario, $estoqueModel = null)
     {
         try {
+            /* Verifica estoque disponível antes de adicionar */
+            if ($estoqueModel !== null) {
+                /* Verifica quantidade atual no carrinho para este item */
+                $stmt = $this->conn->prepare("
+                    SELECT quantidade 
+                    FROM Carrinho 
+                    WHERE id_cliente = :id_cliente 
+                    AND id_produto = :id_produto 
+                    AND (cor = :cor OR (cor IS NULL AND :cor IS NULL))
+                    AND (tamanho = :tamanho OR (tamanho IS NULL AND :tamanho IS NULL))
+                ");
+                $stmt->bindValue(':id_cliente', $idCliente, PDO::PARAM_INT);
+                $stmt->bindValue(':id_produto', $idProduto, PDO::PARAM_INT);
+                $stmt->bindValue(':cor', $cor, $cor === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
+                $stmt->bindValue(':tamanho', $tamanho, $tamanho === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
+                $stmt->execute();
+                $itemExistente = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                $quantidadeAtualNoCarrinho = $itemExistente ? (int)$itemExistente['quantidade'] : 0;
+                $quantidadeTotalNecessaria = $quantidadeAtualNoCarrinho + (int)$quantidade;
+                
+                /* Verifica se há estoque suficiente */
+                $estoqueDisponivel = $estoqueModel->obterQuantidadeDisponivel($idProduto, $cor, $tamanho);
+                
+                if ($estoqueDisponivel < $quantidadeTotalNecessaria) {
+                    return ['erro' => true, 'mensagem' => "Estoque insuficiente. Disponível: $estoqueDisponivel unidades. Solicitado: $quantidadeTotalNecessaria unidades."];
+                }
+            }
+
             /* Verifica se já existe um item igual no carrinho (mesmo produto, cor e tamanho) */
             $stmt = $this->conn->prepare("
                 SELECT id_carrinho, quantidade 
@@ -98,12 +127,12 @@ class CarrinhoModel
     }
 
     /* FUNÇÃO QUE ATUALIZA A QUANTIDADE DE UM ITEM DO CARRINHO */
-    public function atualizarQuantidade($idCarrinho, $quantidade, $idCliente)
+    public function atualizarQuantidade($idCarrinho, $quantidade, $idCliente, $estoqueModel = null)
     {
         try {
-            /* Verifica se o item pertence ao cliente */
+            /* Verifica se o item pertence ao cliente e busca dados do item */
             $stmt = $this->conn->prepare("
-                SELECT id_carrinho 
+                SELECT id_carrinho, id_produto, cor, tamanho
                 FROM Carrinho 
                 WHERE id_carrinho = :id_carrinho AND id_cliente = :id_cliente
             ");
@@ -111,13 +140,27 @@ class CarrinhoModel
             $stmt->bindValue(':id_cliente', $idCliente, PDO::PARAM_INT);
             $stmt->execute();
             
-            if (!$stmt->fetch()) {
+            $item = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$item) {
                 return false; /* Item não pertence ao cliente */
             }
 
             if ($quantidade <= 0) {
                 /* Se quantidade for 0 ou menor, remove o item */
                 return $this->removerItem($idCarrinho, $idCliente);
+            }
+
+            /* Verifica estoque disponível antes de atualizar */
+            if ($estoqueModel !== null) {
+                $estoqueDisponivel = $estoqueModel->obterQuantidadeDisponivel(
+                    $item['id_produto'], 
+                    $item['cor'], 
+                    $item['tamanho']
+                );
+                
+                if ($estoqueDisponivel < $quantidade) {
+                    return ['erro' => true, 'mensagem' => "Estoque insuficiente. Disponível: $estoqueDisponivel unidades."];
+                }
             }
 
             $stmt = $this->conn->prepare("

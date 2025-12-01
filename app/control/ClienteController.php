@@ -306,10 +306,14 @@ class ClienteController
                         $quantidade,
                         $cor,
                         $tamanho,
-                        $precoUnitario
+                        $precoUnitario,
+                        $this->estoqueModel
                     );
 
-                    if ($resultado) {
+                    if (is_array($resultado) && isset($resultado['erro'])) {
+                        $mensagem = $resultado['mensagem'];
+                        $tipoMensagem = 'erro';
+                    } elseif ($resultado) {
                         $mensagem = "Produto adicionado ao carrinho com sucesso!";
                         $tipoMensagem = 'sucesso';
                     } else {
@@ -384,8 +388,11 @@ class ClienteController
                 $quantidade = isset($_POST['quantidade']) ? (int)$_POST['quantidade'] : 0;
 
                 if ($idCarrinho > 0) {
-                    $resultado = $this->carrinhoModel->atualizarQuantidade($idCarrinho, $quantidade, $idCliente);
-                    if ($resultado) {
+                    $resultado = $this->carrinhoModel->atualizarQuantidade($idCarrinho, $quantidade, $idCliente, $this->estoqueModel);
+                    if (is_array($resultado) && isset($resultado['erro'])) {
+                        $mensagem = $resultado['mensagem'];
+                        $tipoMensagem = 'erro';
+                    } elseif ($resultado) {
                         $mensagem = "Quantidade atualizada com sucesso!";
                         $tipoMensagem = 'sucesso';
                     } else {
@@ -462,6 +469,12 @@ class ClienteController
         // Inicializa variáveis de mensagem
         $mensagem = '';
         $tipoMensagem = '';
+
+        // Verifica mensagem de sucesso na URL
+        if (isset($_GET['sucesso'])) {
+            $mensagem = urldecode($_GET['sucesso']);
+            $tipoMensagem = 'sucesso';
+        }
 
         // Verifica se usuário está logado
         $idCliente = $_SESSION['usuario_id'] ?? null;
@@ -600,6 +613,160 @@ class ClienteController
     {
         /*  Protege a rota - só cliente pode acessar */
         AuthController::protegerCliente();
+
+        /* Inicia sessão */
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        /* Verifica se usuário está logado */
+        $idCliente = $_SESSION['usuario_id'] ?? null;
+        if (!$idCliente) {
+            header("Location: " . BASE_URL . "/app/control/LoginController.php");
+            exit;
+        }
+
+        /* Inicializa variáveis de mensagem */
+        $mensagem = '';
+        $tipoMensagem = '';
+
+        /* Verifica se o cliente existe na tabela Cliente */
+        $dadosCliente = $this->usuarioModel->buscarDadosCliente($idCliente);
+        if (!$dadosCliente) {
+            $mensagem = "Erro: Seu cadastro não está completo. Por favor, atualize seus dados na página 'Minha Conta'.";
+            $tipoMensagem = 'erro';
+            /* Continua para mostrar a mensagem na view */
+        }
+
+        /* Busca itens do carrinho */
+        $itensCarrinho = $this->carrinhoModel->listarItensCarrinho($idCliente);
+
+        /* Se carrinho vazio, redireciona */
+        if (empty($itensCarrinho)) {
+            header("Location: " . BASE_URL . "/app/control/ClienteController.php?acao=carrinho");
+            exit;
+        }
+
+        /* Busca endereço do cliente */
+        $endereco = $this->usuarioModel->buscarEndereco($idCliente);
+
+        /* Processa finalizar compra (POST) */
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['finalizar_pedido'])) {
+            $formaPagamento = $_POST['forma_pagamento'] ?? '';
+
+            if (empty($formaPagamento) || !in_array($formaPagamento, ['Pix', 'Cartão', 'Boleto'])) {
+                $mensagem = "Selecione uma forma de pagamento válida.";
+                $tipoMensagem = 'erro';
+            } else {
+                /* Verifica se há itens no carrinho */
+                if (empty($itensCarrinho)) {
+                    $mensagem = "Seu carrinho está vazio. Adicione produtos antes de finalizar o pedido.";
+                    $tipoMensagem = 'erro';
+                } else {
+                    /* Prepara itens do carrinho para o pedido */
+                    $itensParaPedido = [];
+                    $valorTotal = 0;
+
+                    foreach ($itensCarrinho as $item) {
+                        if (!isset($item['id_produto']) || !isset($item['quantidade']) || !isset($item['preco_unitario'])) {
+                            error_log("Item do carrinho com dados incompletos: " . print_r($item, true));
+                            continue;
+                        }
+
+                        $itensParaPedido[] = [
+                            'id_produto' => (int)$item['id_produto'],
+                            'quantidade' => (int)$item['quantidade'],
+                            'preco_unitario' => (float)$item['preco_unitario'],
+                            'cor' => !empty($item['cor']) ? trim($item['cor']) : null,
+                            'tamanho' => !empty($item['tamanho']) ? trim($item['tamanho']) : null
+                        ];
+                        $valorTotal += (float)$item['preco_unitario'] * (int)$item['quantidade'];
+                    }
+
+                    if (empty($itensParaPedido)) {
+                        $mensagem = "Erro ao processar itens do carrinho. Tente novamente.";
+                        $tipoMensagem = 'erro';
+                    } elseif ($valorTotal <= 0) {
+                        $mensagem = "Valor total inválido. Tente novamente.";
+                        $tipoMensagem = 'erro';
+                    } else {
+                        /* Cria pedido a partir do carrinho */
+                        error_log("Tentando criar pedido - Cliente: $idCliente, Itens: " . count($itensParaPedido) . ", Valor: $valorTotal, Forma: $formaPagamento");
+                        $resultado = $this->pedidoModel->criarPedidoDoCarrinho($idCliente, $itensParaPedido, $formaPagamento, $valorTotal);
+
+                        /* Verifica se retornou erro ou ID do pedido */
+                        if (is_array($resultado) && isset($resultado['erro'])) {
+                            /* Erro retornado do model */
+                            $mensagem = "Erro ao finalizar pedido: " . htmlspecialchars($resultado['mensagem']);
+                            $tipoMensagem = 'erro';
+                            error_log("Falha ao criar pedido - Erro: " . $resultado['mensagem']);
+                            error_log("Dados dos itens: " . print_r($itensParaPedido, true));
+                        } elseif ($resultado && is_numeric($resultado)) {
+                            /* Sucesso - retornou ID do pedido */
+                            $idPedido = (int)$resultado;
+
+                            /* Limpa o carrinho */
+                            $this->carrinhoModel->limparCarrinho($idCliente);
+
+                            /* Redireciona para pedidos com mensagem de sucesso */
+                            header("Location: " . BASE_URL . "/app/control/ClienteController.php?acao=pedidos&sucesso=" . urlencode("Pedido criado com sucesso! ID: #" . str_pad($idPedido, 6, '0', STR_PAD_LEFT)));
+                            exit;
+                        } else {
+                            /* Erro desconhecido */
+                            $mensagem = "Erro desconhecido ao finalizar pedido. Verifique os logs do servidor.";
+                            $tipoMensagem = 'erro';
+                            error_log("Falha ao criar pedido - Retorno inesperado: " . print_r($resultado, true));
+                            error_log("Dados dos itens: " . print_r($itensParaPedido, true));
+                        }
+                    }
+                }
+            }
+        }
+
+        /* Formata itens para a view */
+        $itensFormatados = [];
+        $subtotal = 0;
+
+        foreach ($itensCarrinho as $item) {
+            $quantidade = (int)($item['quantidade'] ?? 0);
+            $precoUnitario = (float)($item['preco_unitario'] ?? 0);
+            $precoTotal = $quantidade * $precoUnitario;
+            $subtotal += $precoTotal;
+
+            $imagemProduto = !empty($item['imagens']) ? BASE_URL . $item['imagens'] : '';
+
+            $itensFormatados[] = [
+                'id_produto' => (int)$item['id_produto'],
+                'nome_produto' => htmlspecialchars($item['nome_produto'] ?? ''),
+                'quantidade' => $quantidade,
+                'preco_unitario' => $precoUnitario,
+                'preco_total' => $precoTotal,
+                'cor' => htmlspecialchars($item['cor'] ?? ''),
+                'tamanho' => htmlspecialchars($item['tamanho'] ?? ''),
+                'imagem' => $imagemProduto
+            ];
+        }
+
+        /* Calcula totais */
+        $subtotalFormatado = 'R$ ' . number_format($subtotal, 2, ',', '.');
+        $frete = 0;
+        $freteFormatado = 'R$ ' . number_format($frete, 2, ',', '.');
+        $total = $subtotal + $frete;
+        $totalFormatado = 'R$ ' . number_format($total, 2, ',', '.');
+
+        /* Formata endereço para exibição */
+        $rua = $endereco['rua'] ?? '';
+        $numero = $endereco['numero'] ?? '';
+        $bairro = $endereco['bairro'] ?? '';
+        $cep = $endereco['cep'] ?? '';
+        $estado = $endereco['estado'] ?? '';
+        $complemento = $endereco['complemento'] ?? '';
+
+        /* Formata CEP para exibição */
+        $cepFormatado = $cep;
+        if (!empty($cep) && strlen($cep) == 8) {
+            $cepFormatado = substr($cep, 0, 5) . '-' . substr($cep, 5, 3);
+        }
 
         /* Inclui a view */
         require_once __DIR__ . "/../view/cliente/checkout.php";

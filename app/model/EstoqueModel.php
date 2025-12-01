@@ -373,4 +373,252 @@ class EstoqueModel
             ];
         }
     }
+
+    /* FUNÇÃO QUE VERIFICA SE HÁ ESTOQUE DISPONÍVEL PARA UM PRODUTO COM COR E TAMANHO ESPECÍFICOS */
+    public function verificarEstoqueDisponivel($idProduto, $cor, $tamanho, $quantidadeNecessaria)
+    {
+        try {
+            /* Busca entradas de estoque que contenham a cor e tamanho desejados */
+            $stmt = $this->conn->prepare("
+                SELECT id_estoque, quantidade, cores_disponiveis, tamanhos_disponiveis
+                FROM Estoque
+                WHERE id_produto = :id_produto
+                AND quantidade > 0
+            ");
+            $stmt->bindValue(':id_produto', $idProduto, PDO::PARAM_INT);
+            $stmt->execute();
+            $entradasEstoque = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $estoqueTotal = 0;
+
+            foreach ($entradasEstoque as $entrada) {
+                $temCor = false;
+                $temTamanho = false;
+
+                /* Verifica se a cor está disponível nesta entrada */
+                if (empty($cor)) {
+                    $temCor = true; /* Se não especificou cor, aceita qualquer */
+                } elseif (!empty($entrada['cores_disponiveis'])) {
+                    $coresArray = array_map('trim', explode(',', $entrada['cores_disponiveis']));
+                    $temCor = in_array(trim($cor), $coresArray);
+                }
+
+                /* Verifica se o tamanho está disponível nesta entrada */
+                if (empty($tamanho)) {
+                    $temTamanho = true; /* Se não especificou tamanho, aceita qualquer */
+                } elseif (!empty($entrada['tamanhos_disponiveis'])) {
+                    $tamanhosArray = array_map('trim', explode(',', $entrada['tamanhos_disponiveis']));
+                    $temTamanho = in_array(trim($tamanho), $tamanhosArray);
+                }
+
+                /* Se esta entrada tem a cor e tamanho desejados, soma a quantidade */
+                if ($temCor && $temTamanho) {
+                    $estoqueTotal += (int)$entrada['quantidade'];
+                }
+            }
+
+            return $estoqueTotal >= $quantidadeNecessaria;
+        } catch (PDOException $e) {
+            error_log("Erro ao verificar estoque disponível: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /* FUNÇÃO QUE RETORNA A QUANTIDADE DISPONÍVEL DE ESTOQUE */
+    public function obterQuantidadeDisponivel($idProduto, $cor, $tamanho)
+    {
+        try {
+            $stmt = $this->conn->prepare("
+                SELECT id_estoque, quantidade, cores_disponiveis, tamanhos_disponiveis
+                FROM Estoque
+                WHERE id_produto = :id_produto
+                AND quantidade > 0
+            ");
+            $stmt->bindValue(':id_produto', $idProduto, PDO::PARAM_INT);
+            $stmt->execute();
+            $entradasEstoque = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $estoqueTotal = 0;
+
+            foreach ($entradasEstoque as $entrada) {
+                $temCor = false;
+                $temTamanho = false;
+
+                if (empty($cor)) {
+                    $temCor = true;
+                } elseif (!empty($entrada['cores_disponiveis'])) {
+                    $coresArray = array_map('trim', explode(',', $entrada['cores_disponiveis']));
+                    $temCor = in_array(trim($cor), $coresArray);
+                }
+
+                if (empty($tamanho)) {
+                    $temTamanho = true;
+                } elseif (!empty($entrada['tamanhos_disponiveis'])) {
+                    $tamanhosArray = array_map('trim', explode(',', $entrada['tamanhos_disponiveis']));
+                    $temTamanho = in_array(trim($tamanho), $tamanhosArray);
+                }
+
+                if ($temCor && $temTamanho) {
+                    $estoqueTotal += (int)$entrada['quantidade'];
+                }
+            }
+
+            return $estoqueTotal;
+        } catch (PDOException $e) {
+            error_log("Erro ao obter quantidade disponível: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /* FUNÇÃO QUE REDUZ O ESTOQUE DE UM PRODUTO COM COR E TAMANHO ESPECÍFICOS */
+    public function reduzirEstoque($idProduto, $cor, $tamanho, $quantidade)
+    {
+        try {
+            $this->conn->beginTransaction();
+
+            /* Busca entradas de estoque que contenham a cor e tamanho */
+            $stmt = $this->conn->prepare("
+                SELECT id_estoque, quantidade, cores_disponiveis, tamanhos_disponiveis
+                FROM Estoque
+                WHERE id_produto = :id_produto
+                AND quantidade > 0
+                ORDER BY quantidade DESC
+            ");
+            $stmt->bindValue(':id_produto', $idProduto, PDO::PARAM_INT);
+            $stmt->execute();
+            $entradasEstoque = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $quantidadeRestante = (int)$quantidade;
+
+            foreach ($entradasEstoque as $entrada) {
+                if ($quantidadeRestante <= 0) {
+                    break;
+                }
+
+                $temCor = false;
+                $temTamanho = false;
+
+                if (empty($cor)) {
+                    $temCor = true;
+                } elseif (!empty($entrada['cores_disponiveis'])) {
+                    $coresArray = array_map('trim', explode(',', $entrada['cores_disponiveis']));
+                    $temCor = in_array(trim($cor), $coresArray);
+                }
+
+                if (empty($tamanho)) {
+                    $temTamanho = true;
+                } elseif (!empty($entrada['tamanhos_disponiveis'])) {
+                    $tamanhosArray = array_map('trim', explode(',', $entrada['tamanhos_disponiveis']));
+                    $temTamanho = in_array(trim($tamanho), $tamanhosArray);
+                }
+
+                if ($temCor && $temTamanho) {
+                    $quantidadeDisponivel = (int)$entrada['quantidade'];
+                    $quantidadeAReduzir = min($quantidadeRestante, $quantidadeDisponivel);
+                    $novaQuantidade = $quantidadeDisponivel - $quantidadeAReduzir;
+
+                    $stmt = $this->conn->prepare("
+                        UPDATE Estoque 
+                        SET quantidade = :quantidade 
+                        WHERE id_estoque = :id_estoque
+                    ");
+                    $stmt->bindValue(':quantidade', $novaQuantidade, PDO::PARAM_INT);
+                    $stmt->bindValue(':id_estoque', $entrada['id_estoque'], PDO::PARAM_INT);
+                    $stmt->execute();
+
+                    $quantidadeRestante -= $quantidadeAReduzir;
+                }
+            }
+
+            $this->conn->commit();
+            return true;
+        } catch (PDOException $e) {
+            $this->conn->rollBack();
+            error_log("Erro ao reduzir estoque: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /* FUNÇÃO QUE RESTAURA O ESTOQUE DE UM PRODUTO (QUANDO PEDIDO É CANCELADO) */
+    public function restaurarEstoque($idProduto, $cor, $tamanho, $quantidade)
+    {
+        try {
+            $this->conn->beginTransaction();
+
+            /* Busca entradas de estoque que contenham a cor e tamanho */
+            $stmt = $this->conn->prepare("
+                SELECT id_estoque, quantidade, cores_disponiveis, tamanhos_disponiveis
+                FROM Estoque
+                WHERE id_produto = :id_produto
+                ORDER BY quantidade ASC
+            ");
+            $stmt->bindValue(':id_produto', $idProduto, PDO::PARAM_INT);
+            $stmt->execute();
+            $entradasEstoque = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $quantidadeRestante = (int)$quantidade;
+
+            /* Tenta restaurar em entradas que já têm a cor/tamanho */
+            foreach ($entradasEstoque as $entrada) {
+                if ($quantidadeRestante <= 0) {
+                    break;
+                }
+
+                $temCor = false;
+                $temTamanho = false;
+
+                if (empty($cor)) {
+                    $temCor = true;
+                } elseif (!empty($entrada['cores_disponiveis'])) {
+                    $coresArray = array_map('trim', explode(',', $entrada['cores_disponiveis']));
+                    $temCor = in_array(trim($cor), $coresArray);
+                }
+
+                if (empty($tamanho)) {
+                    $temTamanho = true;
+                } elseif (!empty($entrada['tamanhos_disponiveis'])) {
+                    $tamanhosArray = array_map('trim', explode(',', $entrada['tamanhos_disponiveis']));
+                    $temTamanho = in_array(trim($tamanho), $tamanhosArray);
+                }
+
+                if ($temCor && $temTamanho) {
+                    $quantidadeAtual = (int)$entrada['quantidade'];
+                    $quantidadeARestaurar = $quantidadeRestante;
+                    $novaQuantidade = $quantidadeAtual + $quantidadeARestaurar;
+
+                    $stmt = $this->conn->prepare("
+                        UPDATE Estoque 
+                        SET quantidade = :quantidade 
+                        WHERE id_estoque = :id_estoque
+                    ");
+                    $stmt->bindValue(':quantidade', $novaQuantidade, PDO::PARAM_INT);
+                    $stmt->bindValue(':id_estoque', $entrada['id_estoque'], PDO::PARAM_INT);
+                    $stmt->execute();
+
+                    $quantidadeRestante = 0;
+                    break;
+                }
+            }
+
+            /* Se ainda há quantidade para restaurar e não encontrou entrada compatível, cria nova entrada */
+            if ($quantidadeRestante > 0) {
+                $stmt = $this->conn->prepare("
+                    INSERT INTO Estoque (id_produto, quantidade, cores_disponiveis, tamanhos_disponiveis, data_cadastro)
+                    VALUES (:id_produto, :quantidade, :cor, :tamanho, CURDATE())
+                ");
+                $stmt->bindValue(':id_produto', $idProduto, PDO::PARAM_INT);
+                $stmt->bindValue(':quantidade', $quantidadeRestante, PDO::PARAM_INT);
+                $stmt->bindValue(':cor', $cor, $cor === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
+                $stmt->bindValue(':tamanho', $tamanho, $tamanho === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
+                $stmt->execute();
+            }
+
+            $this->conn->commit();
+            return true;
+        } catch (PDOException $e) {
+            $this->conn->rollBack();
+            error_log("Erro ao restaurar estoque: " . $e->getMessage());
+            return false;
+        }
+    }
 }
