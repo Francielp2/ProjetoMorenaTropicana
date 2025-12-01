@@ -4,15 +4,18 @@
 require_once __DIR__ . "/../config/config.php";
 require_once __DIR__ . "/AuthController.php";
 require_once __DIR__ . "/../model/UsuarioModel.php";
+require_once __DIR__ . "/../model/ProdutoModel.php";
 
 class ClienteController
 {
     /* Ao instanciar o objeto já instancia junto o model de usuário */
     private $usuarioModel;
+    private $produtoModel;
 
     public function __construct()
     {
         $this->usuarioModel = new UsuarioModel();
+        $this->produtoModel = new ProdutoModel();
     }
     /* Roteador que leva para cada página de cliente */
     public function index()
@@ -34,6 +37,9 @@ class ClienteController
                 break;
             case 'carrinho':
                 $this->carrinho();
+                break;
+            case 'pedidos':
+                $this->pedidos();
                 break;
             case 'checkout':
                 $this->checkout();
@@ -212,6 +218,9 @@ class ClienteController
         /* Protege a rota - só cliente pode acessar */
         AuthController::protegerCliente();
 
+        /* Busca todos os produtos para exibir nos cards */
+        $produtos = $this->produtoModel->listarTodosProdutos();
+
         /* Inclui a view */
         require_once __DIR__ . "/../view/cliente/PaginaProdutos.php";
     }
@@ -264,6 +273,72 @@ class ClienteController
 
         /* Inclui a view */
         require_once __DIR__ . "/../view/cliente/carrinho.php";
+    }
+
+    private function pedidos()
+    {
+        // Protege a rota - só cliente pode acessar
+        AuthController::protegerCliente();
+
+        // Inicia sessão
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        // Inicializa variáveis de mensagem
+        $mensagem = '';
+        $tipoMensagem = '';
+
+        // TODO: Aqui será implementada a lógica de buscar pedidos do banco de dados
+        // Por enquanto, vamos criar dados de exemplo para o front funcionar
+
+        $pedidosFormatados = [
+            [
+                'id' => 1,
+                'id_formatado' => '000001',
+                'data' => '25/11/2024',
+                'hora' => '14:30',
+                'status' => 'Pendente',
+                'status_classe' => 'avaliacao', // classe do CSS para cor amarela
+                'valor_total' => 'R$ 299,90',
+                'pagamento_status' => 'Aguardando',
+                'pagamento_classe' => 'avaliacao',
+                'total_itens' => 3,
+                'pode_pagar' => true,
+                'pode_cancelar' => true
+            ],
+            [
+                'id' => 2,
+                'id_formatado' => '000002',
+                'data' => '20/11/2024',
+                'hora' => '10:15',
+                'status' => 'Finalizado',
+                'status_classe' => 'avaliacao', // será usado para verde
+                'valor_total' => 'R$ 450,00',
+                'pagamento_status' => 'Confirmado',
+                'pagamento_classe' => 'avaliacao',
+                'total_itens' => 5,
+                'pode_pagar' => false,
+                'pode_cancelar' => false
+            ],
+            [
+                'id' => 3,
+                'id_formatado' => '000003',
+                'data' => '15/11/2024',
+                'hora' => '16:45',
+                'status' => 'Cancelado',
+                'status_classe' => 'avaliacao',
+                'valor_total' => 'R$ 189,90',
+                'pagamento_status' => 'Cancelado',
+                'pagamento_classe' => 'avaliacao',
+                'total_itens' => 2,
+                'pode_pagar' => false,
+                'pode_cancelar' => false
+            ]
+        ];
+
+        // Inclui a view passando as variáveis prontas
+        require_once __DIR__ . "/../view/cliente/pedidos.php";
     }
 
     /* ---EXIBE A PÁGINA DE CHECKOUT--- */

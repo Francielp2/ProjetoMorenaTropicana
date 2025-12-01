@@ -565,11 +565,32 @@ header {
     border: 1px solid var(--cor_borda);
     position: relative;
     overflow: hidden;
+    height: 500px;
 }
 
 .imagem_produto,
 .conteudo_produto {
     width: 100%;
+}
+
+.imagem_sem_foto {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background-color: #f4f4f4;
+    color: var(--cor_texto);
+    font-weight: var(--espessura_600);
+    text-transform: uppercase;
+    text-align: center;
+    padding: 0 1rem;
+}
+
+.imagem_produto {
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
 }
 
 .conteudo_produto {
@@ -1708,6 +1729,23 @@ form .subtitulo {
 .botao_excluir:hover {
     background-color: red;
     color: var(--cor_branca);
+}
+
+
+/* Estilos para badges de status nos pedidos */
+.avaliacao {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* Cores específicas para status (sobrescrever quando necessário via inline) */
+span.avaliacao {
+    background-color: hsl(51, 100%, 67%);
+    color: var(--cor_titulo);
 }
 
 /* Responsividade */

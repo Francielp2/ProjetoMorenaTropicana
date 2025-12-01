@@ -85,8 +85,8 @@ if (!isset($estoquesFormatados) || !is_array($estoquesFormatados)) {
                 <tr>
                     <td colspan="8" style="text-align: center; padding: 20px; color: #666;">
                         Nenhum registro de estoque encontrado
-                    </td>
-                </tr>
+                </td>
+            </tr>
             <?php else: ?>
                 <?php foreach ($estoquesFormatados as $estoque): ?>
                     <tr>
@@ -97,17 +97,17 @@ if (!isset($estoquesFormatados) || !is_array($estoquesFormatados)) {
                         <td><?= htmlspecialchars($estoque['quantidade']) ?></td>
                         <td><?= htmlspecialchars($estoque['data_cadastro']) ?></td>
                         <td><span class="admin-badge <?= htmlspecialchars($estoque['status_classe']) ?>"><?= htmlspecialchars($estoque['status']) ?></span></td>
-                        <td>
-                            <div class="admin-table-actions">
+                <td>
+                    <div class="admin-table-actions">
                                 <a href="<?= BASE_URL ?>/app/control/AdminController.php?acao=estoque&adicionar=<?= $estoque['id'] ?>" class="admin-btn admin-btn-icon admin-btn-primary" title="Adicionar Estoque">
-                                    <i class="ri-add-line"></i>
+                            <i class="ri-add-line"></i>
                                 </a>
                                 <a href="<?= BASE_URL ?>/app/control/AdminController.php?acao=estoque&editar=<?= $estoque['id'] ?>" class="admin-btn admin-btn-icon admin-btn-secondary" title="Editar">
-                                    <i class="ri-edit-line"></i>
+                            <i class="ri-edit-line"></i>
                                 </a>
-                            </div>
-                        </td>
-                    </tr>
+                    </div>
+                </td>
+            </tr>
                 <?php endforeach; ?>
             <?php endif; ?>
         </tbody>
@@ -152,17 +152,17 @@ if (!isset($estoquesFormatados) || !is_array($estoquesFormatados)) {
             </div>
             <div class="admin-modal-body" style="padding: 1.5rem;">
                 <form method="POST" action="<?= BASE_URL ?>/app/control/AdminController.php?acao=cadastrarEntradaEstoque" class="admin-form">
-                    <div class="admin-form-group">
-                        <label class="admin-form-label">Produto</label>
+            <div class="admin-form-group">
+                <label class="admin-form-label">Produto</label>
                         <select class="admin-form-select" name="id_produto" required>
-                            <option value="">Selecione um produto...</option>
+                    <option value="">Selecione um produto...</option>
                             <?php foreach ($produtos as $produto): ?>
                                 <option value="<?= htmlspecialchars($produto['id_produto']) ?>">
                                     <?= htmlspecialchars($produto['nome']) ?>
                                 </option>
                             <?php endforeach; ?>
-                        </select>
-                    </div>
+                </select>
+            </div>
                     <div class="admin-form-row">
                         <div class="admin-form-group">
                             <label class="admin-form-label">Tamanhos Disponíveis</label>
@@ -173,30 +173,30 @@ if (!isset($estoquesFormatados) || !is_array($estoquesFormatados)) {
                             <input type="text" class="admin-form-input" name="cores" placeholder="Ex: Branco, Preto, Rosa" required>
                         </div>
                     </div>
-                    <div class="admin-form-group">
-                        <label class="admin-form-label">Modelo do Produto</label>
+            <div class="admin-form-group">
+                <label class="admin-form-label">Modelo do Produto</label>
                         <input type="text" class="admin-form-input" name="modelo" placeholder="Ex: Modelo específico (opcional)">
-                    </div>
-                    <div class="admin-form-row">
-                        <div class="admin-form-group">
-                            <label class="admin-form-label">Quantidade</label>
-                            <input type="number" class="admin-form-input" name="quantidade" min="1" required>
-                        </div>
-                        <div class="admin-form-group">
-                            <label class="admin-form-label">Data de Entrada</label>
-                            <input type="date" class="admin-form-input" name="data" value="<?= date('Y-m-d') ?>" required>
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                        <button type="submit" class="admin-btn admin-btn-primary" style="flex: 1;">
-                            <i class="ri-save-line"></i>
-                            Registrar Entrada
-                        </button>
-                        <button type="button" class="admin-btn admin-btn-secondary" onclick="fecharModal()" style="flex: 1;">
-                            Cancelar
-                        </button>
-                    </div>
-                </form>
+            </div>
+            <div class="admin-form-row">
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Quantidade</label>
+                    <input type="number" class="admin-form-input" name="quantidade" min="1" required>
+                </div>
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Data de Entrada</label>
+                    <input type="date" class="admin-form-input" name="data" value="<?= date('Y-m-d') ?>" required>
+                </div>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="submit" class="admin-btn admin-btn-primary" style="flex: 1;">
+                    <i class="ri-save-line"></i>
+                    Registrar Entrada
+                </button>
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="fecharModal()" style="flex: 1;">
+                    Cancelar
+                </button>
+            </div>
+        </form>
             </div>
         </div>
     </div>
@@ -219,28 +219,28 @@ if (!isset($estoquesFormatados) || !is_array($estoquesFormatados)) {
                         <label class="admin-form-label">Produto</label>
                         <input type="text" class="admin-form-input" value="<?= htmlspecialchars($estoqueAdicionar['produto']) ?>" readonly>
                     </div>
-                    <div class="admin-form-group">
-                        <label class="admin-form-label">Quantidade Atual</label>
+            <div class="admin-form-group">
+                <label class="admin-form-label">Quantidade Atual</label>
                         <input type="text" class="admin-form-input" value="<?= htmlspecialchars($estoqueAdicionar['quantidade_atual']) ?>" readonly>
-                    </div>
-                    <div class="admin-form-group">
-                        <label class="admin-form-label">Quantidade a Adicionar</label>
-                        <input type="number" class="admin-form-input" name="quantidade" min="1" required>
-                    </div>
-                    <div class="admin-form-group">
-                        <label class="admin-form-label">Data da Entrada</label>
-                        <input type="date" class="admin-form-input" name="data" value="<?= date('Y-m-d') ?>" required>
-                    </div>
-                    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                        <button type="submit" class="admin-btn admin-btn-primary" style="flex: 1;">
-                            <i class="ri-add-line"></i>
-                            Adicionar ao Estoque
-                        </button>
-                        <button type="button" class="admin-btn admin-btn-secondary" onclick="fecharModal()" style="flex: 1;">
-                            Cancelar
-                        </button>
-                    </div>
-                </form>
+            </div>
+            <div class="admin-form-group">
+                <label class="admin-form-label">Quantidade a Adicionar</label>
+                <input type="number" class="admin-form-input" name="quantidade" min="1" required>
+            </div>
+            <div class="admin-form-group">
+                <label class="admin-form-label">Data da Entrada</label>
+                <input type="date" class="admin-form-input" name="data" value="<?= date('Y-m-d') ?>" required>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="submit" class="admin-btn admin-btn-primary" style="flex: 1;">
+                    <i class="ri-add-line"></i>
+                    Adicionar ao Estoque
+                </button>
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="fecharModal()" style="flex: 1;">
+                    Cancelar
+                </button>
+            </div>
+        </form>
             </div>
         </div>
     </div>
@@ -276,25 +276,25 @@ if (!isset($estoquesFormatados) || !is_array($estoquesFormatados)) {
                     <div class="admin-form-group">
                         <label class="admin-form-label">Modelo do Produto</label>
                         <input type="text" class="admin-form-input" name="modelo" value="<?= htmlspecialchars($estoqueEdicao['modelo']) ?>">
-                    </div>
-                    <div class="admin-form-group">
-                        <label class="admin-form-label">Quantidade</label>
+            </div>
+            <div class="admin-form-group">
+                <label class="admin-form-label">Quantidade</label>
                         <input type="number" class="admin-form-input" name="quantidade" value="<?= htmlspecialchars($estoqueEdicao['quantidade']) ?>" min="0" required>
-                    </div>
-                    <div class="admin-form-group">
-                        <label class="admin-form-label">Data de Cadastro</label>
+            </div>
+            <div class="admin-form-group">
+                <label class="admin-form-label">Data de Cadastro</label>
                         <input type="date" class="admin-form-input" name="data" value="<?= htmlspecialchars($estoqueEdicao['data_cadastro']) ?>" required>
-                    </div>
-                    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                        <button type="submit" class="admin-btn admin-btn-primary" style="flex: 1;">
-                            <i class="ri-save-line"></i>
-                            Atualizar
-                        </button>
-                        <button type="button" class="admin-btn admin-btn-secondary" onclick="fecharModal()" style="flex: 1;">
-                            Cancelar
-                        </button>
-                    </div>
-                </form>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="submit" class="admin-btn admin-btn-primary" style="flex: 1;">
+                    <i class="ri-save-line"></i>
+                    Atualizar
+                </button>
+                <button type="button" class="admin-btn admin-btn-secondary" onclick="fecharModal()" style="flex: 1;">
+                    Cancelar
+                </button>
+            </div>
+        </form>
             </div>
         </div>
     </div>
@@ -327,16 +327,16 @@ if (!isset($estoquesFormatados) || !is_array($estoquesFormatados)) {
         modais.forEach(modal => {
             modal.addEventListener('click', function(e) {
                 if (e.target === this) {
-                    fecharModal();
-                }
+        fecharModal();
+    }
             });
         });
 
         // Fecha modal ao pressionar ESC
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
-                fecharModal();
-            }
+        fecharModal();
+    }
         });
     });
 </script>

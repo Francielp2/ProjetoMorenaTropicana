@@ -7,4 +7,5 @@ if (stripos($server, 'xampp') !== false || stripos($server, 'apache') !== false)
 } else {
     /* Está rodando no servidor embutido do PHP */
     define("BASE_URL", "");
+    // define("BASE_URL", "/ProjetoFinalPSW");
 }

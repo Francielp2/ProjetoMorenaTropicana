@@ -357,7 +357,7 @@ class AdminController
         $extensao = strtolower(pathinfo($arquivo['name'], PATHINFO_EXTENSION));
         $prefixo = $idProduto ? 'produto_' . $idProduto . '_' : 'produto_';
         $nomeArquivo = $prefixo . time() . '_' . uniqid() . '.' . $extensao;
-        
+
         // Caminho completo do arquivo
         $pastaUpload = __DIR__ . '/../../public/uploads/produtos/';
         $caminhoCompleto = $pastaUpload . $nomeArquivo;
@@ -453,7 +453,7 @@ class AdminController
                 $nomeArquivo = basename($caminhoImagem);
                 $novoNomeArquivo = 'produto_' . $idProduto . '_' . substr($nomeArquivo, strpos($nomeArquivo, '_', 8) + 1);
                 $caminhoNovo = __DIR__ . '/../../public/uploads/produtos/' . $novoNomeArquivo;
-                
+
                 if (file_exists($caminhoAntigo)) {
                     rename($caminhoAntigo, $caminhoNovo);
                     $novoCaminho = '/public/uploads/produtos/' . $novoNomeArquivo;
