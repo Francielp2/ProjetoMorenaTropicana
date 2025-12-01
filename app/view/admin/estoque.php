@@ -16,6 +16,11 @@ $filtros = $filtros ?? ['termo' => '', 'status' => ''];
 // Variáveis $estoqueEdicao e $estoqueAdicionar são passadas pelo controller
 $estoqueEdicao = $estoqueEdicao ?? null;
 $estoqueAdicionar = $estoqueAdicionar ?? null;
+
+// Garante que estoquesFormatados existe e é um array
+if (!isset($estoquesFormatados) || !is_array($estoquesFormatados)) {
+    $estoquesFormatados = [];
+}
 ?>
 
 <div class="admin-content-card">
@@ -43,7 +48,7 @@ $estoqueAdicionar = $estoqueAdicionar ?? null;
     <!-- Barra de Busca e Filtros -->
     <form method="GET" action="<?= BASE_URL ?>/app/control/AdminController.php" class="admin-search-bar" style="display: flex; align-items: center; gap: 1rem; flex-wrap: nowrap;">
         <input type="hidden" name="acao" value="estoque">
-        <input type="text" name="termo" class="admin-search-input" placeholder="Buscar por produto ou modelo..." value="<?= htmlspecialchars($filtros['termo']) ?>" style="flex: 1; min-width: 200px; max-width: 300px;">
+        <input type="text" name="termo" class="admin-search-input" placeholder="Buscar por produto, tamanho ou cor..." value="<?= htmlspecialchars($filtros['termo']) ?>" style="flex: 1; min-width: 200px; max-width: 300px;">
         <button type="submit" class="admin-btn admin-btn-primary" style="min-width: 120px; flex-shrink: 0;">
             <i class="ri-search-line"></i>
             Pesquisar
@@ -67,7 +72,8 @@ $estoqueAdicionar = $estoqueAdicionar ?? null;
             <tr>
                 <th>ID</th>
                 <th>Produto</th>
-                <th>Modelo</th>
+                <th>Tamanho</th>
+                <th>Cor</th>
                 <th>Quantidade</th>
                 <th>Data Cadastro</th>
                 <th>Status</th>
@@ -77,7 +83,7 @@ $estoqueAdicionar = $estoqueAdicionar ?? null;
         <tbody>
             <?php if (empty($estoquesFormatados)): ?>
                 <tr>
-                    <td colspan="7" style="text-align: center; padding: 20px; color: #666;">
+                    <td colspan="8" style="text-align: center; padding: 20px; color: #666;">
                         Nenhum registro de estoque encontrado
                     </td>
                 </tr>
@@ -86,7 +92,8 @@ $estoqueAdicionar = $estoqueAdicionar ?? null;
                     <tr>
                         <td><?= htmlspecialchars($estoque['id']) ?></td>
                         <td><?= htmlspecialchars($estoque['produto']) ?></td>
-                        <td><?= htmlspecialchars($estoque['modelo']) ?></td>
+                        <td><?= htmlspecialchars($estoque['tamanho']) ?></td>
+                        <td><?= htmlspecialchars($estoque['cor']) ?></td>
                         <td><?= htmlspecialchars($estoque['quantidade']) ?></td>
                         <td><?= htmlspecialchars($estoque['data_cadastro']) ?></td>
                         <td><span class="admin-badge <?= htmlspecialchars($estoque['status_classe']) ?>"><?= htmlspecialchars($estoque['status']) ?></span></td>
@@ -156,9 +163,19 @@ $estoqueAdicionar = $estoqueAdicionar ?? null;
                             <?php endforeach; ?>
                         </select>
                     </div>
+                    <div class="admin-form-row">
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Tamanhos Disponíveis</label>
+                            <input type="text" class="admin-form-input" name="tamanhos" placeholder="Ex: P, M, G, GG" required>
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Cores Disponíveis</label>
+                            <input type="text" class="admin-form-input" name="cores" placeholder="Ex: Branco, Preto, Rosa" required>
+                        </div>
+                    </div>
                     <div class="admin-form-group">
                         <label class="admin-form-label">Modelo do Produto</label>
-                        <input type="text" class="admin-form-input" name="modelo" placeholder="Ex: P - Branco, M - Preto" required>
+                        <input type="text" class="admin-form-input" name="modelo" placeholder="Ex: Modelo específico (opcional)">
                     </div>
                     <div class="admin-form-row">
                         <div class="admin-form-group">
@@ -246,9 +263,19 @@ $estoqueAdicionar = $estoqueAdicionar ?? null;
                         <label class="admin-form-label">Produto</label>
                         <input type="text" class="admin-form-input" value="<?= htmlspecialchars($estoqueEdicao['produto']) ?>" readonly>
                     </div>
+                    <div class="admin-form-row">
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Tamanhos Disponíveis</label>
+                            <input type="text" class="admin-form-input" name="tamanhos" value="<?= htmlspecialchars($estoqueEdicao['tamanhos']) ?>" required>
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">Cores Disponíveis</label>
+                            <input type="text" class="admin-form-input" name="cores" value="<?= htmlspecialchars($estoqueEdicao['cores']) ?>" required>
+                        </div>
+                    </div>
                     <div class="admin-form-group">
-                        <label class="admin-form-label">Modelo</label>
-                        <input type="text" class="admin-form-input" name="modelo" value="<?= htmlspecialchars($estoqueEdicao['modelo']) ?>" required>
+                        <label class="admin-form-label">Modelo do Produto</label>
+                        <input type="text" class="admin-form-input" name="modelo" value="<?= htmlspecialchars($estoqueEdicao['modelo']) ?>">
                     </div>
                     <div class="admin-form-group">
                         <label class="admin-form-label">Quantidade</label>

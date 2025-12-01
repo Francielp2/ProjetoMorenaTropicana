@@ -278,8 +278,6 @@ class AdminController
                 'status_estoque' => $statusEstoque['texto'],
                 'status_classe' => $statusEstoque['classe'],
                 'descricao' => $produto['descricao'],
-                'tamanhos' => $produto['tamanhos_disponiveis'],
-                'cores' => $produto['cores_disponiveis'],
                 'imagem' => $produto['imagens']
             ];
         }
@@ -306,8 +304,6 @@ class AdminController
                     'descricao' => $produtoCompleto['descricao'],
                     'categoria' => $produtoCompleto['categoria'],
                     'preco' => number_format($produtoCompleto['preco'], 2, '.', ''),
-                    'tamanhos' => $produtoCompleto['tamanhos_disponiveis'],
-                    'cores' => $produtoCompleto['cores_disponiveis'],
                     'imagem' => $produtoCompleto['imagens']
                 ];
             }
@@ -327,8 +323,6 @@ class AdminController
                     'descricao' => $produtoCompleto['descricao'],
                     'categoria' => $produtoCompleto['categoria'] ?? 'Sem categoria',
                     'preco' => $precoFormatado,
-                    'tamanhos' => $produtoCompleto['tamanhos_disponiveis'],
-                    'cores' => $produtoCompleto['cores_disponiveis'],
                     'estoque_total' => $estoqueTotal,
                     'imagem' => $produtoCompleto['imagens']
                 ];
@@ -356,8 +350,6 @@ class AdminController
         $descricao = trim($_POST['descricao'] ?? '');
         $categoria = trim($_POST['categoria'] ?? '');
         $preco = $_POST['preco'] ?? 0;
-        $tamanhos = trim($_POST['tamanhos'] ?? '');
-        $cores = trim($_POST['cores'] ?? '');
         $imagem = trim($_POST['imagem'] ?? '');
 
         /* VALIDAÇÕES BÁSICAS */
@@ -382,7 +374,7 @@ class AdminController
         }
 
         /* SE PASSAR POR TODAS AS VALIDAÇÕES  ATÉ AQUI CHAMA A FUNÇÃO DE INSERIR DADOS NO BANCO */
-        $idProduto = $this->produtoModel->criarProduto($nome, $descricao, $categoria, $preco, $tamanhos, $cores, $imagem);
+        $idProduto = $this->produtoModel->criarProduto($nome, $descricao, $categoria, $preco, $imagem);
 
         if ($idProduto) {
             header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&sucesso=' . urlencode('Produto cadastrado com sucesso!'));
@@ -411,8 +403,6 @@ class AdminController
         $descricao = trim($_POST['descricao'] ?? '');
         $categoria = trim($_POST['categoria'] ?? '');
         $preco = $_POST['preco'] ?? 0;
-        $tamanhos = trim($_POST['tamanhos'] ?? '');
-        $cores = trim($_POST['cores'] ?? '');
         $imagem = trim($_POST['imagem'] ?? '');
 
         /* VALIDAÇÕES BÁSICAS */
@@ -432,7 +422,7 @@ class AdminController
         }
 
         /* SE PASSAR POR TODAS AS VALIDAÇÕES ATÉ AGORA CHAMA A FUNÇÃO DE ATUALIZAR OS DADOS NO BANCO */
-        $resultado = $this->produtoModel->atualizarProduto($idProduto, $nome, $descricao, $categoria, $preco, $tamanhos, $cores, $imagem);
+        $resultado = $this->produtoModel->atualizarProduto($idProduto, $nome, $descricao, $categoria, $preco, $imagem);
 
         if ($resultado) {
             header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=produtos&sucesso=' . urlencode('Produto atualizado com sucesso!'));
@@ -778,31 +768,58 @@ class AdminController
             $estoques = $this->estoqueModel->listarTodosEstoques();
         }
 
+        // Debug: verifica se há estoques retornados
+        if (empty($estoques)) {
+            error_log("Nenhum estoque retornado do banco de dados");
+        } else {
+            error_log("Total de estoques retornados: " . count($estoques));
+        }
+
         /* FORMATA OS ESTOQUES PARA SEREM EXIBIDOS */
         $estoquesFormatados = [];
-        foreach ($estoques as $estoque) {
-            /* Formata data (dd/mm/yyyy) */
-            $dataFormatada = '';
-            if (!empty($estoque['data_cadastro'])) {
-                $dataObj = new DateTime($estoque['data_cadastro']);
-                $dataFormatada = $dataObj->format('d/m/Y');
+        if (is_array($estoques) && count($estoques) > 0) {
+            foreach ($estoques as $estoque) {
+                // Verifica se o estoque tem os campos necessários
+                if (!isset($estoque['id_estoque']) || !isset($estoque['nome_produto'])) {
+                    error_log("Estoque com dados incompletos: " . print_r($estoque, true));
+                    continue; // Pula estoques com dados incompletos
+                }
+
+                /* Formata data (dd/mm/yyyy) */
+                $dataFormatada = '';
+                if (!empty($estoque['data_cadastro'])) {
+                    try {
+                        $dataObj = new DateTime($estoque['data_cadastro']);
+                        $dataFormatada = $dataObj->format('d/m/Y');
+                    } catch (Exception $e) {
+                        $dataFormatada = $estoque['data_cadastro'];
+                    }
+                }
+
+                /* Determina status do estoque baseado na quantidade */
+                $quantidade = isset($estoque['quantidade']) ? (int)$estoque['quantidade'] : 0;
+                $statusEstoque = $this->formatarStatusEstoque($quantidade);
+
+                /* ARRAY COM OS RESULTADOS FORMATADOS */
+                $tamanho = isset($estoque['tamanhos_disponiveis']) && !empty($estoque['tamanhos_disponiveis'])
+                    ? $estoque['tamanhos_disponiveis']
+                    : 'Não informado';
+                $cor = isset($estoque['cores_disponiveis']) && !empty($estoque['cores_disponiveis'])
+                    ? $estoque['cores_disponiveis']
+                    : 'Não informado';
+
+                $estoquesFormatados[] = [
+                    'id' => isset($estoque['id_estoque']) ? (int)$estoque['id_estoque'] : 0,
+                    'id_produto' => isset($estoque['id_produto']) ? (int)$estoque['id_produto'] : 0,
+                    'produto' => isset($estoque['nome_produto']) ? $estoque['nome_produto'] : 'Produto desconhecido',
+                    'tamanho' => $tamanho,
+                    'cor' => $cor,
+                    'quantidade' => $quantidade,
+                    'data_cadastro' => $dataFormatada,
+                    'status' => $statusEstoque['texto'],
+                    'status_classe' => $statusEstoque['classe']
+                ];
             }
-
-            /* Determina status do estoque baseado na quantidade */
-            $quantidade = (int)$estoque['quantidade'];
-            $statusEstoque = $this->formatarStatusEstoque($quantidade);
-
-            /* ARRAY COM OS RESULTADOS FORMATADOS */
-            $estoquesFormatados[] = [
-                'id' => $estoque['id_estoque'],
-                'id_produto' => $estoque['id_produto'],
-                'produto' => $estoque['nome_produto'],
-                'modelo' => $estoque['modelo_produto'] ?? 'Não informado',
-                'quantidade' => $quantidade,
-                'data_cadastro' => $dataFormatada,
-                'status' => $statusEstoque['texto'],
-                'status_classe' => $statusEstoque['classe']
-            ];
         }
 
         /* CALCULA O RESUMO DO ESTOQUE */
@@ -810,6 +827,9 @@ class AdminController
 
         /* BUSCA LISTA DE PRODUTOS PARA OS SELECTS */
         $produtos = $this->estoqueModel->listarProdutos();
+
+        // Debug: verifica se estoquesFormatados foi criado
+        error_log("Total de estoques formatados: " . count($estoquesFormatados));
 
         /* DEFINE O TITULO DA PÁGINA COMO ESTOQUE PARA SER USADO NO HEADER DE ADMIN E DECLARA A AÇÃO DA URL COMO ESTOQUE PARA QUE A PÁGINA DE ESTOQUE SEJA EXIBIDA*/
         $titulo_pagina = "Estoque";
@@ -837,7 +857,9 @@ class AdminController
                     'id' => $estoqueCompleto['id_estoque'],
                     'id_produto' => $estoqueCompleto['id_produto'],
                     'produto' => $estoqueCompleto['nome_produto'],
-                    'modelo' => $estoqueCompleto['modelo_produto'] ?? '',
+                    'tamanhos' => !empty($estoqueCompleto['tamanhos_disponiveis']) ? $estoqueCompleto['tamanhos_disponiveis'] : '',
+                    'cores' => !empty($estoqueCompleto['cores_disponiveis']) ? $estoqueCompleto['cores_disponiveis'] : '',
+                    'modelo' => !empty($estoqueCompleto['modelo_produto']) ? $estoqueCompleto['modelo_produto'] : '',
                     'quantidade' => $estoqueCompleto['quantidade'],
                     'data_cadastro' => $dataFormatada
                 ];
@@ -866,23 +888,27 @@ class AdminController
     /* PROCESSA O CADASTRO DE UMA NOVA ENTRADA DE ESTOQUE */
     public function cadastrarEntradaEstoque()
     {
-        /* PROTEGE A ROTA PARA SOMENTE O ADMIN PODER EXECUTAR A AÇÃO */
         AuthController::protegerAdmin();
 
-        /* Verifica se é POST */
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&erro=' . urlencode('Método não permitido'));
             exit;
         }
 
-        /* PEGA OS DADOS QUE FORAM DECLARADOS NO POST */
-        $idProduto = $_POST['id_produto'] ?? null;
-        $quantidade = $_POST['quantidade'] ?? 0;
-        $modeloProduto = trim($_POST['modelo'] ?? '');
-        $dataCadastro = $_POST['data'] ?? null;
+        $idProduto = isset($_POST['id_produto']) ? intval($_POST['id_produto']) : null;
+        $quantidade = isset($_POST['quantidade']) ? intval($_POST['quantidade']) : 0;
+        $tamanhosDisponiveis = isset($_POST['tamanhos']) ? trim($_POST['tamanhos']) : null;
+        $coresDisponiveis = isset($_POST['cores']) ? trim($_POST['cores']) : null;
+        $modeloProduto = isset($_POST['modelo']) ? trim($_POST['modelo']) : null;
+        $dataCadastro = isset($_POST['data']) ? trim($_POST['data']) : null;
 
-        /* VALIDAÇÕES BÁSICAS */
-        if (!$idProduto) {
+        // Trata strings vazias como NULL
+        if (empty($tamanhosDisponiveis)) $tamanhosDisponiveis = null;
+        if (empty($coresDisponiveis)) $coresDisponiveis = null;
+        if (empty($modeloProduto)) $modeloProduto = null;
+
+        // VALIDAÇÕES BÁSICAS
+        if (empty($idProduto) || $idProduto <= 0) {
             header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&erro=' . urlencode('Produto é obrigatório'));
             exit;
         }
@@ -892,19 +918,17 @@ class AdminController
             exit;
         }
 
-        if (empty($modeloProduto)) {
-            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&erro=' . urlencode('Modelo do produto é obrigatório'));
-            exit;
-        }
+        // Tamanhos e cores não são mais obrigatórios
+        // (remova as validações de tamanhos e cores obrigatórios)
 
-        /* SE PASSAR POR TODAS AS VALIDAÇÕES ATÉ AQUI CHAMA A FUNÇÃO DE INSERIR DADOS NO BANCO */
-        $idEstoque = $this->estoqueModel->criarEntradaEstoque($idProduto, $quantidade, $modeloProduto, $dataCadastro);
+        $idEstoque = $this->estoqueModel->criarEntradaEstoque($idProduto, $quantidade, $tamanhosDisponiveis, $coresDisponiveis, $modeloProduto, $dataCadastro);
 
-        if ($idEstoque) {
+        if ($idEstoque && $idEstoque > 0) {
             header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&sucesso=' . urlencode('Entrada de estoque cadastrada com sucesso!'));
             exit;
         } else {
-            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&erro=' . urlencode('Erro ao cadastrar entrada de estoque. Tente novamente.'));
+            error_log("Falha ao cadastrar estoque - valores: idProduto=$idProduto, quantidade=$quantidade");
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&erro=' . urlencode('Erro ao cadastrar entrada de estoque. Verifique os logs.'));
             exit;
         }
     }
@@ -922,10 +946,20 @@ class AdminController
         }
 
         /* Pega dados do POST */
-        $idEstoque = $_POST['id'] ?? null;
-        $quantidade = $_POST['quantidade'] ?? 0;
-        $modeloProduto = trim($_POST['modelo'] ?? '');
-        $dataCadastro = $_POST['data'] ?? null;
+        $idEstoque = isset($_POST['id']) ? intval($_POST['id']) : null;
+        $quantidade = isset($_POST['quantidade']) ? intval($_POST['quantidade']) : 0;
+        $tamanhosDisponiveis = isset($_POST['tamanhos']) ? trim($_POST['tamanhos']) : '';
+        $coresDisponiveis = isset($_POST['cores']) ? trim($_POST['cores']) : '';
+        $modeloProduto = isset($_POST['modelo']) ? trim($_POST['modelo']) : '';
+        $dataCadastro = isset($_POST['data']) ? trim($_POST['data']) : null;
+
+        // Log dos valores recebidos para debug
+        error_log("Dados de atualização recebidos - idEstoque: $idEstoque, quantidade: $quantidade, tamanhos: '$tamanhosDisponiveis', cores: '$coresDisponiveis'");
+
+        // Trata modelo vazio como NULL
+        if (empty($modeloProduto)) {
+            $modeloProduto = null;
+        }
 
         /* VALIDAÇÕES BÁSICAS */
         if (!$idEstoque) {
@@ -938,8 +972,13 @@ class AdminController
             exit;
         }
 
-        if (empty($modeloProduto)) {
-            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&erro=' . urlencode('Modelo do produto é obrigatório'));
+        if (empty($tamanhosDisponiveis)) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&erro=' . urlencode('Tamanhos disponíveis é obrigatório'));
+            exit;
+        }
+
+        if (empty($coresDisponiveis)) {
+            header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&erro=' . urlencode('Cores disponíveis é obrigatório'));
             exit;
         }
 
@@ -949,7 +988,7 @@ class AdminController
         }
 
         /* SE PASSAR POR TODAS AS VALIDAÇÕES ATÉ AGORA CHAMA A FUNÇÃO DE ATUALIZAR OS DADOS NO BANCO */
-        $resultado = $this->estoqueModel->atualizarEstoque($idEstoque, $quantidade, $modeloProduto, $dataCadastro);
+        $resultado = $this->estoqueModel->atualizarEstoque($idEstoque, $quantidade, $tamanhosDisponiveis, $coresDisponiveis, $modeloProduto, $dataCadastro);
 
         if ($resultado) {
             header('Location: ' . BASE_URL . '/app/control/AdminController.php?acao=estoque&sucesso=' . urlencode('Estoque atualizado com sucesso!'));

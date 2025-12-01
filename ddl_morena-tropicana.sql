@@ -48,8 +48,6 @@ CREATE TABLE Produto (
     descricao TEXT,
     categoria VARCHAR(50),
     preco DECIMAL(10,2) NOT NULL,
-    tamanhos_disponiveis VARCHAR(50),
-    cores_disponiveis VARCHAR(50),
     imagens VARCHAR(255)
 );
 
@@ -69,6 +67,8 @@ CREATE TABLE Estoque (
     id_estoque INT AUTO_INCREMENT PRIMARY KEY,
     id_produto INT NOT NULL,
     quantidade INT DEFAULT 0,
+    tamanhos_disponiveis VARCHAR(50),
+    cores_disponiveis VARCHAR(50),
     modelo_produto VARCHAR(50),
     data_cadastro DATE DEFAULT (CURRENT_DATE),
     FOREIGN KEY (id_produto) REFERENCES Produto(id_produto)

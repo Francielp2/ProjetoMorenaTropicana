@@ -19,20 +19,28 @@ class EstoqueModel
     {
         try {
             $stmt = $this->conn->prepare("
-                SELECT 
-                    e.id_estoque,
-                    e.quantidade,
-                    e.modelo_produto,
-                    e.data_cadastro,
-                    p.id_produto,
-                    p.nome as nome_produto
-                FROM Estoque e
-                INNER JOIN Produto p ON e.id_produto = p.id_produto
-                ORDER BY e.data_cadastro DESC, p.nome ASC
-            ");
+            SELECT 
+                e.id_estoque,
+                e.quantidade,
+                COALESCE(e.tamanhos_disponiveis, 'Não informado') as tamanhos_disponiveis,
+                COALESCE(e.cores_disponiveis, 'Não informado') as cores_disponiveis,
+                COALESCE(e.modelo_produto, '') as modelo_produto,
+                e.data_cadastro,
+                p.id_produto,
+                p.nome as nome_produto
+            FROM Estoque e
+            INNER JOIN Produto p ON e.id_produto = p.id_produto
+            ORDER BY e.data_cadastro DESC, p.nome ASC
+        ");
             $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $resultado = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Debug
+            error_log("Query executada com sucesso. Total de registros: " . count($resultado));
+
+            return $resultado;
         } catch (PDOException $e) {
+            error_log("Erro ao listar estoques: " . $e->getMessage());
             return [];
         }
     }
@@ -50,7 +58,9 @@ class EstoqueModel
                 SELECT 
                     e.id_estoque,
                     e.quantidade,
-                    e.modelo_produto,
+                    COALESCE(e.tamanhos_disponiveis, '') as tamanhos_disponiveis,
+                    COALESCE(e.cores_disponiveis, '') as cores_disponiveis,
+                    COALESCE(e.modelo_produto, '') as modelo_produto,
                     e.data_cadastro,
                     p.id_produto,
                     p.nome as nome_produto
@@ -61,10 +71,10 @@ class EstoqueModel
 
             $params = [];
 
-            /* Adiciona filtro de pesquisa (nome do produto ou modelo) */
+            /* Adiciona filtro de pesquisa (nome do produto, tamanho ou cor) */
             if (!empty($termo)) {
                 $termoBusca = '%' . $termo . '%';
-                $sql .= " AND (p.nome LIKE :termo OR e.modelo_produto LIKE :termo)";
+                $sql .= " AND (p.nome LIKE :termo OR COALESCE(e.tamanhos_disponiveis, '') LIKE :termo OR COALESCE(e.cores_disponiveis, '') LIKE :termo OR COALESCE(e.modelo_produto, '') LIKE :termo)";
                 $params[':termo'] = $termoBusca;
             }
 
@@ -91,8 +101,11 @@ class EstoqueModel
             }
 
             $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $resultado = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            error_log("Estoques encontrados na busca: " . count($resultado));
+            return $resultado;
         } catch (PDOException $e) {
+            error_log("Erro ao buscar estoques por termo: " . $e->getMessage());
             return [];
         }
     }
@@ -105,7 +118,9 @@ class EstoqueModel
                 SELECT 
                     e.id_estoque,
                     e.quantidade,
-                    e.modelo_produto,
+                    COALESCE(e.tamanhos_disponiveis, '') as tamanhos_disponiveis,
+                    COALESCE(e.cores_disponiveis, '') as cores_disponiveis,
+                    COALESCE(e.modelo_produto, '') as modelo_produto,
                     e.data_cadastro,
                     p.id_produto,
                     p.nome as nome_produto
@@ -113,16 +128,80 @@ class EstoqueModel
                 INNER JOIN Produto p ON e.id_produto = p.id_produto
                 WHERE e.id_estoque = :id
             ");
-            $stmt->bindParam(':id', $idEstoque);
+            $stmt->bindValue(':id', $idEstoque, PDO::PARAM_INT);
             $stmt->execute();
-            return $stmt->fetch(PDO::FETCH_ASSOC);
+            $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $resultado;
         } catch (PDOException $e) {
+            error_log("Erro ao buscar estoque por ID: " . $e->getMessage());
             return false;
         }
     }
 
     /* FUNÇÃO QUE CRIA UMA NOVA ENTRADA DE ESTOQUE */
-    public function criarEntradaEstoque($idProduto, $quantidade, $modeloProduto, $dataCadastro = null)
+    public function criarEntradaEstoque($idProduto, $quantidade, $tamanhosDisponiveis, $coresDisponiveis, $modeloProduto = null, $dataCadastro = null)
+    {
+        try {
+            if ($dataCadastro === null) {
+                $dataCadastro = date('Y-m-d');
+            }
+
+            // Trata valores vazios como NULL
+            if (empty($modeloProduto)) {
+                $modeloProduto = null;
+            }
+            if (empty($tamanhosDisponiveis)) {
+                $tamanhosDisponiveis = null;
+            }
+            if (empty($coresDisponiveis)) {
+                $coresDisponiveis = null;
+            }
+
+            $stmt = $this->conn->prepare("
+                INSERT INTO Estoque (id_produto, quantidade, tamanhos_disponiveis, cores_disponiveis, modelo_produto, data_cadastro)
+                VALUES (:id_produto, :quantidade, :tamanhos_disponiveis, :cores_disponiveis, :modelo_produto, :data_cadastro)
+            ");
+
+            $stmt->bindValue(':id_produto', $idProduto, PDO::PARAM_INT);
+            $stmt->bindValue(':quantidade', $quantidade, PDO::PARAM_INT);
+
+            // Bind condicional para tamanhos
+            if ($tamanhosDisponiveis === null) {
+                $stmt->bindValue(':tamanhos_disponiveis', null, PDO::PARAM_NULL);
+            } else {
+                $stmt->bindValue(':tamanhos_disponiveis', $tamanhosDisponiveis, PDO::PARAM_STR);
+            }
+
+            // Bind condicional para cores
+            if ($coresDisponiveis === null) {
+                $stmt->bindValue(':cores_disponiveis', null, PDO::PARAM_NULL);
+            } else {
+                $stmt->bindValue(':cores_disponiveis', $coresDisponiveis, PDO::PARAM_STR);
+            }
+
+            // Bind condicional para modelo
+            if ($modeloProduto === null) {
+                $stmt->bindValue(':modelo_produto', null, PDO::PARAM_NULL);
+            } else {
+                $stmt->bindValue(':modelo_produto', $modeloProduto, PDO::PARAM_STR);
+            }
+
+            $stmt->bindValue(':data_cadastro', $dataCadastro, PDO::PARAM_STR);
+
+            if (!$stmt->execute()) {
+                error_log("Erro ao executar INSERT: " . print_r($stmt->errorInfo(), true));
+                return false;
+            }
+
+            return $this->conn->lastInsertId();
+        } catch (PDOException $e) {
+            error_log("Erro ao criar estoque: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /* FUNÇÃO QUE ATUALIZA UM REGISTRO DE ESTOQUE */
+    public function atualizarEstoque($idEstoque, $quantidade, $tamanhosDisponiveis, $coresDisponiveis, $modeloProduto = null, $dataCadastro = null)
     {
         try {
             if ($dataCadastro === null) {
@@ -130,38 +209,26 @@ class EstoqueModel
             }
 
             $stmt = $this->conn->prepare("
-                INSERT INTO Estoque (id_produto, quantidade, modelo_produto, data_cadastro)
-                VALUES (:id_produto, :quantidade, :modelo_produto, :data_cadastro)
-            ");
-
-            $stmt->bindParam(':id_produto', $idProduto);
-            $stmt->bindParam(':quantidade', $quantidade);
-            $stmt->bindParam(':modelo_produto', $modeloProduto);
-            $stmt->bindParam(':data_cadastro', $dataCadastro);
-
-            $stmt->execute();
-            return $this->conn->lastInsertId();
-        } catch (PDOException $e) {
-            return false;
-        }
-    }
-
-    /* FUNÇÃO QUE ATUALIZA UM REGISTRO DE ESTOQUE */
-    public function atualizarEstoque($idEstoque, $quantidade, $modeloProduto, $dataCadastro)
-    {
-        try {
-            $stmt = $this->conn->prepare("
                 UPDATE Estoque 
                 SET quantidade = :quantidade, 
+                    tamanhos_disponiveis = :tamanhos_disponiveis,
+                    cores_disponiveis = :cores_disponiveis,
                     modelo_produto = :modelo_produto, 
                     data_cadastro = :data_cadastro
                 WHERE id_estoque = :id
             ");
 
-            $stmt->bindParam(':quantidade', $quantidade);
-            $stmt->bindParam(':modelo_produto', $modeloProduto);
-            $stmt->bindParam(':data_cadastro', $dataCadastro);
-            $stmt->bindParam(':id', $idEstoque);
+            // Trata valores vazios como NULL para modelo_produto
+            if (empty($modeloProduto)) {
+                $modeloProduto = null;
+            }
+
+            $stmt->bindValue(':quantidade', $quantidade, PDO::PARAM_INT);
+            $stmt->bindValue(':tamanhos_disponiveis', $tamanhosDisponiveis);
+            $stmt->bindValue(':cores_disponiveis', $coresDisponiveis);
+            $stmt->bindValue(':modelo_produto', $modeloProduto, $modeloProduto === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
+            $stmt->bindValue(':data_cadastro', $dataCadastro);
+            $stmt->bindValue(':id', $idEstoque, PDO::PARAM_INT);
 
             $stmt->execute();
             return true;
@@ -247,4 +314,3 @@ class EstoqueModel
         }
     }
 }
-

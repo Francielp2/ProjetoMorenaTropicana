@@ -25,8 +25,6 @@ class ProdutoModel
                     p.categoria,
                     p.preco,
                     p.descricao,
-                    p.tamanhos_disponiveis,
-                    p.cores_disponiveis,
                     p.imagens,
                     COALESCE(SUM(e.quantidade), 0) as estoque_total
                 FROM Produto p
@@ -57,8 +55,6 @@ class ProdutoModel
                     p.categoria,
                     p.preco,
                     p.descricao,
-                    p.tamanhos_disponiveis,
-                    p.cores_disponiveis,
                     p.imagens,
                     COALESCE(SUM(e.quantidade), 0) as estoque_total
                 FROM Produto p
@@ -119,20 +115,18 @@ class ProdutoModel
     }
 
     /* FUNÇÃO QUE CRIA UM NOVO PRODUTO AS VALIDAÇÕES SÃO FEITAS NO CONTROLER, ESSA FUNÇÃO SÓ TENTA INSERIR OS VALORES NO BANCOD E DADOS*/
-    public function criarProduto($nome, $descricao, $categoria, $preco, $tamanhos, $cores, $imagem = null)
+    public function criarProduto($nome, $descricao, $categoria, $preco, $imagem = null)
     {
         try {
             $stmt = $this->conn->prepare("
-                INSERT INTO Produto (nome, descricao, categoria, preco, tamanhos_disponiveis, cores_disponiveis, imagens)
-                VALUES (:nome, :descricao, :categoria, :preco, :tamanhos, :cores, :imagem)
+                INSERT INTO Produto (nome, descricao, categoria, preco, imagens)
+                VALUES (:nome, :descricao, :categoria, :preco, :imagem)
             ");
 
             $stmt->bindParam(':nome', $nome);
             $stmt->bindParam(':descricao', $descricao);
             $stmt->bindParam(':categoria', $categoria);
             $stmt->bindParam(':preco', $preco);
-            $stmt->bindParam(':tamanhos', $tamanhos);
-            $stmt->bindParam(':cores', $cores);
             $stmt->bindParam(':imagem', $imagem);
 
             $stmt->execute();
@@ -143,7 +137,7 @@ class ProdutoModel
     }
 
     /* FUNÇÃO QUE ATUALIZA UM PRODUTO AS VALIDAÇÕES SÃO FEITAS NO CONTROLER, ESSA FUNÇÃO SÓ TENTA INSERIR OS VALORES NO BANCOD E DADOS*/
-    public function atualizarProduto($idProduto, $nome, $descricao, $categoria, $preco, $tamanhos, $cores, $imagem = null)
+    public function atualizarProduto($idProduto, $nome, $descricao, $categoria, $preco, $imagem = null)
     {
         try {
             /* Se imagem foi fornecida, atualiza também */
@@ -154,8 +148,6 @@ class ProdutoModel
                         descricao = :descricao, 
                         categoria = :categoria, 
                         preco = :preco, 
-                        tamanhos_disponiveis = :tamanhos, 
-                        cores_disponiveis = :cores,
                         imagens = :imagem
                     WHERE id_produto = :id
                 ");
@@ -166,9 +158,7 @@ class ProdutoModel
                     SET nome = :nome, 
                         descricao = :descricao, 
                         categoria = :categoria, 
-                        preco = :preco, 
-                        tamanhos_disponiveis = :tamanhos, 
-                        cores_disponiveis = :cores
+                        preco = :preco
                     WHERE id_produto = :id
                 ");
             }
@@ -177,8 +167,6 @@ class ProdutoModel
             $stmt->bindParam(':descricao', $descricao);
             $stmt->bindParam(':categoria', $categoria);
             $stmt->bindParam(':preco', $preco);
-            $stmt->bindParam(':tamanhos', $tamanhos);
-            $stmt->bindParam(':cores', $cores);
             $stmt->bindParam(':id', $idProduto);
 
             $stmt->execute();

@@ -147,16 +147,6 @@ $produtoVisualizacao = $produtoVisualizacao ?? null;
                         </div>
                     </div>
 
-                    <div class="admin-form-row" style="margin: 0; gap: 1rem;">
-                        <div class="admin-form-group" style="margin: 0; flex: 1;">
-                            <label class="admin-form-label">Tamanhos Disponíveis</label>
-                            <input type="text" class="admin-form-input" name="tamanhos" placeholder="Ex: P, M, G, GG">
-                        </div>
-                        <div class="admin-form-group" style="margin: 0; flex: 1;">
-                            <label class="admin-form-label">Cores Disponíveis</label>
-                            <input type="text" class="admin-form-input" name="cores" placeholder="Ex: Branco, Preto, Rosa">
-                        </div>
-                    </div>
 
                     <div class="admin-form-group" style="margin: 0;">
                         <label class="admin-form-label">URL da Imagem</label>
@@ -211,16 +201,6 @@ $produtoVisualizacao = $produtoVisualizacao ?? null;
                         </div>
                     </div>
 
-                    <div class="admin-form-row" style="margin: 0; gap: 1rem;">
-                        <div class="admin-form-group" style="margin: 0; flex: 1;">
-                            <label class="admin-form-label">Tamanhos Disponíveis</label>
-                            <input type="text" class="admin-form-input" name="tamanhos" value="<?= htmlspecialchars($produtoEdicao['tamanhos']) ?>">
-                        </div>
-                        <div class="admin-form-group" style="margin: 0; flex: 1;">
-                            <label class="admin-form-label">Cores Disponíveis</label>
-                            <input type="text" class="admin-form-input" name="cores" value="<?= htmlspecialchars($produtoEdicao['cores']) ?>">
-                        </div>
-                    </div>
 
                     <div class="admin-form-group" style="margin: 0;">
                         <label class="admin-form-label">URL da Imagem</label>
@@ -272,16 +252,6 @@ $produtoVisualizacao = $produtoVisualizacao ?? null;
                         <div class="admin-form-group">
                             <label class="admin-form-label">Preço</label>
                             <input type="text" class="admin-form-input" value="<?= htmlspecialchars($produtoVisualizacao['preco']) ?>" readonly>
-                        </div>
-                    </div>
-                    <div class="admin-form-row">
-                        <div class="admin-form-group">
-                            <label class="admin-form-label">Tamanhos</label>
-                            <input type="text" class="admin-form-input" value="<?= htmlspecialchars($produtoVisualizacao['tamanhos']) ?>" readonly>
-                        </div>
-                        <div class="admin-form-group">
-                            <label class="admin-form-label">Cores</label>
-                            <input type="text" class="admin-form-input" value="<?= htmlspecialchars($produtoVisualizacao['cores']) ?>" readonly>
                         </div>
                     </div>
                     <div class="admin-form-group">
