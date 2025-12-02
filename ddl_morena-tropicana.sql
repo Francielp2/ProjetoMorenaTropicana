@@ -51,18 +51,6 @@ CREATE TABLE Produto (
     imagens VARCHAR(255)
 );
 
-CREATE TABLE Administrador_Produto(
-	id_adm INT,
-    id_produto INT,
-    PRIMARY KEY (id_adm, id_produto),
-    FOREIGN KEY(id_adm) REFERENCES Administrador(id_usuario)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE,
-	FOREIGN KEY(id_produto) REFERENCES Produto(id_produto)
-		ON DELETE CASCADE
-		ON UPDATE CASCADE
-);
-
 CREATE TABLE Estoque (
     id_estoque INT AUTO_INCREMENT PRIMARY KEY,
     id_produto INT NOT NULL,
@@ -128,18 +116,6 @@ CREATE TABLE Pagamento (
     forma_pagamento ENUM('Cartão', 'Pix', 'Boleto'),
     FOREIGN KEY (id_pedido) REFERENCES Pedido(id_pedido)
         ON DELETE CASCADE
-        ON UPDATE CASCADE
-);
-
-CREATE TABLE Administrador_Pedido (
-    id_adm INT,
-    id_pedido INT,
-    PRIMARY KEY (id_adm , id_pedido),
-    FOREIGN KEY (id_adm) REFERENCES Administrador (id_usuario)
-        ON DELETE CASCADE 
-        ON UPDATE CASCADE,
-    FOREIGN KEY (id_pedido) REFERENCES Pedido (id_pedido)
-        ON DELETE CASCADE 
         ON UPDATE CASCADE
 );
 
