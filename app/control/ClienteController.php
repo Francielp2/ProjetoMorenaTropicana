@@ -8,6 +8,7 @@ require_once __DIR__ . "/../model/PedidoModel.php";
 require_once __DIR__ . "/../model/ProdutoModel.php";
 require_once __DIR__ . "/../model/CarrinhoModel.php";
 require_once __DIR__ . "/../model/EstoqueModel.php";
+require_once __DIR__ . "/../model/FavoritoModel.php";
 
 class ClienteController
 {
@@ -17,6 +18,7 @@ class ClienteController
     private $produtoModel;
     private $carrinhoModel;
     private $estoqueModel;
+    private $favoritoModel;
 
     public function __construct()
     {
@@ -25,6 +27,7 @@ class ClienteController
         $this->produtoModel = new ProdutoModel();
         $this->carrinhoModel = new CarrinhoModel();
         $this->estoqueModel = new EstoqueModel();
+        $this->favoritoModel = new FavoritoModel();
     }
     /* Roteador que leva para cada página de cliente */
     public function index()
@@ -79,7 +82,48 @@ class ClienteController
         /*  Protege a rota - só cliente pode acessar */
         AuthController::protegerCliente();
 
-        /*  Inclui a view (sem variáveis por enquanto, pois a view não precisa de lógica) */
+        /* Inicia sessão */
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $idCliente = $_SESSION['usuario_id'] ?? null;
+
+        /* Processa adicionar/remover favorito (se vier da seção de produtos) */
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao_favorito'])) {
+            if ($idCliente) {
+                $idProduto = isset($_POST['id_produto']) ? (int)$_POST['id_produto'] : 0;
+                $acao = $_POST['acao_favorito'];
+
+                if ($idProduto > 0) {
+                    if ($acao === 'adicionar') {
+                        $this->favoritoModel->adicionarFavorito($idCliente, $idProduto);
+                    } elseif ($acao === 'remover') {
+                        $this->favoritoModel->removerFavorito($idCliente, $idProduto);
+                    }
+                }
+            }
+            /* Redireciona para evitar reenvio do formulário */
+            header("Location: " . BASE_URL . "/app/control/ClienteController.php?acao=tela_inicial");
+            exit;
+        }
+
+        /* Busca os últimos 4 produtos adicionados ao carrinho */
+        $produtosDestaque = $this->carrinhoModel->listarUltimosProdutosAdicionados(4);
+
+        /* Se não houver produtos no carrinho, busca os 4 últimos produtos cadastrados */
+        if (empty($produtosDestaque)) {
+            $todosProdutos = $this->produtoModel->listarTodosProdutos();
+            $produtosDestaque = array_slice($todosProdutos, -4, 4);
+        }
+
+        /* Busca IDs de produtos favoritos do cliente */
+        $idsFavoritos = [];
+        if ($idCliente) {
+            $idsFavoritos = $this->favoritoModel->listarIdsFavoritos($idCliente);
+        }
+
+        /* Inclui a view passando os produtos e favoritos */
         require_once __DIR__ . "/../view/cliente/tela_inicial.php";
     }
 
@@ -227,8 +271,58 @@ class ClienteController
         /* Protege a rota - só cliente pode acessar */
         AuthController::protegerCliente();
 
-        /* Busca todos os produtos para exibir nos cards */
-        $produtos = $this->produtoModel->listarTodosProdutos();
+        /* Inicia sessão */
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $idCliente = $_SESSION['usuario_id'] ?? null;
+
+        /* Processa adicionar/remover favorito */
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao_favorito'])) {
+            if ($idCliente) {
+                $idProduto = isset($_POST['id_produto']) ? (int)$_POST['id_produto'] : 0;
+                $acao = $_POST['acao_favorito'];
+
+                if ($idProduto > 0) {
+                    if ($acao === 'adicionar') {
+                        $this->favoritoModel->adicionarFavorito($idCliente, $idProduto);
+                    } elseif ($acao === 'remover') {
+                        $this->favoritoModel->removerFavorito($idCliente, $idProduto);
+                    }
+                }
+            }
+            /* Redireciona para evitar reenvio do formulário */
+            header("Location: " . $_SERVER['REQUEST_URI']);
+            exit;
+        }
+
+        /* Verifica se há busca na barra de pesquisa */
+        $termoBusca = $_GET['busca'] ?? $_GET['termo'] ?? '';
+        $termoBusca = trim($termoBusca);
+
+        /* Verifica se há filtros do quiz */
+        $categoria = $_GET['categoria'] ?? '';
+        $tamanho = $_GET['tamanho'] ?? '';
+        $cor = $_GET['cor'] ?? '';
+        $isQuiz = isset($_GET['quiz']) && $_GET['quiz'] == '1';
+
+        /* Se houver busca, busca produtos por termo */
+        if (!empty($termoBusca)) {
+            $produtos = $this->produtoModel->buscarProdutosPorTermo($termoBusca);
+        } elseif (!empty($categoria) || !empty($tamanho) || !empty($cor)) {
+            /* Se houver filtros do quiz, busca produtos filtrados */
+            $produtos = $this->produtoModel->buscarProdutosComFiltros($categoria, $tamanho, $cor);
+        } else {
+            /* Caso contrário, lista todos os produtos */
+            $produtos = $this->produtoModel->listarTodosProdutos();
+        }
+
+        /* Busca IDs de produtos favoritos do cliente */
+        $idsFavoritos = [];
+        if ($idCliente) {
+            $idsFavoritos = $this->favoritoModel->listarIdsFavoritos($idCliente);
+        }
 
         /* Inclui a view */
         require_once __DIR__ . "/../view/cliente/PaginaProdutos.php";
@@ -275,10 +369,32 @@ class ClienteController
             }
         }
 
+        /* Verifica se usuário está logado */
+        $idCliente = $_SESSION['usuario_id'] ?? null;
+
+        /* Processa adicionar/remover favorito */
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['acao_favorito'])) {
+            if ($idCliente && $idProduto > 0) {
+                $acao = $_POST['acao_favorito'];
+                if ($acao === 'adicionar') {
+                    $this->favoritoModel->adicionarFavorito($idCliente, $idProduto);
+                } elseif ($acao === 'remover') {
+                    $this->favoritoModel->removerFavorito($idCliente, $idProduto);
+                }
+            }
+            /* Redireciona para evitar reenvio do formulário */
+            header("Location: " . $_SERVER['REQUEST_URI']);
+            exit;
+        }
+
+        /* Verifica se produto está nos favoritos */
+        $ehFavorito = false;
+        if ($idCliente && $idProduto > 0) {
+            $ehFavorito = $this->favoritoModel->verificarFavorito($idCliente, $idProduto);
+        }
+
         /* Processa adicionar ao carrinho (POST) */
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['adicionar_carrinho'])) {
-            $idCliente = $_SESSION['usuario_id'] ?? null;
-
             if (!$idCliente) {
                 header("Location: " . BASE_URL . "/app/control/LoginController.php");
                 exit;
@@ -334,6 +450,67 @@ class ClienteController
         /* Protege a rota - só cliente pode acessar */
         AuthController::protegerCliente();
 
+        /* Inicia sessão */
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        /* Verifica se usuário está logado */
+        $idCliente = $_SESSION['usuario_id'] ?? null;
+        if (!$idCliente) {
+            header("Location: " . BASE_URL . "/app/control/LoginController.php");
+            exit;
+        }
+
+        /* Inicializa variáveis de mensagem */
+        $mensagem = '';
+        $tipoMensagem = '';
+
+        /* Processa remoção de favorito (POST) */
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['remover_favorito'])) {
+            $idFavorito = isset($_POST['id_favorito']) ? (int)$_POST['id_favorito'] : 0;
+
+            if ($idFavorito > 0) {
+                $resultado = $this->favoritoModel->removerFavoritoPorId($idFavorito, $idCliente);
+                if ($resultado) {
+                    $mensagem = "Produto removido dos favoritos com sucesso!";
+                    $tipoMensagem = 'sucesso';
+                } else {
+                    $mensagem = "Erro ao remover produto dos favoritos. Tente novamente.";
+                    $tipoMensagem = 'erro';
+                }
+            }
+        }
+
+        /* Busca favoritos do cliente */
+        $favoritos = $this->favoritoModel->listarFavoritos($idCliente);
+
+        /* Formata favoritos para a view */
+        $favoritosFormatados = [];
+        foreach ($favoritos as $favorito) {
+            $idProduto = (int)$favorito['id_produto'];
+            $nomeProduto = htmlspecialchars($favorito['nome_produto'] ?? 'Produto sem nome');
+            $precoProduto = isset($favorito['preco']) ? number_format((float)$favorito['preco'], 2, ',', '.') : '0,00';
+            $imagemProduto = !empty($favorito['imagens']) ? BASE_URL . $favorito['imagens'] : '';
+            $estoqueTotal = (int)($favorito['estoque_total'] ?? 0);
+            
+            /* Formata status de estoque igual ao admin */
+            $statusEstoque = $this->formatarStatusEstoque($estoqueTotal);
+
+            $favoritosFormatados[] = [
+                'id_favorito' => (int)$favorito['id_favorito'],
+                'id_produto' => $idProduto,
+                'nome_produto' => $nomeProduto,
+                'preco' => $precoProduto,
+                'preco_numerico' => (float)$favorito['preco'],
+                'imagem' => $imagemProduto,
+                'categoria' => htmlspecialchars($favorito['categoria'] ?? ''),
+                'estoque_total' => $estoqueTotal,
+                'status_estoque' => $statusEstoque['texto'],
+                'status_classe' => $statusEstoque['classe']
+            ];
+        }
+
         /* Inclui a view */
         require_once __DIR__ . "/../view/cliente/Favoritos.php";
     }
@@ -343,6 +520,144 @@ class ClienteController
     {
         /*   Protege a rota - só cliente pode acessar */
         AuthController::protegerCliente();
+
+        /* Inicia sessão para armazenar respostas */
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        /* Determina a etapa atual do quiz */
+        $etapa = isset($_GET['etapa']) ? (int)$_GET['etapa'] : 1;
+
+        /* Se voltar para etapa anterior, limpa seleções das etapas seguintes */
+        if (isset($_GET['etapa'])) {
+            if ($etapa == 1) {
+                unset($_SESSION['quiz_categoria']);
+                unset($_SESSION['quiz_tamanho']);
+                unset($_SESSION['quiz_cor']);
+            } elseif ($etapa == 2) {
+                unset($_SESSION['quiz_tamanho']);
+                unset($_SESSION['quiz_cor']);
+            } elseif ($etapa == 3) {
+                unset($_SESSION['quiz_cor']);
+            }
+        }
+
+        /* Processa respostas do formulário */
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (isset($_POST['categoria']) && is_array($_POST['categoria']) && !empty($_POST['categoria'])) {
+                $categoriasSelecionadas = array_filter(array_map('trim', $_POST['categoria']));
+                if (!empty($categoriasSelecionadas)) {
+                    /* Pega a primeira categoria para buscar tamanhos (simplificado) */
+                    $primeiraCategoria = reset($categoriasSelecionadas);
+                    $tamanhosDisponiveis = $this->produtoModel->listarTamanhosPorCategoria($primeiraCategoria);
+                    if (!empty($tamanhosDisponiveis)) {
+                        $_SESSION['quiz_categoria'] = implode(',', $categoriasSelecionadas);
+                        $etapa = 2;
+                    } else {
+                        $etapa = 1;
+                        $_SESSION['quiz_erro'] = 'A(s) categoria(s) selecionada(s) não possui(em) produtos disponíveis. Por favor, escolha outra(s) categoria(s).';
+                    }
+                }
+            } elseif (isset($_POST['tamanho']) && is_array($_POST['tamanho']) && !empty($_POST['tamanho'])) {
+                $tamanhosSelecionados = array_filter(array_map('trim', $_POST['tamanho']));
+                if (!empty($tamanhosSelecionados)) {
+                    $categoriaAtual = $_SESSION['quiz_categoria'] ?? '';
+                    $primeiraCategoria = !empty($categoriaAtual) ? explode(',', $categoriaAtual)[0] : '';
+                    $primeiroTamanho = reset($tamanhosSelecionados);
+                    $coresDisponiveis = $this->produtoModel->listarCoresPorCategoriaETamanho($primeiraCategoria, $primeiroTamanho);
+                    if (!empty($coresDisponiveis)) {
+                        $_SESSION['quiz_tamanho'] = implode(',', $tamanhosSelecionados);
+                        $etapa = 3;
+                    } else {
+                        $etapa = 2;
+                        $_SESSION['quiz_erro'] = 'O(s) tamanho(s) selecionado(s) não possui(em) cores disponíveis. Por favor, escolha outro(s) tamanho(s).';
+                    }
+                }
+            } elseif (isset($_POST['cor']) && is_array($_POST['cor']) && !empty($_POST['cor'])) {
+                $coresSelecionadas = array_filter(array_map('trim', $_POST['cor']));
+                if (!empty($coresSelecionadas)) {
+                    $_SESSION['quiz_cor'] = implode(',', $coresSelecionadas);
+                    
+                    /* Redireciona para produtos com os filtros aplicados */
+                    $url = BASE_URL . "/app/control/ClienteController.php?acao=produtos";
+                    $filtros = [];
+                    
+                    if (!empty($_SESSION['quiz_categoria'])) {
+                        $filtros[] = "categoria=" . urlencode($_SESSION['quiz_categoria']);
+                    }
+                    if (!empty($_SESSION['quiz_tamanho'])) {
+                        $filtros[] = "tamanho=" . urlencode($_SESSION['quiz_tamanho']);
+                    }
+                    if (!empty($_SESSION['quiz_cor'])) {
+                        $filtros[] = "cor=" . urlencode($_SESSION['quiz_cor']);
+                    }
+                    
+                    if (!empty($filtros)) {
+                        $url .= "&" . implode("&", $filtros);
+                        $url .= "&quiz=1";
+                    }
+                    
+                    /* Limpa sessão do quiz */
+                    unset($_SESSION['quiz_categoria']);
+                    unset($_SESSION['quiz_tamanho']);
+                    unset($_SESSION['quiz_cor']);
+                    
+                    header("Location: " . $url);
+                    exit;
+                }
+            }
+        }
+
+        /* Busca dados para a etapa atual */
+        $categorias = [];
+        $tamanhos = [];
+        $cores = [];
+        $categoriaSelecionada = $_SESSION['quiz_categoria'] ?? '';
+        $tamanhoSelecionado = $_SESSION['quiz_tamanho'] ?? '';
+        $mensagemErro = $_SESSION['quiz_erro'] ?? '';
+        unset($_SESSION['quiz_erro']);
+
+        if ($etapa == 1) {
+            /* Etapa 1: Mostra categorias com produtos em estoque */
+            $categorias = $this->produtoModel->listarCategorias();
+            if (empty($categorias)) {
+                $mensagemErro = 'Não há categorias disponíveis no momento.';
+            }
+        } elseif ($etapa == 2) {
+            /* Etapa 2: Mostra tamanhos baseado na categoria */
+            if (!empty($categoriaSelecionada)) {
+                $tamanhos = $this->produtoModel->listarTamanhosPorCategoria($categoriaSelecionada);
+                if (empty($tamanhos)) {
+                    $mensagemErro = 'Não há tamanhos disponíveis para esta categoria. Por favor, escolha outra categoria.';
+                    $etapa = 1;
+                    $categorias = $this->produtoModel->listarCategorias();
+                }
+            } else {
+                /* Se não tem categoria, volta para etapa 1 */
+                $etapa = 1;
+                $categorias = $this->produtoModel->listarCategorias();
+            }
+        } elseif ($etapa == 3) {
+            /* Etapa 3: Mostra cores baseado na categoria e tamanho */
+            if (!empty($categoriaSelecionada) && !empty($tamanhoSelecionado)) {
+                $cores = $this->produtoModel->listarCoresPorCategoriaETamanho($categoriaSelecionada, $tamanhoSelecionado);
+                if (empty($cores)) {
+                    $mensagemErro = 'Não há cores disponíveis para esta combinação. Por favor, escolha outro tamanho.';
+                    $etapa = 2;
+                    $tamanhos = $this->produtoModel->listarTamanhosPorCategoria($categoriaSelecionada);
+                }
+            } else {
+                /* Se não tem categoria ou tamanho, volta para etapa anterior */
+                if (empty($categoriaSelecionada)) {
+                    $etapa = 1;
+                    $categorias = $this->produtoModel->listarCategorias();
+                } else {
+                    $etapa = 2;
+                    $tamanhos = $this->produtoModel->listarTamanhosPorCategoria($categoriaSelecionada);
+                }
+            }
+        }
 
         /* Inclui a view */
         require_once __DIR__ . "/../view/cliente/quiz.php";
@@ -770,6 +1085,20 @@ class ClienteController
 
         /* Inclui a view */
         require_once __DIR__ . "/../view/cliente/checkout.php";
+    }
+
+    /* FUNÇÃO DE FORMATAR E PASSAR A CLASSE REFERENTE A QUANTIDADE DE ESTOQUE */
+    private function formatarStatusEstoque($quantidade)
+    {
+        if ($quantidade == 0) {
+            return ['texto' => 'Sem Estoque', 'classe' => 'admin-badge-danger'];
+        } elseif ($quantidade < 3) {
+            return ['texto' => 'Estoque Crítico', 'classe' => 'admin-badge-danger'];
+        } elseif ($quantidade < 10) {
+            return ['texto' => 'Estoque Baixo', 'classe' => 'admin-badge-warning'];
+        } else {
+            return ['texto' => 'Disponível', 'classe' => 'admin-badge-success'];
+        }
     }
 }
 

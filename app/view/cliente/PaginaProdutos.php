@@ -17,6 +17,37 @@
     </section>
 
     <section class="loja container section">
+        <?php 
+        $idsFavoritos = $idsFavoritos ?? [];
+        $isQuiz = isset($_GET['quiz']) && $_GET['quiz'] == '1';
+        $termoBusca = isset($_GET['busca']) ? trim($_GET['busca']) : (isset($_GET['termo']) ? trim($_GET['termo']) : '');
+        $temBusca = !empty($termoBusca);
+        
+        if ($isQuiz): 
+        ?>
+            <div style="margin-bottom: 2rem; padding: 1.5rem; background-color: <?= !empty($produtos) ? '#d4edda' : '#f8d7da' ?>; color: <?= !empty($produtos) ? '#155724' : '#721c24' ?>; border-radius: 8px; text-align: center;">
+                <h2 style="margin-bottom: 0.5rem; font-size: 1.5rem;">
+                    <?= !empty($produtos) ? 'Produtos Recomendados' : 'Sem Produtos Recomendados' ?>
+                </h2>
+                <p style="margin: 0; font-size: 1rem;">
+                    <?= !empty($produtos) 
+                        ? 'Encontramos ' . count($produtos) . ' produto(s) que correspondem às suas preferências!' 
+                        : 'Não encontramos produtos que correspondam aos filtros selecionados. Tente outras opções no quiz.' ?>
+                </p>
+            </div>
+        <?php elseif ($temBusca): ?>
+            <div style="margin-bottom: 2rem; padding: 1.5rem; background-color: <?= !empty($produtos) ? '#d4edda' : '#f8d7da' ?>; color: <?= !empty($produtos) ? '#155724' : '#721c24' ?>; border-radius: 8px; text-align: center;">
+                <h2 style="margin-bottom: 0.5rem; font-size: 1.5rem;">
+                    <?= !empty($produtos) ? 'Resultados da Busca' : 'Nenhum resultado encontrado' ?>
+                </h2>
+                <p style="margin: 0; font-size: 1rem;">
+                    <?= !empty($produtos) 
+                        ? 'Encontramos ' . count($produtos) . ' produto(s) para "' . htmlspecialchars($termoBusca) . '"' 
+                        : 'Não encontramos produtos para "' . htmlspecialchars($termoBusca) . '". Tente buscar por outro termo.' ?>
+                </p>
+            </div>
+        <?php endif; ?>
+        
         <div class="grid produtos_loja">
             <?php if (!empty($produtos)): ?>
                 <?php
@@ -122,7 +153,13 @@
                                 <span class="preco_produto">R$ <?= $precoProduto ?></span>
                     </div>
 
-                    <a href="#" class="produto_favorito"> <i class="ri-heart-line"></i></a>
+                    <form method="POST" action="<?= BASE_URL ?>/app/control/ClienteController.php?acao=produtos" style="display: inline;">
+                        <input type="hidden" name="id_produto" value="<?= $idProduto ?>">
+                        <input type="hidden" name="acao_favorito" value="<?= in_array($idProduto, $idsFavoritos) ? 'remover' : 'adicionar' ?>">
+                        <button type="submit" class="produto_favorito" style="background: none; border: none; cursor: pointer; padding: 0;">
+                            <i class="ri-heart<?= in_array($idProduto, $idsFavoritos) ? '-fill' : '-line' ?>" style="color: <?= in_array($idProduto, $idsFavoritos) ? '#d32f2f' : 'inherit' ?>;"></i>
+                        </button>
+                    </form>
                 </div>
 
             </article>

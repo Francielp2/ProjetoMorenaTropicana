@@ -190,19 +190,277 @@ class ProdutoModel
         }
     }
 
-    /* FUNÇÃO QUE BUSCA TODAS AS CATEGORIAS EXISTENTES PARA SEREM EXIBIDAS NA HORA DE FILTRAR*/
+    /* FUNÇÃO QUE BUSCA TODAS AS CATEGORIAS EXISTENTES COM PRODUTOS EM ESTOQUE */
     public function listarCategorias()
     {
         try {
             $stmt = $this->conn->prepare("
-                SELECT DISTINCT categoria 
-                FROM Produto 
-                WHERE categoria IS NOT NULL 
-                ORDER BY categoria ASC
+                SELECT DISTINCT p.categoria 
+                FROM Produto p
+                INNER JOIN Estoque e ON p.id_produto = e.id_produto
+                WHERE p.categoria IS NOT NULL 
+                AND p.categoria != ''
+                AND e.quantidade > 0
+                ORDER BY p.categoria ASC
             ");
             $stmt->execute();
             $categorias = $stmt->fetchAll(PDO::FETCH_COLUMN);
             return $categorias;
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
+
+    /* FUNÇÃO QUE BUSCA TODAS AS CORES ÚNICAS DO BANCO DE DADOS */
+    public function listarCores()
+    {
+        try {
+            $stmt = $this->conn->prepare("
+                SELECT DISTINCT cores_disponiveis
+                FROM Estoque
+                WHERE cores_disponiveis IS NOT NULL 
+                AND cores_disponiveis != ''
+                AND quantidade > 0
+            ");
+            $stmt->execute();
+            $resultados = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            
+            $cores = [];
+            foreach ($resultados as $coresString) {
+                $coresArray = array_map('trim', explode(',', $coresString));
+                foreach ($coresArray as $cor) {
+                    if (!empty($cor) && !in_array($cor, $cores)) {
+                        $cores[] = $cor;
+                    }
+                }
+            }
+            
+            sort($cores);
+            return $cores;
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
+
+    /* FUNÇÃO QUE BUSCA TAMANHOS DISPONÍVEIS BASEADO NA CATEGORIA */
+    public function listarTamanhosPorCategoria($categoria = '')
+    {
+        try {
+            $sql = "
+                SELECT DISTINCT e.tamanhos_disponiveis
+                FROM Estoque e
+                INNER JOIN Produto p ON e.id_produto = p.id_produto
+                WHERE e.tamanhos_disponiveis IS NOT NULL 
+                AND e.tamanhos_disponiveis != ''
+                AND e.quantidade > 0
+            ";
+
+            $params = [];
+            if (!empty($categoria)) {
+                /* Se categoria contém vírgula, são múltiplas categorias */
+                if (strpos($categoria, ',') !== false) {
+                    $categoriasArray = array_map('trim', explode(',', $categoria));
+                    $placeholders = [];
+                    foreach ($categoriasArray as $index => $cat) {
+                        $key = ':categoria' . $index;
+                        $placeholders[] = $key;
+                        $params[$key] = $cat;
+                    }
+                    $sql .= " AND p.categoria IN (" . implode(',', $placeholders) . ")";
+                } else {
+                    $sql .= " AND p.categoria = :categoria";
+                    $params[':categoria'] = $categoria;
+                }
+            }
+
+            $stmt = $this->conn->prepare($sql);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value, PDO::PARAM_STR);
+            }
+            $stmt->execute();
+            $resultados = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            
+            $tamanhos = [];
+            foreach ($resultados as $tamanhosString) {
+                $tamanhosArray = array_map('trim', explode(',', $tamanhosString));
+                foreach ($tamanhosArray as $tamanho) {
+                    if (!empty($tamanho) && !in_array($tamanho, $tamanhos)) {
+                        $tamanhos[] = $tamanho;
+                    }
+                }
+            }
+            
+            sort($tamanhos);
+            return $tamanhos;
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
+
+    /* FUNÇÃO QUE BUSCA CORES DISPONÍVEIS BASEADO NA CATEGORIA E TAMANHO */
+    public function listarCoresPorCategoriaETamanho($categoria = '', $tamanho = '')
+    {
+        try {
+            $sql = "
+                SELECT DISTINCT e.cores_disponiveis
+                FROM Estoque e
+                INNER JOIN Produto p ON e.id_produto = p.id_produto
+                WHERE e.cores_disponiveis IS NOT NULL 
+                AND e.cores_disponiveis != ''
+                AND e.quantidade > 0
+            ";
+
+            $params = [];
+            if (!empty($categoria)) {
+                /* Se categoria contém vírgula, são múltiplas categorias */
+                if (strpos($categoria, ',') !== false) {
+                    $categoriasArray = array_map('trim', explode(',', $categoria));
+                    $placeholders = [];
+                    foreach ($categoriasArray as $index => $cat) {
+                        $key = ':categoria' . $index;
+                        $placeholders[] = $key;
+                        $params[$key] = $cat;
+                    }
+                    $sql .= " AND p.categoria IN (" . implode(',', $placeholders) . ")";
+                } else {
+                    $sql .= " AND p.categoria = :categoria";
+                    $params[':categoria'] = $categoria;
+                }
+            }
+
+            if (!empty($tamanho)) {
+                /* Se tamanho contém vírgula, são múltiplos tamanhos */
+                if (strpos($tamanho, ',') !== false) {
+                    $tamanhosArray = array_map('trim', explode(',', $tamanho));
+                    $condicoes = [];
+                    foreach ($tamanhosArray as $index => $tam) {
+                        $key = ':tamanho' . $index;
+                        $condicoes[] = "e.tamanhos_disponiveis LIKE " . $key;
+                        $params[$key] = '%' . $tam . '%';
+                    }
+                    $sql .= " AND (" . implode(' OR ', $condicoes) . ")";
+                } else {
+                    $sql .= " AND e.tamanhos_disponiveis LIKE :tamanho";
+                    $params[':tamanho'] = '%' . $tamanho . '%';
+                }
+            }
+
+            $stmt = $this->conn->prepare($sql);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value, PDO::PARAM_STR);
+            }
+            $stmt->execute();
+            $resultados = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            
+            $cores = [];
+            foreach ($resultados as $coresString) {
+                $coresArray = array_map('trim', explode(',', $coresString));
+                foreach ($coresArray as $cor) {
+                    if (!empty($cor) && !in_array($cor, $cores)) {
+                        $cores[] = $cor;
+                    }
+                }
+            }
+            
+            sort($cores);
+            return $cores;
+        } catch (PDOException $e) {
+            return [];
+        }
+    }
+
+    /* FUNÇÃO QUE BUSCA PRODUTOS COM FILTROS DE CATEGORIA, TAMANHO E COR */
+    public function buscarProdutosComFiltros($categoria = '', $tamanho = '', $cor = '')
+    {
+        try {
+            $categoria = trim($categoria);
+            $tamanho = trim($tamanho);
+            $cor = trim($cor);
+
+            $temFiltroEstoque = !empty($tamanho) || !empty($cor);
+            $joinType = $temFiltroEstoque ? 'INNER JOIN' : 'LEFT JOIN';
+
+            $sql = "
+                SELECT DISTINCT
+                    p.id_produto,
+                    p.nome,
+                    p.categoria,
+                    p.preco,
+                    p.descricao,
+                    p.imagens,
+                    COALESCE(SUM(e.quantidade), 0) as estoque_total
+                FROM Produto p
+                $joinType Estoque e ON p.id_produto = e.id_produto
+                WHERE 1=1
+            ";
+
+            $params = [];
+
+            if (!empty($categoria)) {
+                /* Se categoria contém vírgula, são múltiplas categorias */
+                if (strpos($categoria, ',') !== false) {
+                    $categoriasArray = array_map('trim', explode(',', $categoria));
+                    $placeholders = [];
+                    foreach ($categoriasArray as $index => $cat) {
+                        $key = ':categoria' . $index;
+                        $placeholders[] = $key;
+                        $params[$key] = $cat;
+                    }
+                    $sql .= " AND p.categoria IN (" . implode(',', $placeholders) . ")";
+                } else {
+                    $sql .= " AND p.categoria = :categoria";
+                    $params[':categoria'] = $categoria;
+                }
+            }
+
+            if (!empty($tamanho)) {
+                /* Se tamanho contém vírgula, são múltiplos tamanhos */
+                if (strpos($tamanho, ',') !== false) {
+                    $tamanhosArray = array_map('trim', explode(',', $tamanho));
+                    $condicoes = [];
+                    foreach ($tamanhosArray as $index => $tam) {
+                        $key = ':tamanho' . $index;
+                        $condicoes[] = "e.tamanhos_disponiveis LIKE " . $key;
+                        $params[$key] = '%' . $tam . '%';
+                    }
+                    $sql .= " AND (" . implode(' OR ', $condicoes) . ")";
+                } else {
+                    $sql .= " AND e.tamanhos_disponiveis LIKE :tamanho";
+                    $params[':tamanho'] = '%' . $tamanho . '%';
+                }
+            }
+
+            if (!empty($cor)) {
+                /* Se cor contém vírgula, são múltiplas cores */
+                if (strpos($cor, ',') !== false) {
+                    $coresArray = array_map('trim', explode(',', $cor));
+                    $condicoes = [];
+                    foreach ($coresArray as $index => $c) {
+                        $key = ':cor' . $index;
+                        $condicoes[] = "e.cores_disponiveis LIKE " . $key;
+                        $params[$key] = '%' . $c . '%';
+                    }
+                    $sql .= " AND (" . implode(' OR ', $condicoes) . ")";
+                } else {
+                    $sql .= " AND e.cores_disponiveis LIKE :cor";
+                    $params[':cor'] = '%' . $cor . '%';
+                }
+            }
+
+            if ($temFiltroEstoque) {
+                $sql .= " AND e.quantidade > 0";
+            }
+
+            $sql .= " GROUP BY p.id_produto ORDER BY p.id_produto ASC";
+
+            $stmt = $this->conn->prepare($sql);
+
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value, PDO::PARAM_STR);
+            }
+
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             return [];
         }

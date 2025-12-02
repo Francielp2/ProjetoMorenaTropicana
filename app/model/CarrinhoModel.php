@@ -96,6 +96,34 @@ class CarrinhoModel
         }
     }
 
+    /* FUNÇÃO QUE BUSCA OS ÚLTIMOS 4 PRODUTOS ÚNICOS ADICIONADOS AO CARRINHO (DE TODOS OS CLIENTES) */
+    public function listarUltimosProdutosAdicionados($limite = 4)
+    {
+        try {
+            $stmt = $this->conn->prepare("
+                SELECT DISTINCT 
+                    p.id_produto,
+                    p.nome,
+                    p.categoria,
+                    p.preco,
+                    p.descricao,
+                    p.imagens,
+                    MAX(c.data_adicionado) as ultima_adicao
+                FROM Carrinho c
+                INNER JOIN Produto p ON c.id_produto = p.id_produto
+                GROUP BY p.id_produto, p.nome, p.categoria, p.preco, p.descricao, p.imagens
+                ORDER BY ultima_adicao DESC
+                LIMIT :limite
+            ");
+            $stmt->bindValue(':limite', (int)$limite, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Erro ao listar últimos produtos adicionados: " . $e->getMessage());
+            return [];
+        }
+    }
+
     /* FUNÇÃO QUE LISTA TODOS OS ITENS DO CARRINHO DE UM CLIENTE */
     public function listarItensCarrinho($idCliente)
     {

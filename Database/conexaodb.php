@@ -11,7 +11,7 @@ class Database
     private $conn;
 
     /* ---FUNÇÃO DE CONEXÃO COM PDO--- */
-    public function conexao($host = "localhost", $dbname = "morena_tropicana", $username = "root", $password = "databasekey@31")
+    public function conexao($host = "localhost", $dbname = "morena_tropicana", $username = "root", $password = "dvd1224@")
     {
         try {
             $this->conn = new PDO(

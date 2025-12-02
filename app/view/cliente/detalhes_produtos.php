@@ -31,7 +31,10 @@
         </div>
     <?php endif; ?>
 
-    <?php if ($produto): ?>
+    <?php 
+    $ehFavorito = $ehFavorito ?? false;
+    if ($produto): 
+    ?>
         <section class="detalhes">
             <div class="detalhes_conteudo container grid">
                 <div class="detalhes_esquerda">
@@ -151,7 +154,14 @@
 
                     <div class="detalhes_acoes">
                         <a href="#"><i class="ri-arrow-left-right-line"></i>Adicionar para comparar</a>
-                        <a href="#"><i class="ri-heart-line"></i>Adicionar aos Favoritos</a>
+                        <form method="POST" action="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos&id=<?= (int)($produto['id_produto'] ?? 0) ?>" style="display: inline;">
+                            <input type="hidden" name="id_produto" value="<?= (int)($produto['id_produto'] ?? 0) ?>">
+                            <input type="hidden" name="acao_favorito" value="<?= $ehFavorito ? 'remover' : 'adicionar' ?>">
+                            <button type="submit" style="background: none; border: none; cursor: pointer; color: inherit; font-size: inherit; padding: 0; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="ri-heart<?= $ehFavorito ? '-fill' : '-line' ?>" style="color: <?= $ehFavorito ? '#d32f2f' : 'inherit' ?>;"></i>
+                                <?= $ehFavorito ? 'Remover dos Favoritos' : 'Adicionar aos Favoritos' ?>
+                            </button>
+                        </form>
                     </div>
 
                     <div class="detalhes_retorno grid">

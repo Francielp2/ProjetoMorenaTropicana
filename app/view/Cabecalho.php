@@ -85,16 +85,17 @@ $emailUsuario = $_SESSION['usuario_email'] ?? '';
 
             </div>
 
-            <form action="#" class="formulario_navbar">
-                <select name="" id="select_navbar" class="select_navbar" style="display: none;">
+            <form action="<?= BASE_URL ?>/app/control/ClienteController.php?acao=produtos" method="GET" class="formulario_navbar">
+                <input type="hidden" name="acao" value="produtos">
+                <!-- <select name="" id="select_navbar" class="select_navbar" style="display: none;">
                     <option value="todascat" selected>Todas as categorias</option>
                     <option value="vessai">Vestidos e Saídas</option>
                     <option value="blucam">Blusas e Camisas</option>
                     <option value="saical">Saias e Calças</option>
                     <option value="acecom">Acessórios</option>
-                </select>
+                </select> -->
 
-                <input type="text" placeholder="Procurar..." class="input_navbar">
+                <input type="text" name="busca" placeholder="Procurar..." class="input_navbar" value="<?= htmlspecialchars($_GET['busca'] ?? '') ?>">
 
                 <button type="submit" class="procurar_navbar">
 

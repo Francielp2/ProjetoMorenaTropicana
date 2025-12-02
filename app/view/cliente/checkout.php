@@ -73,7 +73,7 @@
                     <li class="metodo_pagamento">
                         <input type="radio" id="metodo_pagamento_boleto" name="forma_pagamento" value="Boleto" class="checkout_radio" required>
                         <label for="metodo_pagamento_boleto">
-                            Boleto <img src="<?= BASE_URL ?>/public/assets/image/cartao.png" alt="Boleto">
+                            Boleto <img src="<?= BASE_URL ?>/public/assets/image/boleto.jpg" alt="Boleto">
                         </label>
                     </li>
                 </ul>

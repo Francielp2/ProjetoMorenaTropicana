@@ -1225,8 +1225,8 @@ class AdminController
             $idUsuario,
             $nome,
             $email,
-            $senhaParaAtualizar,
             $tipo,
+            $senhaParaAtualizar,
             $status,
             $telefone
         );

@@ -142,3 +142,17 @@ CREATE TABLE Administrador_Pedido (
         ON DELETE CASCADE 
         ON UPDATE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS Favoritos (
+    id_favorito INT AUTO_INCREMENT PRIMARY KEY,
+    id_cliente INT NOT NULL,
+    id_produto INT NOT NULL,
+    data_adicionado DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_cliente) REFERENCES Cliente(id_usuario)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    FOREIGN KEY (id_produto) REFERENCES Produto(id_produto)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    UNIQUE KEY unique_favorito (id_cliente, id_produto)
+);

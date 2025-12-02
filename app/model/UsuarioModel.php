@@ -446,7 +446,7 @@ class UsuarioModel
     }
 
     /* ATUALIZA DADOS DE UM USUÁRIO */
-    public function atualizarUsuario($idUsuario, $nome, $email, $senha = null, $tipo, $status = null, $telefone = null)
+    public function atualizarUsuario($idUsuario, $nome, $email, $tipo, $senha = null, $status = null, $telefone = null)
     {
         try {
             $this->conn->beginTransaction();
@@ -542,6 +542,8 @@ class UsuarioModel
             return true;
         } catch (PDOException $e) {
             $this->conn->rollBack();/* SE DER ERRO CANCELA TODAS AS MUDANÇAS */
+            error_log("Erro ao atualizar usuário: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             return false;
         }
     }
