@@ -7,16 +7,16 @@
 
                 <!-- slide 1 -->
 
-                <div class="swiper-slide" style="background: url(<?= BASE_URL ?>/public/assets/image/img-inicio1.jpg); repeat: no-repeat; background-position:center center; background-size: cover;">
+                <div class="swiper-slide" style="background: url(<?= BASE_URL ?>/public/assets/image/img-inicio2.png); repeat: no-repeat; background-position:center center; background-size: cover;">
                     <div class="container">
 
                         <div class="inicio_tag">
                             <img src="<?= BASE_URL ?>/public/assets/image/raio.svg" alt="" class="img_inicio"> Em Alta
                         </div>
 
-                        <h1 class="titulo_inicio">Moda feminina clássica e elegante</h1>
+                        <h1 class="titulo_inicio" style="color: var(--cor_branca)">Moda feminina clássica e elegante</h1>
 
-                        <p class="descricao_inicial">
+                        <p class="descricao_inicial" style="color: var(--cor_branca)">
                             Roupas que unem elegância, conforto e autenticidade para realçar sua verdadeira essência.
                         </p>
 
@@ -28,16 +28,16 @@
                 <!-- Slide 2 -->
 
                 <div class="swiper-slide" style="
-                    background: url(<?= BASE_URL ?>/public/assets/image/img-inicio2.png); background-repeat: no-repeat; background-position:center center; background-size: cover;">
+                    background: url(<?= BASE_URL ?>/public/assets/image/img-inicio3.png); background-repeat: no-repeat; background-position:center center; background-size: cover;">
                     <div class="container">
 
                         <div class="inicio_tag">
                             <img src="<?= BASE_URL ?>/public/assets/image/raio.svg" alt="" class="img_inicio"> Em Alta
                         </div>
 
-                        <h1 class="titulo_inicio" style="color: var(--cor_branca)">Moda feminina clássica e elegante</h1>
+                        <h1 class="titulo_inicio">Moda feminina clássica e elegante</h1>
 
-                        <p class="descricao_inicial" style="color: var(--cor_branca)">
+                        <p class="descricao_inicial">
                             Roupas que unem elegância, conforto e autenticidade para realçar sua verdadeira essência.
                         </p>
 
