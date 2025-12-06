@@ -103,27 +103,4 @@
     </section>
 </main>
 
-<style>
-    .admin-badge {
-        display: inline-block;
-        padding: 0.35rem 0.65rem;
-        font-size: 0.875rem;
-        font-weight: 500;
-        border-radius: 0.25rem;
-        text-align: center;
-    }
-    .admin-badge-success {
-        background-color: #d4edda;
-        color: #155724;
-    }
-    .admin-badge-warning {
-        background-color: #fff3cd;
-        color: #856404;
-    }
-    .admin-badge-danger {
-        background-color: #f8d7da;
-        color: #721c24;
-    }
-</style>
-
 <?php include_once __DIR__ . "/../Rodape.php"; ?>

@@ -155,11 +155,6 @@ include_once __DIR__ . "/../Cabecalho.php";
             <!-- Botão de Excluir Conta -->
             <div class="card_informacoes">
                 <div class="card_acoes">
-                    <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=pedidos" class="botao_acao btn" style="text-decoration: none; display: inline-block; background-color: var(--cor_primaria);">
-                        <i class="ri-shopping-bag-line"></i>
-                        Meus Pedidos
-                    </a>
-
                     <a href="<?= BASE_URL ?>/app/control/LogoutController.php" class="botao_acao btn" style="text-decoration: none; display: inline-block;">
                         <i class="ri-logout-box-line"></i>
                         Sair da sua conta

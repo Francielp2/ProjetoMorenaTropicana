@@ -1432,11 +1432,20 @@ form .subtitulo {
 }
 
 .acoes_coluna {
-    width: 234px;
-    display: flex;
-    align-items: center;
-    column-gap: 1rem;
+    vertical-align: middle !important;
 }
+
+.acoes_coluna>div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.thead th:nth-child(4) {
+    text-align: center;
+}
+
 
 .favoritos_btn {
     padding: 0.75rem 2rem;
@@ -1448,6 +1457,30 @@ form .subtitulo {
     border-color: var(--cor_container);
     border-radius: 50%;
     cursor: pointer;
+}
+
+.admin-badge {
+    display: inline-block;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.25rem;
+    text-align: center;
+}
+
+.admin-badge-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.admin-badge-warning {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.admin-badge-danger {
+    background-color: #f8d7da;
+    color: #721c24;
 }
 
 /* Estilização para página de checkout */
