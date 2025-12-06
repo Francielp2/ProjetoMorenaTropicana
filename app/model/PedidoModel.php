@@ -207,8 +207,10 @@ class PedidoModel
             $stmt = $this->conn->prepare("
                 SELECT 
                     pp.quantidade,
-                    pp.preco_unitario
+                    pp.preco_unitario,
+                    pr.nome AS nome_produto
                 FROM Produto_Pedido pp
+                INNER JOIN Produto pr ON pp.id_produto = pr.id_produto
                 WHERE pp.id_pedido = :id
             ");
             $stmt->bindParam(':id', $idPedido);
@@ -255,7 +257,7 @@ class PedidoModel
             $stmt->bindParam(':id', $idPedido);
             $stmt->execute();
             $statusAnterior = $stmt->fetchColumn();
-            
+
             $this->conn->beginTransaction();/* INICIA TRANSAÇÃO */
 
             /* Atualiza status do pedido */
@@ -309,7 +311,7 @@ class PedidoModel
                 $stmt->bindParam(':id_pedido', $idPedido);
                 $stmt->execute();
                 $itensPedido = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                
+
                 /* Restaura estoque de cada item (dentro da mesma transação) */
                 foreach ($itensPedido as $item) {
                     $this->restaurarEstoqueNaTransacao(
@@ -339,7 +341,7 @@ class PedidoModel
             $stmt->bindValue(':id_cliente', $idCliente, PDO::PARAM_INT);
             $stmt->execute();
             $clienteExiste = $stmt->fetchColumn() > 0;
-            
+
             if (!$clienteExiste) {
                 error_log("Erro: Cliente com ID $idCliente não existe na tabela Cliente");
                 throw new Exception("Cliente não encontrado na base de dados. Verifique se o usuário está cadastrado corretamente.");
@@ -354,9 +356,9 @@ class PedidoModel
             ");
             $stmt->bindValue(':id_cliente', $idCliente, PDO::PARAM_INT);
             $stmt->bindValue(':valor_total', $valorTotal);
-            
+
             $stmt->execute();
-            
+
             $idPedido = $this->conn->lastInsertId();
 
             if (!$idPedido || $idPedido === '0') {
@@ -374,7 +376,7 @@ class PedidoModel
                 }
 
                 $idProduto = (int)$item['id_produto'];
-                
+
                 /* Se já existe este produto, soma a quantidade */
                 if (isset($itensAgrupados[$idProduto])) {
                     $itensAgrupados[$idProduto]['quantidade'] += (int)$item['quantidade'];
@@ -404,23 +406,23 @@ class PedidoModel
                 $stmt->bindValue(':id_produto', $item['id_produto'], PDO::PARAM_INT);
                 $stmt->execute();
                 $produtoExiste = $stmt->fetchColumn() > 0;
-                
+
                 if (!$produtoExiste) {
                     error_log("Erro: Produto com ID {$item['id_produto']} não existe");
                     throw new Exception("Produto não encontrado na base de dados");
                 }
-                
+
                 /* Verifica estoque antes de inserir */
                 $estoqueDisponivel = $this->estoqueModel->obterQuantidadeDisponivel(
-                    $item['id_produto'], 
-                    $item['cor'], 
+                    $item['id_produto'],
+                    $item['cor'],
                     $item['tamanho']
                 );
-                
+
                 if ($estoqueDisponivel < $item['quantidade']) {
                     throw new Exception("Estoque insuficiente para o produto ID {$item['id_produto']}. Disponível: $estoqueDisponivel, Solicitado: {$item['quantidade']}");
                 }
-                
+
                 $stmt = $this->conn->prepare("
                     INSERT INTO Produto_Pedido (id_pedido, id_produto, quantidade, preco_unitario, cor, tamanho)
                     VALUES (:id_pedido, :id_produto, :quantidade, :preco_unitario, :cor, :tamanho)
@@ -431,9 +433,9 @@ class PedidoModel
                 $stmt->bindValue(':preco_unitario', $item['preco_unitario']);
                 $stmt->bindValue(':cor', $item['cor'], $item['cor'] === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
                 $stmt->bindValue(':tamanho', $item['tamanho'], $item['tamanho'] === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
-                
+
                 $stmt->execute();
-                
+
                 /* Reduz estoque após inserir o item no pedido (dentro da mesma transação) */
                 $this->reduzirEstoqueNaTransacao(
                     $item['id_produto'],
@@ -450,7 +452,7 @@ class PedidoModel
             ");
             $stmt->bindValue(':id_pedido', $idPedido, PDO::PARAM_INT);
             $stmt->bindValue(':forma_pagamento', $formaPagamento);
-            
+
             $stmt->execute();
 
             $this->conn->commit();/* FINALIZA TRANSAÇÃO */

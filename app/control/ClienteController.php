@@ -913,8 +913,29 @@ class ClienteController
             // Conta itens do pedido
             $itens = $this->pedidoModel->buscarItensPedido($id);
             $totalItens = 0;
+            // Lista de nomes de produtos
+            $nomesProdutos = [];
             foreach ($itens as $item) {
                 $totalItens += (int)($item['quantidade'] ?? 0);
+                // tenta obter o nome do produto com diferentes chaves possíveis
+                if (!empty($item['nome_produto'])) {
+                    $nomesProdutos[] = $item['nome_produto'];
+                } elseif (!empty($item['nome'])) {
+                    $nomesProdutos[] = $item['nome'];
+                } elseif (!empty($item['produto_nome'])) {
+                    $nomesProdutos[] = $item['produto_nome'];
+                }
+            }
+
+            // Remove duplicatas e formata em string curta (máx 3 itens, com indicação se houver mais)
+            $nomesProdutos = array_values(array_unique(array_filter($nomesProdutos)));
+            $produtosExibicao = '';
+            if (!empty($nomesProdutos)) {
+                if (count($nomesProdutos) > 3) {
+                    $produtosExibicao = implode(', ', array_slice($nomesProdutos, 0, 3)) . ' e mais ' . (count($nomesProdutos) - 3);
+                } else {
+                    $produtosExibicao = implode(', ', $nomesProdutos);
+                }
             }
 
             $pedidosFormatados[] = [
@@ -927,6 +948,7 @@ class ClienteController
                 'valor_total' => $valorTotalFormatado,
                 'pagamento_status' => $pagamentoTexto,
                 'pagamento_classe' => $pagamentoClasse,
+                'produtos' => $produtosExibicao,
                 'total_itens' => $totalItens,
                 'pode_pagar' => $podePagar,
                 'pode_cancelar' => $podeCancelar

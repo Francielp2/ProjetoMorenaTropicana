@@ -28,6 +28,7 @@
         <table class="carrinho_tabela tabela">
             <thead class="thead">
                 <th class="thead_titulo">Pedido</th>
+                <th>Produtos</th>
                 <th>Data</th>
                 <th>Status</th>
                 <th>Valor Total</th>
@@ -38,7 +39,7 @@
             <tbody class="tbody">
                 <?php if (empty($pedidosFormatados)): ?>
                     <tr>
-                        <td colspan="6" style="text-align: center; padding: 40px; color: #666;">
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #666;">
                             <i class="ri-shopping-bag-line" style="font-size: 3rem; display: block; margin-bottom: 1rem; color: var(--cor_primaria);"></i>
                             Você ainda não realizou nenhum pedido
                         </td>
@@ -59,6 +60,12 @@
                                 </div>
                             </td>
 
+                            <td style="max-width: 300px; white-space: normal;">
+                                <span style="font-size:0.95rem; color:#444;">
+                                    <?= !empty($pedido['produtos']) ? htmlspecialchars($pedido['produtos']) : '-' ?>
+                                </span>
+                            </td>
+
                             <td>
                                 <span style="display: block; font-weight: 500;">
                                     <?= htmlspecialchars($pedido['data']) ?>
@@ -69,8 +76,8 @@
                             </td>
 
                             <td>
-                                <span class="<?= htmlspecialchars($pedido['status_classe']) ?>" 
-                                      style="display: inline-block; padding: 0.5rem 1rem; border-radius: 1rem; font-size: 0.85rem; font-weight: 600;">
+                                <span class="<?= htmlspecialchars($pedido['status_classe']) ?>"
+                                    style="display: inline-block; padding: 0.5rem 1rem; border-radius: 1rem; font-size: 0.85rem; font-weight: 600;">
                                     <?= htmlspecialchars($pedido['status']) ?>
                                 </span>
                             </td>
@@ -82,8 +89,8 @@
                             </td>
 
                             <td>
-                                <span class="<?= htmlspecialchars($pedido['pagamento_classe']) ?>" 
-                                      style="display: inline-block; padding: 0.5rem 1rem; border-radius: 1rem; font-size: 0.85rem; font-weight: 600;">
+                                <span class="<?= htmlspecialchars($pedido['pagamento_classe']) ?>"
+                                    style="display: inline-block; padding: 0.5rem 1rem; border-radius: 1rem; font-size: 0.85rem; font-weight: 600;">
                                     <?= htmlspecialchars($pedido['pagamento_status']) ?>
                                 </span>
                             </td>
@@ -91,25 +98,25 @@
                             <td>
                                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;">
                                     <?php if ($pedido['pode_pagar']): ?>
-                                        <button onclick="abrirModalPagamento(<?= $pedido['id'] ?>, '<?= htmlspecialchars($pedido['valor_total']) ?>')" 
-                                                class="btn" 
-                                                style="padding: 0.75rem 1.5rem; font-size: 0.9rem; white-space: nowrap;">
+                                        <button onclick="abrirModalPagamento(<?= $pedido['id'] ?>, '<?= htmlspecialchars($pedido['valor_total']) ?>')"
+                                            class="btn"
+                                            style="padding: 0.75rem 1.5rem; font-size: 0.9rem; white-space: nowrap;">
                                             <i class="ri-bank-card-line"></i> Pagar
                                         </button>
                                     <?php endif; ?>
-                                    
+
                                     <?php if ($pedido['pode_cancelar']): ?>
-                                        <button onclick="confirmarCancelamento(<?= $pedido['id'] ?>)" 
-                                                class="btn btn-dark" 
-                                                style="padding: 0.75rem 1.5rem; font-size: 0.9rem; background-color: #d32f2f; white-space: nowrap;">
+                                        <button onclick="confirmarCancelamento(<?= $pedido['id'] ?>)"
+                                            class="btn btn-dark"
+                                            style="padding: 0.75rem 1.5rem; font-size: 0.9rem; background-color: #d32f2f; white-space: nowrap;">
                                             <i class="ri-close-circle-line"></i> Cancelar
                                         </button>
                                     <?php endif; ?>
 
                                     <?php if (!$pedido['pode_pagar'] && !$pedido['pode_cancelar']): ?>
-                                        <button class="btn" 
-                                                style="padding: 0.75rem 1.5rem; font-size: 0.9rem; background-color: var(--cor_cinza); cursor: not-allowed;" 
-                                                disabled>
+                                        <button class="btn"
+                                            style="padding: 0.75rem 1.5rem; font-size: 0.9rem; background-color: var(--cor_cinza); cursor: not-allowed;"
+                                            disabled>
                                             Sem ações
                                         </button>
                                     <?php endif; ?>
