@@ -46,10 +46,10 @@
                             <td class="carriho_dados">
                                 <div style="display: flex; align-items: center; justify-content: center; width: 120px; height: 120px; background-color: #f5f5f5; border-radius: 8px; margin-right: 1rem; flex-shrink: 0;">
                                     <?php if (!empty($favorito['imagem'])): ?>
-                                        <img src="<?= htmlspecialchars($favorito['imagem']) ?>" 
-                                             alt="<?= htmlspecialchars($favorito['nome_produto']) ?>" 
-                                             class="carrinho_imagem favoritos_imagem"
-                                             style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                                        <img src="<?= htmlspecialchars($favorito['imagem']) ?>"
+                                            alt="<?= htmlspecialchars($favorito['nome_produto']) ?>"
+                                            class="carrinho_imagem favoritos_imagem"
+                                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
                                     <?php else: ?>
                                         <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; color: #999;">
                                             <i class="ri-image-line" style="font-size: 3rem;"></i>
@@ -81,15 +81,15 @@
 
                             <td class="acoes_coluna" style="text-align: center; vertical-align: middle;">
                                 <div style="display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
-                                    <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos&id=<?= $favorito['id_produto'] ?>" 
-                                       class="btn btn-dark favoritos_btn" style="white-space: nowrap;">
+                                    <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=detalhes_produtos&id=<?= $favorito['id_produto'] ?>"
+                                        class="btn btn-dark favoritos_btn" style="white-space: nowrap;">
                                         Adicionar ao Carrinho
                                     </a>
                                     <form method="POST" action="<?= BASE_URL ?>/app/control/ClienteController.php?acao=favoritos" style="display: inline;">
                                         <input type="hidden" name="remover_favorito" value="1">
                                         <input type="hidden" name="id_favorito" value="<?= $favorito['id_favorito'] ?>">
-                                        <button type="submit" class="remover_btn" style="background: none; border: none; cursor: pointer; font-size: 1.5rem; color: #d32f2f; padding: 0.5rem;" 
-                                                onclick="return confirm('Deseja remover este produto dos favoritos?')">
+                                        <button type="submit" class="remover_btn" style="background: none; border: none; cursor: pointer; font-size: 1.5rem; color: #d32f2f; padding: 0.5rem;"
+                                            onclick="return confirm('Deseja remover este produto dos favoritos?')">
                                             &times;
                                         </button>
                                     </form>

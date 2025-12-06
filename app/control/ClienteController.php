@@ -493,7 +493,7 @@ class ClienteController
             $precoProduto = isset($favorito['preco']) ? number_format((float)$favorito['preco'], 2, ',', '.') : '0,00';
             $imagemProduto = !empty($favorito['imagens']) ? BASE_URL . $favorito['imagens'] : '';
             $estoqueTotal = (int)($favorito['estoque_total'] ?? 0);
-            
+
             /* Formata status de estoque igual ao admin */
             $statusEstoque = $this->formatarStatusEstoque($estoqueTotal);
 
@@ -578,11 +578,11 @@ class ClienteController
                 $coresSelecionadas = array_filter(array_map('trim', $_POST['cor']));
                 if (!empty($coresSelecionadas)) {
                     $_SESSION['quiz_cor'] = implode(',', $coresSelecionadas);
-                    
+
                     /* Redireciona para produtos com os filtros aplicados */
                     $url = BASE_URL . "/app/control/ClienteController.php?acao=produtos";
                     $filtros = [];
-                    
+
                     if (!empty($_SESSION['quiz_categoria'])) {
                         $filtros[] = "categoria=" . urlencode($_SESSION['quiz_categoria']);
                     }
@@ -592,17 +592,17 @@ class ClienteController
                     if (!empty($_SESSION['quiz_cor'])) {
                         $filtros[] = "cor=" . urlencode($_SESSION['quiz_cor']);
                     }
-                    
+
                     if (!empty($filtros)) {
                         $url .= "&" . implode("&", $filtros);
                         $url .= "&quiz=1";
                     }
-                    
+
                     /* Limpa sessão do quiz */
                     unset($_SESSION['quiz_categoria']);
                     unset($_SESSION['quiz_tamanho']);
                     unset($_SESSION['quiz_cor']);
-                    
+
                     header("Location: " . $url);
                     exit;
                 }
@@ -858,37 +858,51 @@ class ClienteController
             $valorTotalNumero = (float)($pedido['valor_total_calculado'] ?? 0);
             $valorTotalFormatado = 'R$ ' . number_format($valorTotalNumero, 2, ',', '.');
 
-            // Status do pedido
+            // Status do pedido (texto e classe CSS semelhante ao Admin)
             $statusPedido = strtoupper($pedido['status_pedido'] ?? 'PENDENTE');
             $statusTexto = '';
-            $statusClasse = 'avaliacao';
+            $statusClasse = '';
 
             switch ($statusPedido) {
+                case 'PENDENTE':
+                    $statusTexto = 'Pendente';
+                    $statusClasse = 'admin-badge-warning';
+                    break;
                 case 'FINALIZADO':
                     $statusTexto = 'Finalizado';
+                    $statusClasse = 'admin-badge-success';
                     break;
                 case 'CANCELADO':
                     $statusTexto = 'Cancelado';
+                    $statusClasse = 'admin-badge-danger';
                     break;
                 default:
-                    $statusTexto = 'Pendente';
+                    $statusTexto = $statusPedido;
+                    $statusClasse = 'admin-badge-warning';
                     break;
             }
 
-            // Status do pagamento
+            // Status do pagamento (texto e classe CSS semelhante ao Admin)
             $statusPagamento = strtoupper($pedido['status_pagamento'] ?? 'PENDENTE');
             $pagamentoTexto = '';
-            $pagamentoClasse = 'avaliacao';
+            $pagamentoClasse = '';
 
             switch ($statusPagamento) {
+                case 'PENDENTE':
+                    $pagamentoTexto = 'Pendente';
+                    $pagamentoClasse = 'admin-badge-warning';
+                    break;
                 case 'CONFIRMADO':
                     $pagamentoTexto = 'Confirmado';
+                    $pagamentoClasse = 'admin-badge-success';
                     break;
                 case 'CANCELADO':
                     $pagamentoTexto = 'Cancelado';
+                    $pagamentoClasse = 'admin-badge-danger';
                     break;
                 default:
                     $pagamentoTexto = 'Pendente';
+                    $pagamentoClasse = 'admin-badge-warning';
                     break;
             }
 

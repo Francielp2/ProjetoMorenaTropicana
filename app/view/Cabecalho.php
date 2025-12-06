@@ -28,6 +28,8 @@ $emailUsuario = $_SESSION['usuario_email'] ?? '';
 </head>
 
 <body>
+    <!-- Iframe invisível para submissões de favoritos sem recarregar a página -->
+    <iframe name="favorito_target" id="favorito_target" style="display:none;width:0;height:0;border:0;" aria-hidden="true"></iframe>
     <!-- CABEÇALHO -->
 
     <header class="cabecalho" id="cabecalho">
@@ -47,7 +49,7 @@ $emailUsuario = $_SESSION['usuario_email'] ?? '';
                     </li>
 
                     <li class="item_topbar">
-                    <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=pedidos" class="link_topbar">Meus pedidos</a>
+                        <a href="<?= BASE_URL ?>/app/control/ClienteController.php?acao=pedidos" class="link_topbar">Meus pedidos</a>
                     </li>
                 </ul>
 
@@ -141,3 +143,75 @@ $emailUsuario = $_SESSION['usuario_email'] ?? '';
             </div>
         </nav>
     </header>
+    <script>
+        (function() {
+            // Guarda o UID do último form submetido para favoritos
+            window._lastFavoritoFormUid = null;
+
+            // Delegation: intercepta submissões de forms de favorito
+            document.addEventListener('submit', function(e) {
+                var form = e.target;
+                if (!form.classList || !form.classList.contains('form-favorito')) return;
+
+                // Identificador único do form (adicionado nos templates)
+                var uid = form.dataset.favoritoUid || null;
+                if (uid) window._lastFavoritoFormUid = uid;
+
+                // Se for formulário que tem acao_favorito (produtos/descricao)
+                var acaoInput = form.querySelector('input[name="acao_favorito"]');
+                if (acaoInput) {
+                    // Atualiza visual do ícone imediatamente (otimista)
+                    var btn = form.querySelector('button[type="submit"]');
+                    var icon = btn ? btn.querySelector('i') : null;
+                    var original = acaoInput.value; // 'adicionar' ou 'remover'
+
+                    if (icon) {
+                        // toggle visual conforme ação que será executada
+                        if (original === 'adicionar') {
+                            icon.className = icon.className.replace('-line', '-fill');
+                            icon.style.color = '#d32f2f';
+                        } else {
+                            icon.className = icon.className.replace('-fill', '-line');
+                            icon.style.color = '';
+                        }
+                    }
+
+                    // marca como pendente para controle posterior
+                    form.dataset.pending = 'true';
+                    // permite a submissão seguir para o iframe (não preventDefault)
+                } else if (form.querySelector('input[name="remover_favorito"]')) {
+                    // formulário da página Favoritos - removemos a linha imediatamente
+                    var row = form.closest('tr');
+                    if (row) row.remove();
+                    // marca pendente
+                    form.dataset.pending = 'true';
+                }
+            }, true);
+
+            // Quando o iframe carrega, atualiza o estado do input acao_favorito
+            var iframe = document.getElementById('favorito_target');
+            if (iframe) {
+                iframe.addEventListener('load', function() {
+                    try {
+                        var uid = window._lastFavoritoFormUid;
+                        if (!uid) return;
+                        var form = document.querySelector('.form-favorito[data-favorito-uid="' + uid + '"]');
+                        if (!form) return;
+
+                        // se tinha acao_favorito, inverte o valor para a próxima ação
+                        var acaoInput = form.querySelector('input[name="acao_favorito"]');
+                        if (acaoInput) {
+                            acaoInput.value = (acaoInput.value === 'adicionar') ? 'remover' : 'adicionar';
+                        }
+
+                        // limpa pendente
+                        delete form.dataset.pending;
+                        window._lastFavoritoFormUid = null;
+                    } catch (err) {
+                        // falha silenciosa
+                        console.error('Erro ao processar resposta do iframe de favoritos', err);
+                    }
+                });
+            }
+        })();
+    </script>
