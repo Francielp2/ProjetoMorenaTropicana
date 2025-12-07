@@ -69,7 +69,7 @@ $emailUsuario = $_SESSION['usuario_email'] ?? '';
 
                 <div class="msg_topbar">
                     <img src="<?= BASE_URL ?>/public/assets/image/caminhao.svg" alt="ícone de caminhão" class="icone_topbar">
-                    <p class="texto_topbar">Frete grátis a partir de R$200</p>
+                    <p class="texto_topbar">Frete grátis</p>
                 </div>
 
             </div>

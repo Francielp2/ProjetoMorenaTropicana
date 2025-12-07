@@ -1,4 +1,5 @@
 <?php include_once __DIR__ . "/../Cabecalho.php"; ?>
+<?php $temEndereco = !empty($rua ?? ''); ?>
 
 <main class="principal">
     <section class="banner">
@@ -27,9 +28,9 @@
         <?php endif; ?>
 
         <div class="checkout_container container grid">
-            <form method="POST" action="<?= BASE_URL ?>/app/control/ClienteController.php?acao=checkout" class="checkout_formulario formulario">
+            <form id="checkoutForm" method="POST" action="<?= BASE_URL ?>/app/control/ClienteController.php?acao=checkout" class="checkout_formulario formulario">
                 <h2 class="checkout_titulo">Informações de Entrega</h2>
-                
+
                 <div>
                     <input type="text" value="Brasil" class="input" readonly>
                 </div>
@@ -55,7 +56,13 @@
 
                 <h2 class="checkout_titulo">Forma de Pagamento</h2>
 
-                <ul class="metodos_pagamento grid">
+                <?php if (!$temEndereco): ?>
+                    <div style="background-color: #fff3e0; color: #665; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
+                        Cadastre um endereço na sua conta para finalizar o pedido (para isso acesse a página de perfil)
+                    </div>
+                <?php endif; ?>
+
+                <ul class="metodos_pagamento grid" <?php if (!$temEndereco) echo 'style="opacity:0.6;pointer-events:none;"'; ?>>
                     <li class="metodo_pagamento">
                         <input type="radio" id="metodo_pagamento_pix" name="forma_pagamento" value="Pix" class="checkout_radio" required>
                         <label for="metodo_pagamento_pix">
@@ -78,7 +85,7 @@
                     </li>
                 </ul>
 
-                <button type="submit" name="finalizar_pedido" class="btn btn_finalizar">Finalizar Pedido</button>
+                <button type="submit" name="finalizar_pedido" class="btn btn_finalizar" <?php if (!$temEndereco) echo 'disabled'; ?>>Finalizar Pedido</button>
             </form>
 
             <div class="checkout_conteudo">
@@ -140,3 +147,20 @@
 </main>
 
 <?php include_once __DIR__ . "/../Rodape.php"; ?>
+
+<script>
+    // Proteção extra no cliente: impede submissão caso não haja endereço
+    (function() {
+        var form = document.getElementById('checkoutForm');
+        if (!form) return;
+        form.addEventListener('submit', function(e) {
+            var temEndereco = <?= $temEndereco ? 'true' : 'false' ?>;
+            if (!temEndereco) {
+                e.preventDefault();
+                // Mensagem visível já existe na página, mas exibimos um alerta também
+                alert('Cadastre um endereço na sua conta para finalizar o pedido (para isso acesse a página de perfil)');
+                return false;
+            }
+        });
+    })();
+</script>

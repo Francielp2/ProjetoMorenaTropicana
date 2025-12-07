@@ -165,7 +165,7 @@
                     </div>
 
                     <div class="detalhes_retorno grid">
-                        <li><i class="ri-truck-fill"></i>Frete grátis apartir de 200 reais</li>
+                        <li><i class="ri-truck-fill"></i>Frete grátis</li>
                         <li><i class="ri-arrow-go-back-line"></i>Devolva de graça em até 30 dias</li>
                     </div>
 
